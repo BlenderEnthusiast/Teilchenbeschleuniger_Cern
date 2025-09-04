@@ -104,7 +104,139 @@ img{max-width:100%;display:block}
     </div>
     <div class="card reveal">
       <h2>Überblick</h2>
-      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis pharetra justo in odio pulvinar, eget blandit nulla luctus.</p>
+      <p><!-- Timeline Markup -->
+<div class="timeline">
+  <div class="timeline-bg" id="bg1"></div>
+  <div class="timeline-bg" id="bg2"></div>
+
+  <button class="timeline-btn" id="prevBtn">&larr;</button>
+  <div class="timeline-panel">
+    <time id="tpDate"></time>
+    <h2 id="tpTitle"></h2>
+    <p id="tpDesc"></p>
+  </div>
+  <button class="timeline-btn" id="nextBtn">&rarr;</button>
+</div>
+
+<!-- Timeline Styles -->
+<style>
+.timeline {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow: hidden;
+  color: white;
+  min-height: 220px;
+}
+
+/* Background layers */
+.timeline-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out;
+  z-index: 0;
+}
+.timeline-bg.show {
+  opacity: 0.4; /* how visible background is */
+}
+
+.timeline-panel,
+.timeline-btn {
+  position: relative;
+  z-index: 1;
+}
+
+.timeline-btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+.timeline-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+.timeline-panel {
+  flex: 1;
+}
+#tpDate {
+  display: block;
+  font-size: 0.9rem;
+  color: #e5e7eb;
+  margin-bottom: 0.25rem;
+}
+#tpTitle {
+  margin: 0;
+  font-size: 1.2rem;
+}
+#tpDesc {
+  margin: 0.25rem 0 0;
+  color: #f3f4f6;
+}
+</style>
+
+<!-- Timeline Script -->
+<script>
+const timepoints = [
+  { date: "Step 1", title: "text eingeben", desc: "text eingeben", img: "https://via.placeholder.com/800x400?text=Bild+1" },
+  { date: "Step 2", title: "text eingeben", desc: "text eingeben", img: "https://via.placeholder.com/800x400?text=Bild+2" },
+  { date: "Step 3", title: "text eingeben", desc: "text eingeben", img: "https://via.placeholder.com/800x400?text=Bild+3" },
+  { date: "Step 4", title: "text eingeben", desc: "text eingeben", img: "https://via.placeholder.com/800x400?text=Bild+4" },
+  { date: "Step 5", title: "text eingeben", desc: "text eingeben", img: "https://via.placeholder.com/800x400?text=Bild+5" },
+  { date: "Step 6", title: "text eingeben", desc: "text eingeben", img: "https://via.placeholder.com/800x400?text=Bild+6" },
+  { date: "Step 7", title: "text eingeben", desc: "text eingeben", img: "https://via.placeholder.com/800x400?text=Bild+7" },
+  { date: "Step 8", title: "text eingeben", desc: "text eingeben", img: "https://via.placeholder.com/800x400?text=Bild+8" },
+  { date: "Step 9", title: "text eingeben", desc: "text eingeben", img: "https://via.placeholder.com/800x400?text=Bild+9" },
+  { date: "Step 10", title: "text eingeben", desc: "text eingeben", img: "https://via.placeholder.com/800x400?text=Bild+10" }
+];
+
+let index = 0;
+const elDate = document.getElementById('tpDate');
+const elTitle = document.getElementById('tpTitle');
+const elDesc = document.getElementById('tpDesc');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const bg1 = document.getElementById('bg1');
+const bg2 = document.getElementById('bg2');
+
+let showingBg1 = true;
+
+function updateTimeline() {
+  const tp = timepoints[index];
+  elDate.textContent = tp.date;
+  elTitle.textContent = tp.title;
+  elDesc.textContent = tp.desc;
+
+  prevBtn.disabled = index === 0;
+  nextBtn.disabled = index === timepoints.length - 1;
+
+  // Crossfade between bg1 and bg2
+  if (showingBg1) {
+    bg2.style.backgroundImage = `url(${tp.img})`;
+    bg2.classList.add("show");
+    bg1.classList.remove("show");
+  } else {
+    bg1.style.backgroundImage = `url(${tp.img})`;
+    bg1.classList.add("show");
+    bg2.classList.remove("show");
+  }
+  showingBg1 = !showingBg1;
+}
+
+prevBtn.addEventListener('click', () => { index--; updateTimeline(); });
+nextBtn.addEventListener('click', () => { index++; updateTimeline(); });
+
+updateTimeline();
+</script>
+</p>
       <p>Morbi feugiat, massa nec laoreet luctus, massa augue dictum lorem, eget hendrerit arcu orci vitae est.</p>
     </div>
   </div>
@@ -221,6 +353,7 @@ const det=document.getElementById('detector');const buttons=document.querySelect
 </script>
 </body>
 </html>
+
 
 
 
