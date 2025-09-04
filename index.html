@@ -105,134 +105,156 @@ img{max-width:100%;display:block}
     <div class="card reveal">
       <h2>Überblick</h2>
       <p><!-- Timeline Markup -->
-<div class="timeline">
-  <div class="timeline-bg" id="bg1"></div>
-  <div class="timeline-bg" id="bg2"></div>
-
-  <button class="timeline-btn" id="prevBtn">&larr;</button>
-  <div class="timeline-panel">
-    <time id="tpDate"></time>
-    <h2 id="tpTitle"></h2>
-    <p id="tpDesc"></p>
+<div class="timeline-container">
+  <div class="timeline-controls">
+    <button id="prevBtn">&uarr;</button>
+    <button id="nextBtn">&darr;</button>
   </div>
-  <button class="timeline-btn" id="nextBtn">&rarr;</button>
+
+  <div class="timeline-wrapper">
+    <div class="timeline-line"></div>
+    <div class="timeline-points" id="points"></div>
+  </div>
+
+  <div class="timeline-info" id="timelineInfo">
+    <h2 id="tpTitle">text eingeben</h2>
+    <p id="tpDesc">text eingeben</p>
+  </div>
 </div>
 
-<!-- Timeline Styles -->
+<!-- Styles -->
 <style>
-.timeline {
-  position: relative;
+.timeline-container {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
-  padding: 1rem;
-  border-radius: 8px;
-  overflow: hidden;
-  color: white;
-  min-height: 220px;
-}
-
-/* Background layers */
-.timeline-bg {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  opacity: 0;
-  transition: opacity 0.8s ease-in-out;
-  z-index: 0;
-}
-.timeline-bg.show {
-  opacity: 0.4; /* how visible background is */
-}
-
-.timeline-panel,
-.timeline-btn {
+  font-family: sans-serif;
   position: relative;
-  z-index: 1;
 }
 
-.timeline-btn {
+.timeline-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.timeline-controls button {
+  padding: 0.5rem;
+  font-size: 1.2rem;
+  border: none;
   background: #2563eb;
   color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 0.5rem 1rem;
+  border-radius: 4px;
   cursor: pointer;
 }
-.timeline-btn:disabled {
+.timeline-controls button:disabled {
   background: #9ca3af;
   cursor: not-allowed;
 }
-.timeline-panel {
+
+.timeline-wrapper {
   flex: 1;
+  position: relative;
+  margin-top: 1.2rem;
 }
-#tpDate {
-  display: block;
-  font-size: 0.9rem;
-  color: #e5e7eb;
-  margin-bottom: 0.25rem;
+.timeline-line {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #d1d5db;
+  border-radius: 2px;
 }
-#tpTitle {
-  margin: 0;
-  font-size: 1.2rem;
+.timeline-points {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1;
 }
-#tpDesc {
-  margin: 0.25rem 0 0;
-  color: #f3f4f6;
+.timeline-point {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #9ca3af;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.3s;
+}
+.timeline-point.active {
+  background: #2563eb;
+  transform: scale(1.3);
+}
+
+.timeline-info {
+  margin-top: 2rem;
+  flex: 1;
+  transition: opacity 0.5s ease-in-out;
+  opacity: 1;
+}
+.timeline-info.fade {
+  opacity: 0;
 }
 </style>
 
-<!-- Timeline Script -->
+<!-- Script -->
 <script>
 const timepoints = [
-  { date: "Step 1", title: "text eingeben", desc: "text eingeben", img: "https://via.placeholder.com/800x400?text=Bild+1" },
-  { date: "Step 2", title: "text eingeben", desc: "text eingeben", img: "https://via.placeholder.com/800x400?text=Bild+2" },
-  { date: "Step 3", title: "text eingeben", desc: "text eingeben", img: "https://via.placeholder.com/800x400?text=Bild+3" },
-  { date: "Step 4", title: "text eingeben", desc: "text eingeben", img: "https://via.placeholder.com/800x400?text=Bild+4" },
-  { date: "Step 5", title: "text eingeben", desc: "text eingeben", img: "https://via.placeholder.com/800x400?text=Bild+5" },
-  { date: "Step 6", title: "text eingeben", desc: "text eingeben", img: "https://via.placeholder.com/800x400?text=Bild+6" },
-  { date: "Step 7", title: "text eingeben", desc: "text eingeben", img: "https://via.placeholder.com/800x400?text=Bild+7" },
-  { date: "Step 8", title: "text eingeben", desc: "text eingeben", img: "https://via.placeholder.com/800x400?text=Bild+8" },
-  { date: "Step 9", title: "text eingeben", desc: "text eingeben", img: "https://via.placeholder.com/800x400?text=Bild+9" },
-  { date: "Step 10", title: "text eingeben", desc: "text eingeben", img: "https://via.placeholder.com/800x400?text=Bild+10" }
+  { title: "text eingeben", desc: "text eingeben", img: "add background" },
+  { title: "text eingeben", desc: "text eingeben", img: "add background" },
+  { title: "text eingeben", desc: "text eingeben", img: "add background" },
+  { title: "text eingeben", desc: "text eingeben", img: "add background" },
+  { title: "text eingeben", desc: "text eingeben", img: "add background" },
+  { title: "text eingeben", desc: "text eingeben", img: "add background" },
+  { title: "text eingeben", desc: "text eingeben", img: "add background" },
+  { title: "text eingeben", desc: "text eingeben", img: "add background" },
+  { title: "text eingeben", desc: "text eingeben", img: "add background" },
+  { title: "text eingeben", desc: "text eingeben", img: "add background" }
 ];
 
 let index = 0;
-const elDate = document.getElementById('tpDate');
-const elTitle = document.getElementById('tpTitle');
-const elDesc = document.getElementById('tpDesc');
+const infoBox = document.getElementById('timelineInfo');
+const titleEl = document.getElementById('tpTitle');
+const descEl = document.getElementById('tpDesc');
 const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
-const bg1 = document.getElementById('bg1');
-const bg2 = document.getElementById('bg2');
+const pointsContainer = document.getElementById('points');
 
-let showingBg1 = true;
+// Create points
+timepoints.forEach((_, i) => {
+  const p = document.createElement('div');
+  p.className = 'timeline-point';
+  if (i === 0) p.classList.add('active');
+  pointsContainer.appendChild(p);
+});
 
+// Update UI
 function updateTimeline() {
-  const tp = timepoints[index];
-  elDate.textContent = tp.date;
-  elTitle.textContent = tp.title;
-  elDesc.textContent = tp.desc;
+  // Fade out info
+  infoBox.classList.add('fade');
 
+  setTimeout(() => {
+    const tp = timepoints[index];
+    titleEl.textContent = tp.title;
+    descEl.textContent = tp.desc;
+    // You can use tp.img for background handling if needed
+    document.body.style.backgroundImage = `url(${tp.img})`;
+
+    // Update active dot
+    [...pointsContainer.children].forEach((p, i) => {
+      p.classList.toggle('active', i === index);
+    });
+
+    // Fade in info
+    infoBox.classList.remove('fade');
+  }, 300);
+
+  // Button states
   prevBtn.disabled = index === 0;
   nextBtn.disabled = index === timepoints.length - 1;
-
-  // Crossfade between bg1 and bg2
-  if (showingBg1) {
-    bg2.style.backgroundImage = `url(${tp.img})`;
-    bg2.classList.add("show");
-    bg1.classList.remove("show");
-  } else {
-    bg1.style.backgroundImage = `url(${tp.img})`;
-    bg1.classList.add("show");
-    bg2.classList.remove("show");
-  }
-  showingBg1 = !showingBg1;
 }
 
-prevBtn.addEventListener('click', () => { index--; updateTimeline(); });
-nextBtn.addEventListener('click', () => { index++; updateTimeline(); });
+// Navigation
+prevBtn.addEventListener('click', () => { if (index > 0) { index--; updateTimeline(); } });
+nextBtn.addEventListener('click', () => { if (index < timepoints.length - 1) { index++; updateTimeline(); } });
 
 updateTimeline();
 </script>
@@ -353,6 +375,7 @@ const det=document.getElementById('detector');const buttons=document.querySelect
 </script>
 </body>
 </html>
+
 
 
 
