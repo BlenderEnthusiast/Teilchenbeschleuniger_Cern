@@ -1,226 +1,812 @@
 <!doctype html>
 <html lang="de">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Teilchenbeschleuniger – Prototyp</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-<style>
-*{box-sizing:border-box}
-:root{--bg:#0b0b0c;--fg:#fafafa;--muted:#a8a8ab;--card:#141416;--line:#242428}
-html,body{margin:0;height:100%;scroll-behavior:smooth}
-body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:var(--bg);color:var(--fg);}
-img{max-width:100%;display:block}
-.container{max-width:1100px;margin:0 auto;padding:0 20px}
-.header{position:sticky;top:0;z-index:40;backdrop-filter:saturate(120%) blur(10px);background:rgba(11,11,12,.6);border-bottom:1px solid var(--line)}
-.nav{display:flex;align-items:center;justify-content:space-between;padding:14px 20px}
-.nav a{color:var(--muted);text-decoration:none;font-size:14px;margin-left:18px}
-.nav a:hover{color:var(--fg)}
-.hero{position:relative;min-height:88vh;display:grid;place-items:center;overflow:hidden}
-.hero .bg{position:absolute;inset:0;background:radial-gradient(1200px 600px at 70% 20%,rgba(255,255,255,.08),transparent),linear-gradient(180deg,#0c0c10, #09090b)}
-.hero .media{position:absolute;inset:0;opacity:.35;filter:grayscale(40%) contrast(105%);}
-.hero .media img{width:100%;height:100%;object-fit:cover}
-.hero .content{position:relative;text-align:center;padding:40px}
-.title{font-size:clamp(36px,6vw,72px);font-weight:700;letter-spacing:-.02em}
-.subtitle{max-width:750px;margin:14px auto 0;color:var(--muted);font-size:clamp(16px,2.2vw,18px)}
-.scrollhint{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);font-size:12px;color:var(--muted);opacity:.8}
-.section{padding:80px 0;border-top:1px solid var(--line)}
-.section h2{font-size:clamp(26px,3.8vw,40px);margin:0 0 16px}
-.section p{color:var(--muted);font-size:18px}
-.grid{display:grid;gap:22px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
-#scale .visual{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(180deg,#111113,#0c0c0e)}
-#scale .overlay{position:absolute;inset:0;display:grid;place-items:center;color:#fff;text-shadow:0 2px 20px rgba(0,0,0,.5);padding:24px;text-align:center}
-#ring-hotspots .stage{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#0f0f12}
-#ring-hotspots .stage img{width:100%;height:520px;object-fit:cover;opacity:.85;filter:grayscale(20%)}
-.hotspot{position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 0 0 6px rgba(255,255,255,.15);cursor:pointer;border:none;padding:0}
-.hotspot:focus{outline:2px solid #fff}
-.fact{position:absolute;min-width:240px;max-width:320px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;line-height:1.4;transform:translate(-50%,-120%);display:none}
-.fact h3{margin:0 0 6px;font-size:16px}
-.fact p{margin:0;color:var(--muted);font-size:14px}
-.fact.show{display:block}
-#acceleration-chain .chain{display:grid;grid-template-columns:1fr 1fr;gap:22px}
-.timeline{position:relative;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
-.timeline ul{list-style:none;padding:0;margin:0}
-.timeline li{display:flex;align-items:center;gap:12px;padding:12px 6px;border-radius:12px}
-.timeline .dot{width:10px;height:10px;border-radius:50%;background:#888}
-.timeline li.active .dot{background:#fff}
-.timeline li .label{font-weight:600}
-.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.metric{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;text-align:center}
-.metric .v{font-size:24px;font-weight:700}
-#bfield{appearance:none;width:100%}
-#bfield::-webkit-slider-thumb{appearance:none;width:18px;height:18px;border-radius:50%;background:#fff}
-#bfield::-webkit-slider-runnable-track{height:4px;background:#2b2b30;border-radius:999px}
-.svgbox{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
-#collision-detector .rings{display:grid;grid-template-columns:1fr 1fr;gap:22px}
-.detector{position:relative;aspect-ratio:1/1;border-radius:18px;border:1px solid var(--line);overflow:hidden;background:radial-gradient(circle at 50% 50%,#1b1b1f, #101014)}
-.layer{position:absolute;border-radius:50%;inset:10%;border:2px solid rgba(255,255,255,.25);opacity:.2;transition:opacity .35s, transform .35s}
-.layer.show{opacity:.95;transform:scale(1.02)}
-.layers-legend .row{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:10px}
-.layers-legend button{border:none;background:#fff;color:#000;padding:6px 10px;border-radius:10px;cursor:pointer}
-.safety{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.footer{padding:40px 0;color:var(--muted);text-align:center;border-top:1px solid var(--line)}
-.reveal{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .6s ease}
-.reveal.show{opacity:1;transform:none}
-@media (max-width:900px){#acceleration-chain .chain{grid-template-columns:1fr}#collision-detector .rings{grid-template-columns:1fr}.safety{grid-template-columns:1fr}}
-</style>
-</head>
-<body>
-<header class="header">
-  <div class="nav container">
-    <div>Beschleuniger</div>
-    <nav>
-      <a href="#scale">Größe</a>
-      <a href="#ring-hotspots">Stationen</a>
-      <a href="#acceleration-chain">Physik</a>
-      <a href="#collision-detector">Kollision</a>
-      <a href="#sources">Quellen</a>
-    </nav>
-  </div>
-</header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
+    <title>Teilchenbeschleuniger – Prototyp</title>
 
-<section class="hero" id="hero">
-  <div class="bg"></div>
-  <div class="media"><img src="cern-hero.jpg" alt="CERN"></div>
-  <div class="content container">
-    <div class="title">Teilchen auf nahezu Lichtgeschwindigkeit</div>
-    <div class="subtitle">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer ac ante in lorem aliquet posuere.</div>
-  </div>
-  <div class="scrollhint">Scroll</div>
-</section>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
 
-<section class="section" id="scale">
-  <div class="container grid" style="grid-template-columns:1.2fr .8fr">
-    <div class="visual reveal">
-      <img src="lhc-ring.jpg" alt="LHC Ring" style="width:100%;height:420px;object-fit:cover;opacity:.8;filter:grayscale(20%)">
-      <div class="overlay">
-        <div>
-          <div style="font-size:42px;font-weight:700;letter-spacing:-.02em">Größenordnung</div>
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi.</p>
+    <style>
+      /* ========== CSS RESET & THEME TOKENS ========== */
+      * {
+        box-sizing: border-box;
+      }
+      :root {
+        --bg: #0b0b0c;
+        --fg: #fafafa;
+        --muted: #a8a8ab;
+        --card: #141416;
+        --line: #242428;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu,
+          Cantarell, Noto Sans, sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+      }
+      img {
+        max-width: 100%;
+        display: block;
+      }
+
+      /* ========== LAYOUT ========== */
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+      .header {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        backdrop-filter: saturate(120%) blur(10px);
+        background: rgba(11, 11, 12, 0.6);
+        border-bottom: 1px solid var(--line);
+      }
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 20px;
+      }
+      .nav a {
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 14px;
+        margin-left: 18px;
+      }
+      .nav a:hover {
+        color: var(--fg);
+      }
+
+      /* ========== HERO ========== */
+      .hero {
+        position: relative;
+        min-height: 88vh;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+      }
+      .hero .bg {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+            1200px 600px at 70% 20%,
+            rgba(255, 255, 255, 0.08),
+            transparent
+          ),
+          linear-gradient(180deg, #0c0c10, #09090b);
+      }
+      .hero .media {
+        position: absolute;
+        inset: 0;
+        opacity: 0.35;
+        filter: grayscale(40%) contrast(105%);
+      }
+      .hero .media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .hero .content {
+        position: relative;
+        text-align: center;
+        padding: 40px;
+      }
+      .title {
+        font-size: clamp(36px, 6vw, 72px);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .subtitle {
+        max-width: 750px;
+        margin: 14px auto 0;
+        color: var(--muted);
+        font-size: clamp(16px, 2.2vw, 18px);
+      }
+      .scrollhint {
+        position: absolute;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 12px;
+        color: var(--muted);
+        opacity: 0.8;
+      }
+
+      /* ========== SECTIONS / CARDS ========== */
+      .section {
+        padding: 80px 0;
+        border-top: 1px solid var(--line);
+      }
+      .section h2 {
+        font-size: clamp(26px, 3.8vw, 40px);
+        margin: 0 0 16px;
+      }
+      .section p {
+        color: var(--muted);
+        font-size: 18px;
+      }
+      .grid {
+        display: grid;
+        gap: 22px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px;
+      }
+
+      /* ========== SCALE ========== */
+      #scale .visual {
+        position: relative;
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        background: linear-gradient(180deg, #111113, #0c0c0e);
+      }
+      #scale .overlay {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+        padding: 24px;
+        text-align: center;
+      }
+
+      /* ========== HOTSPOTS ========== */
+      #ring-hotspots .stage {
+        position: relative;
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        background: #0f0f12;
+      }
+      #ring-hotspots .stage img {
+        width: 100%;
+        height: 520px;
+        object-fit: cover;
+        opacity: 0.85;
+        filter: grayscale(20%);
+      }
+      .hotspot {
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.15);
+        cursor: pointer;
+        border: none;
+        padding: 0;
+      }
+      .hotspot:focus {
+        outline: 2px solid #fff;
+      }
+      .fact {
+        position: absolute;
+        min-width: 240px;
+        max-width: 320px;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 14px;
+        line-height: 1.4;
+        transform: translate(-50%, -120%);
+        display: none;
+      }
+      .fact h3 {
+        margin: 0 0 6px;
+        font-size: 16px;
+      }
+      .fact p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .fact.show {
+        display: block;
+      }
+
+      /* ========== ACCELERATION CHAIN ========== */
+      #acceleration-chain .chain {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+      }
+      .timeline {
+        position: relative;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px;
+      }
+      .timeline ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .timeline li {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 6px;
+        border-radius: 12px;
+      }
+      .timeline .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #888;
+      }
+      .timeline li.active .dot {
+        background: #fff;
+      }
+      .timeline li .label {
+        font-weight: 600;
+      }
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+      .metric {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 16px;
+        text-align: center;
+      }
+      .metric .v {
+        font-size: 24px;
+        font-weight: 700;
+      }
+      #bfield {
+        appearance: none;
+        width: 100%;
+      }
+      #bfield::-webkit-slider-thumb {
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #fff;
+      }
+      #bfield::-webkit-slider-runnable-track {
+        height: 4px;
+        background: #2b2b30;
+        border-radius: 999px;
+      }
+      .svgbox {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 14px;
+      }
+
+      /* ========== COLLISION DETECTOR ========== */
+      #collision-detector .rings {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+      }
+      .detector {
+        position: relative;
+        aspect-ratio: 1 / 1;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        overflow: hidden;
+        background: radial-gradient(circle at 50% 50%, #1b1b1f, #101014);
+      }
+      .layer {
+        position: absolute;
+        border-radius: 50%;
+        inset: 10%;
+        border: 2px solid rgba(255, 255, 255, 0.25);
+        opacity: 0.2;
+        transition: opacity 0.35s, transform 0.35s;
+      }
+      .layer.show {
+        opacity: 0.95;
+        transform: scale(1.02);
+      }
+      .layers-legend .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 10px 12px;
+        margin-bottom: 10px;
+      }
+      .layers-legend button {
+        border: none;
+        background: #fff;
+        color: #000;
+        padding: 6px 10px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+
+      /* ========== SAFETY ========== */
+      .safety {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+      }
+
+      /* ========== FOOTER ========== */
+      .footer {
+        padding: 40px 0;
+        color: var(--muted);
+        text-align: center;
+        border-top: 1px solid var(--line);
+      }
+
+      /* ========== REVEAL ANIMATIONS ========== */
+      .reveal {
+        opacity: 0;
+        transform: translateY(16px);
+        transition: opacity 0.5s ease, transform 0.6s ease;
+      }
+      .reveal.show {
+        opacity: 1;
+        transform: none;
+      }
+
+      /* ========== RESPONSIVE ========== */
+      @media (max-width: 900px) {
+        #acceleration-chain .chain {
+          grid-template-columns: 1fr;
+        }
+        #collision-detector .rings {
+          grid-template-columns: 1fr;
+        }
+        .safety {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ========== HEADER / NAVIGATION ========== -->
+    <header class="header">
+      <div class="nav container" role="navigation" aria-label="Hauptnavigation">
+        <div>Beschleuniger</div>
+        <nav>
+          <a href="#scale">Größe</a>
+          <a href="#ring-hotspots">Stationen</a>
+          <a href="#acceleration-chain">Physik</a>
+          <a href="#collision-detector">Kollision</a>
+          <a href="#sources">Quellen</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- ========== HERO ========== -->
+    <section class="hero" id="hero">
+      <div class="bg" aria-hidden="true"></div>
+      <div class="media" aria-hidden="true">
+        <!-- Hinweis: Bilder bleiben extern referenziert; Preview funktioniert weiterhin. -->
+        <img
+          src="cern-hero.jpg"
+          alt="CERN"
+          loading="lazy"
+          width="1600"
+          height="900"
+        />
+      </div>
+      <div class="content container">
+        <div class="title">Teilchen auf nahezu Lichtgeschwindigkeit</div>
+        <div class="subtitle">
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer ac
+          ante in lorem aliquet posuere.
         </div>
       </div>
-    </div>
-    <div class="card reveal">
-      <h2>Überblick</h2>
-      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis pharetra justo in odio pulvinar, eget blandit nulla luctus.</p>
-      <p>Morbi feugiat, massa nec laoreet luctus, massa augue dictum lorem, eget hendrerit arcu orci vitae est.</p>
-    </div>
-  </div>
-</section>
+      <div class="scrollhint">Scroll</div>
+    </section>
 
-<section class="section" id="ring-hotspots">
-  <div class="container">
-    <h2 class="reveal">Stationen und Experimente</h2>
-    <p class="reveal">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer dignissim, lorem eget aliquet pulvinar, enim nibh sodales neque.</p>
-    <div class="stage reveal">
-      <img src="lhc-overview.jpg" alt="Ring Übersicht">
-      <button class="hotspot" style="left:22%;top:60%" data-title="ATLAS" data-text="Lorem ipsum dolor sit amet."></button>
-      <div class="fact" style="left:22%;top:60%"></div>
-      <button class="hotspot" style="left:48%;top:25%" data-title="CMS" data-text="Lorem ipsum dolor sit amet."></button>
-      <div class="fact" style="left:48%;top:25%"></div>
-      <button class="hotspot" style="left:72%;top:63%" data-title="ALICE" data-text="Lorem ipsum dolor sit amet."></button>
-      <div class="fact" style="left:72%;top:63%"></div>
-      <button class="hotspot" style="left:35%;top:78%" data-title="LHCb" data-text="Lorem ipsum dolor sit amet."></button>
-      <div class="fact" style="left:35%;top:78%"></div>
-    </div>
-  </div>
-</section>
-
-<section class="section" id="acceleration-chain">
-  <div class="container">
-    <h2 class="reveal">Wie werden Teilchen schnell</h2>
-    <p class="reveal">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse potenti.</p>
-    <div class="chain">
-      <div class="timeline reveal">
-        <ul>
-          <li data-step="0" class="active"><span class="dot"></span><span class="label">Quelle</span></li>
-          <li data-step="1"><span class="dot"></span><span class="label">LINAC4</span></li>
-          <li data-step="2"><span class="dot"></span><span class="label">PS Booster</span></li>
-          <li data-step="3"><span class="dot"></span><span class="label">PS</span></li>
-          <li data-step="4"><span class="dot"></span><span class="label">SPS</span></li>
-          <li data-step="5"><span class="dot"></span><span class="label">LHC</span></li>
-        </ul>
+    <!-- ========== SCALE ========== -->
+    <section class="section" id="scale">
+      <div class="container grid" style="grid-template-columns: 1.2fr 0.8fr">
+        <div class="visual reveal">
+          <img
+            src="lhc-ring.jpg"
+            alt="LHC Ring"
+            style="width: 100%; height: 420px; object-fit: cover; opacity: 0.8; filter: grayscale(20%)"
+            loading="lazy"
+            width="1200"
+            height="420"
+          />
+          <div class="overlay">
+            <div>
+              <div style="font-size: 42px; font-weight: 700; letter-spacing: -0.02em">
+                Größenordnung
+              </div>
+              <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla
+                facilisi.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="card reveal">
+          <h2>Überblick</h2>
+          <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis
+            pharetra justo in odio pulvinar, eget blandit nulla luctus.
+          </p>
+          <p>
+            Morbi feugiat, massa nec laoreet luctus, massa augue dictum lorem,
+            eget hendrerit arcu orci vitae est.
+          </p>
+        </div>
       </div>
-      <div class="grid">
-        <div class="metric"><div class="v" id="energy">0</div><div>Energie (relativ)</div></div>
-        <div class="metric"><div class="v" id="speed">0</div><div>Geschwindigkeit (relativ)</div></div>
-        <div class="metric"><div class="v" id="turns">0</div><div>Umläufe (relativ)</div></div>
-        <div class="card">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px"><div>Magnetfeld</div><div id="bval">50%</div></div>
-          <input id="bfield" type="range" min="0" max="100" value="50">
-          <div class="svgbox" style="margin-top:12px">
-            <svg viewBox="0 0 320 200" style="width:100%;height:220px">
-              <defs><marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0 0, 6 3, 0 6" fill="#fff"/></marker></defs>
-              <path id="beam" d="M 20 160 A 200 200 0 0 1 260 60" stroke="#fff" stroke-width="3" fill="none" marker-end="url(#arr)"/>
-              <text x="24" y="150" fill="#bdbdc2" font-size="10">Strahl</text>
-              <text x="180" y="30" fill="#bdbdc2" font-size="10">B↑ ⇒ Radius↓</text>
-            </svg>
+    </section>
+
+    <!-- ========== RING HOTSPOTS ========== -->
+    <section class="section" id="ring-hotspots">
+      <div class="container">
+        <h2 class="reveal">Stationen und Experimente</h2>
+        <p class="reveal">
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer
+          dignissim, lorem eget aliquet pulvinar, enim nibh sodales neque.
+        </p>
+        <div class="stage reveal">
+          <img
+            src="lhc-overview.jpg"
+            alt="Ring Übersicht"
+            loading="lazy"
+            width="1400"
+            height="520"
+          />
+
+          <!-- Hotspots + Fact-Boxen (semantisch verknüpft, visuell unverändert) -->
+          <button
+            class="hotspot"
+            style="left: 22%; top: 60%"
+            data-title="ATLAS"
+            data-text="Lorem ipsum dolor sit amet."
+            aria-label="Hotspot ATLAS"
+          ></button>
+          <div class="fact" style="left: 22%; top: 60%"></div>
+
+          <button
+            class="hotspot"
+            style="left: 48%; top: 25%"
+            data-title="CMS"
+            data-text="Lorem ipsum dolor sit amet."
+            aria-label="Hotspot CMS"
+          ></button>
+          <div class="fact" style="left: 48%; top: 25%"></div>
+
+          <button
+            class="hotspot"
+            style="left: 72%; top: 63%"
+            data-title="ALICE"
+            data-text="Lorem ipsum dolor sit amet."
+            aria-label="Hotspot ALICE"
+          ></button>
+          <div class="fact" style="left: 72%; top: 63%"></div>
+
+          <button
+            class="hotspot"
+            style="left: 35%; top: 78%"
+            data-title="LHCb"
+            data-text="Lorem ipsum dolor sit amet."
+            aria-label="Hotspot LHCb"
+          ></button>
+          <div class="fact" style="left: 35%; top: 78%"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== ACCELERATION CHAIN ========== -->
+    <section class="section" id="acceleration-chain">
+      <div class="container">
+        <h2 class="reveal">Wie werden Teilchen schnell</h2>
+        <p class="reveal">
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse
+          potenti.
+        </p>
+        <div class="chain">
+          <div class="timeline reveal">
+            <ul>
+              <li data-step="0" class="active">
+                <span class="dot"></span><span class="label">Quelle</span>
+              </li>
+              <li data-step="1">
+                <span class="dot"></span><span class="label">LINAC4</span>
+              </li>
+              <li data-step="2">
+                <span class="dot"></span><span class="label">PS Booster</span>
+              </li>
+              <li data-step="3">
+                <span class="dot"></span><span class="label">PS</span>
+              </li>
+              <li data-step="4">
+                <span class="dot"></span><span class="label">SPS</span>
+              </li>
+              <li data-step="5">
+                <span class="dot"></span><span class="label">LHC</span>
+              </li>
+            </ul>
+          </div>
+          <div class="grid">
+            <div class="metric">
+              <div class="v" id="energy">0</div>
+              <div>Energie (relativ)</div>
+            </div>
+            <div class="metric">
+              <div class="v" id="speed">0</div>
+              <div>Geschwindigkeit (relativ)</div>
+            </div>
+            <div class="metric">
+              <div class="v" id="turns">0</div>
+              <div>Umläufe (relativ)</div>
+            </div>
+            <div class="card">
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: space-between;
+                  gap: 12px;
+                  margin-bottom: 10px;
+                "
+              >
+                <div>Magnetfeld</div>
+                <div id="bval">50%</div>
+              </div>
+              <input id="bfield" type="range" min="0" max="100" value="50" />
+              <div class="svgbox" style="margin-top: 12px">
+                <svg viewBox="0 0 320 200" style="width: 100%; height: 220px">
+                  <defs>
+                    <marker
+                      id="arr"
+                      markerWidth="6"
+                      markerHeight="6"
+                      refX="5"
+                      refY="3"
+                      orient="auto"
+                    >
+                      <polygon points="0 0, 6 3, 0 6" fill="#fff" />
+                    </marker>
+                  </defs>
+                  <path
+                    id="beam"
+                    d="M 20 160 A 200 200 0 0 1 260 60"
+                    stroke="#fff"
+                    stroke-width="3"
+                    fill="none"
+                    marker-end="url(#arr)"
+                  />
+                  <text x="24" y="150" fill="#bdbdc2" font-size="10">Strahl</text>
+                  <text x="180" y="30" fill="#bdbdc2" font-size="10"
+                    >B↑ ⇒ Radius↓</text
+                  >
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
-</section>
+    </section>
 
-<section class="section" id="collision-detector">
-  <div class="container">
-    <h2 class="reveal">Was passiert in der Kollisionskammer</h2>
-    <p class="reveal">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus vitae arcu ac mauris accumsan gravida.</p>
-    <div class="rings">
-      <div class="detector" id="detector">
-        <div class="layer" style="inset:8%; border-color:rgba(255,255,255,.35)" data-key="tracker"></div>
-        <div class="layer" style="inset:22%; border-color:rgba(66,160,255,.6)" data-key="ecal"></div>
-        <div class="layer" style="inset:36%; border-color:rgba(255,180,64,.6)" data-key="hcal"></div>
-        <div class="layer" style="inset:54%; border-color:rgba(140,255,140,.6)" data-key="muon"></div>
+    <!-- ========== COLLISION DETECTOR ========== -->
+    <section class="section" id="collision-detector">
+      <div class="container">
+        <h2 class="reveal">Was passiert in der Kollisionskammer</h2>
+        <p class="reveal">
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus vitae
+          arcu ac mauris accumsan gravida.
+        </p>
+        <div class="rings">
+          <div class="detector" id="detector">
+            <div
+              class="layer"
+              style="inset: 8%; border-color: rgba(255, 255, 255, 0.35)"
+              data-key="tracker"
+            ></div>
+            <div
+              class="layer"
+              style="inset: 22%; border-color: rgba(66, 160, 255, 0.6)"
+              data-key="ecal"
+            ></div>
+            <div
+              class="layer"
+              style="inset: 36%; border-color: rgba(255, 180, 64, 0.6)"
+              data-key="hcal"
+            ></div>
+            <div
+              class="layer"
+              style="inset: 54%; border-color: rgba(140, 255, 140, 0.6)"
+              data-key="muon"
+            ></div>
+          </div>
+          <div class="layers-legend">
+            <div class="row">
+              <div>Tracker</div>
+              <button data-target="tracker">zeigen</button>
+            </div>
+            <div class="row">
+              <div>Elektromagnetischer Kalorimeter</div>
+              <button data-target="ecal">zeigen</button>
+            </div>
+            <div class="row">
+              <div>Hadronen‑Kalorimeter</div>
+              <button data-target="hcal">zeigen</button>
+            </div>
+            <div class="row">
+              <div>Muon‑System</div>
+              <button data-target="muon">zeigen</button>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="layers-legend">
-        <div class="row"><div>Tracker</div><button data-target="tracker">zeigen</button></div>
-        <div class="row"><div>Elektromagnetischer Kalorimeter</div><button data-target="ecal">zeigen</button></div>
-        <div class="row"><div>Hadronen-Kalorimeter</div><button data-target="hcal">zeigen</button></div>
-        <div class="row"><div>Muon-System</div><button data-target="muon">zeigen</button></div>
+    </section>
+
+    <!-- ========== SAFETY ========== -->
+    <section class="section" id="safety">
+      <div class="container">
+        <h2 class="reveal">Sicherheit und Realität</h2>
+        <div class="safety">
+          <div class="card reveal">
+            <h3>Abschirmung</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+          </div>
+          <div class="card reveal">
+            <h3>Betrieb</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+          </div>
+          <div class="card reveal">
+            <h3>Mythen</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</section>
+    </section>
 
-<section class="section" id="safety">
-  <div class="container">
-    <h2 class="reveal">Sicherheit und Realität</h2>
-    <div class="safety">
-      <div class="card reveal"><h3>Abschirmung</h3><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p></div>
-      <div class="card reveal"><h3>Betrieb</h3><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p></div>
-      <div class="card reveal"><h3>Mythen</h3><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p></div>
-    </div>
-  </div>
-</section>
+    <!-- ========== SOURCES ========== -->
+    <section class="section" id="sources">
+      <div class="container">
+        <h2 class="reveal">Quellen</h2>
+        <ul>
+          <li><a href="#" style="color: #9ecbff">Lorem ipsum dolor</a></li>
+          <li><a href="#" style="color: #9ecbff">Sit amet consectetur</a></li>
+        </ul>
+      </div>
+    </section>
 
-<section class="section" id="sources">
-  <div class="container">
-    <h2 class="reveal">Quellen</h2>
-    <ul>
-      <li><a href="#" style="color:#9ecbff">Lorem ipsum dolor</a></li>
-      <li><a href="#" style="color:#9ecbff">Sit amet consectetur</a></li>
-    </ul>
-  </div>
-</section>
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer">
+      <div class="container">© 2025 Schulprojekt</div>
+    </footer>
 
-<footer class="footer">
-  <div class="container">© 2025 Schulprojekt</div>
-</footer>
+    <!-- ========== SCRIPTS (unverändert, nur formatiert) ========== -->
+    <script>
+      // Reveal-Animation via IntersectionObserver
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) e.target.classList.add("show");
+          });
+        },
+        { threshold: 0.2 }
+      );
+      document.querySelectorAll(".reveal").forEach((x) => io.observe(x));
 
-<script>
-const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('show')})},{threshold:.2});document.querySelectorAll('.reveal').forEach(x=>io.observe(x));
-const hotspots=document.querySelectorAll('.hotspot');hotspots.forEach((h,i)=>{const f=h.nextElementSibling;h.addEventListener('click',()=>{document.querySelectorAll('.fact').forEach(x=>x.classList.remove('show'));f.innerHTML='<h3>'+h.dataset.title+'</h3><p>'+h.dataset.text+'</p>';f.classList.add('show')});document.addEventListener('click',ev=>{if(!h.contains(ev.target)&&!f.contains(ev.target))f.classList.remove('show')})});
-const steps=document.querySelectorAll('.timeline li');const energy=document.getElementById('energy');const speed=document.getElementById('speed');const turns=document.getElementById('turns');const vals=[{e:1,s:1,t:1},{e:2,s:2,t:3},{e:3,s:3,t:6},{e:5,s:4,t:10},{e:8,s:5,t:16},{e:13,s:6,t:24}];let cur=0;function setStep(i){steps.forEach(s=>s.classList.remove('active'));steps[i].classList.add('active');energy.textContent=vals[i].e;speed.textContent=vals[i].s;turns.textContent=vals[i].t;cur=i}
-steps.forEach((s,i)=>s.addEventListener('click',()=>setStep(i)));
-const chainSec=document.getElementById('acceleration-chain');let last=0;document.addEventListener('scroll',()=>{const r=chainSec.getBoundingClientRect();if(r.top<window.innerHeight*0.6&&r.bottom>window.innerHeight*0.4){const p=(window.innerHeight*0.6-r.top)/(r.height+window.innerHeight*0.2);const idx=Math.max(0,Math.min(5,Math.floor(p*6)));if(idx!==last){setStep(idx);last=idx}}});
-const b=document.getElementById('bfield');const bval=document.getElementById('bval');const beam=document.getElementById('beam');function upd(){const v=+b.value;bval.textContent=v+'%';const minR=90,maxR=240;const R=maxR-(v/100)*(maxR-minR);const cx=160,cy=160;const ang=Math.min(110,3800/R);const rad=ang*Math.PI/180;const startX=20,startY=160;const endX=cx+R*Math.sin(rad)-(R-(cx-startX));const endY=cy-R*(1-Math.cos(rad));const large=ang>180?1:0;beam.setAttribute('d',`M ${startX} ${startY} A ${R} ${R} 0 ${large} 1 ${endX} ${endY}`)};b.addEventListener('input',upd);upd();
-const det=document.getElementById('detector');const buttons=document.querySelectorAll('.layers-legend button');const layers=det.querySelectorAll('.layer');buttons.forEach(btn=>btn.addEventListener('click',()=>{layers.forEach(l=>l.classList.remove('show'));const t=btn.dataset.target;const lay=det.querySelector(`.layer[data-key="${t}"]`);if(lay)lay.classList.add('show')}));
-</script>
-</body>
+      // Hotspots mit Fact-Boxen
+      const hotspots = document.querySelectorAll(".hotspot");
+      hotspots.forEach((h) => {
+        const f = h.nextElementSibling;
+        h.addEventListener("click", () => {
+          document
+            .querySelectorAll(".fact")
+            .forEach((x) => x.classList.remove("show"));
+          f.innerHTML = `<h3>${h.dataset.title}</h3><p>${h.dataset.text}</p>`;
+          f.classList.add("show");
+        });
+        document.addEventListener("click", (ev) => {
+          if (!h.contains(ev.target) && !f.contains(ev.target)) f.classList.remove("show");
+        });
+      });
+
+      // Timeline / Metriken
+      const steps = document.querySelectorAll(".timeline li");
+      const energy = document.getElementById("energy");
+      const speed = document.getElementById("speed");
+      const turns = document.getElementById("turns");
+      const vals = [
+        { e: 1, s: 1, t: 1 },
+        { e: 2, s: 2, t: 3 },
+        { e: 3, s: 3, t: 6 },
+        { e: 5, s: 4, t: 10 },
+        { e: 8, s: 5, t: 16 },
+        { e: 13, s: 6, t: 24 },
+      ];
+      function setStep(i) {
+        steps.forEach((s) => s.classList.remove("active"));
+        steps[i].classList.add("active");
+        energy.textContent = vals[i].e;
+        speed.textContent = vals[i].s;
+        turns.textContent = vals[i].t;
+      }
+      steps.forEach((s, i) => s.addEventListener("click", () => setStep(i)));
+
+      const chainSec = document.getElementById("acceleration-chain");
+      let last = 0;
+      document.addEventListener("scroll", () => {
+        const r = chainSec.getBoundingClientRect();
+        if (r.top < window.innerHeight * 0.6 && r.bottom > window.innerHeight * 0.4) {
+          const p = (window.innerHeight * 0.6 - r.top) / (r.height + window.innerHeight * 0.2);
+          const idx = Math.max(0, Math.min(5, Math.floor(p * 6)));
+          if (idx !== last) {
+            setStep(idx);
+            last = idx;
+          }
+        }
+      });
+
+      // Magnetfeld-Slider (beeinflusst nur den SVG-Pfad; Optik bleibt gleich)
+      const b = document.getElementById("bfield");
+      const bval = document.getElementById("bval");
+      const beam = document.getElementById("beam");
+      function upd() {
+        const v = +b.value;
+        bval.textContent = v + "%";
+        const minR = 90,
+          maxR = 240;
+        const R = maxR - (v / 100) * (maxR - minR);
+        const cx = 160,
+          cy = 160;
+        const ang = Math.min(110, 3800 / R);
+        const rad = (ang * Math.PI) / 180;
+        const startX = 20,
+          startY = 160;
+        const endX = cx + R * Math.sin(rad) - (R - (cx - startX));
+        const endY = cy - R * (1 - Math.cos(rad));
+        const large = ang > 180 ? 1 : 0;
+        beam.setAttribute(
+          "d",
+          `M ${startX} ${startY} A ${R} ${R} 0 ${large} 1 ${endX} ${endY}`
+        );
+      }
+      b.addEventListener("input", upd);
+      upd();
+
+      // Detector-Layer-Toggles
+      const det = document.getElementById("detector");
+      const buttons = document.querySelectorAll(".layers-legend button");
+      const layers = det.querySelectorAll(".layer");
+      buttons.forEach((btn) =>
+        btn.addEventListener("click", () => {
+          layers.forEach((l) => l.classList.remove("show"));
+          const t = btn.dataset.target;
+          const lay = det.querySelector(`.layer[data-key="${t}"]`);
+          if (lay) lay.classList.add("show");
+        })
+      );
+    </script>
+  </body>
 </html>
 
 
