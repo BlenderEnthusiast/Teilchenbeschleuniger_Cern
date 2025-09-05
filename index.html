@@ -1,3 +1,4 @@
+<!doctype html>
 <html lang="de">
 <head>
 <meta charset="utf-8">
@@ -86,31 +87,10 @@ img{max-width:100%;display:block}
   <div class="media"><img src="cern-hero.jpg" alt="CERN"></div>
   <div class="content container">
     <div class="title">Teilchen auf nahezu Lichtgeschwindigkeit</div>
-    <div class="subtitle">teilchenbeschleuniger</div>
+    <div class="subtitle">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer ac ante in lorem aliquet posuere.</div>
   </div>
   <div class="scrollhint">Scroll</div>
 </section>
-<div class="timeline">
-  <div class="point" data-text="Lorem ipsum dolor 1">1</div>
-  <div class="point" data-text="Lorem ipsum dolor 2">2</div>
-  <div class="point" data-text="Lorem ipsum dolor 3">3</div>
-  <div class="point" data-text="Lorem ipsum dolor 4">4</div>
-</div>
-<div id="output" class="textbox"></div>
-
-<style>
-.timeline{display:flex;justify-content:space-between;max-width:800px;margin:40px auto;position:relative}
-.timeline::before{content:"";position:absolute;top:50%;left:0;right:0;height:2px;background:#444}
-.point{position:relative;z-index:2;background:#fff;color:#000;width:22px;height:22px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:transform .2s}
-.point:hover{transform:scale(1.2)}
-.textbox{margin:20px auto;max-width:600px;padding:20px;border-radius:12px;background:#141416;border:1px solid #242428;display:none;color:#fafafa}
-.textbox.show{display:block}
-</style>
-
-<script>
-const pts=document.querySelectorAll('.point');const box=document.getElementById('output');
-pts.forEach(p=>p.addEventListener('click',()=>{box.textContent=p.dataset.text;box.classList.add('show')}));
-</script>
 
 <section class="section" id="scale">
   <div class="container grid" style="grid-template-columns:1.2fr .8fr">
@@ -119,167 +99,13 @@ pts.forEach(p=>p.addEventListener('click',()=>{box.textContent=p.dataset.text;bo
       <div class="overlay">
         <div>
           <div style="font-size:42px;font-weight:700;letter-spacing:-.02em">Größenordnung</div>
-          <p>Lni dolor sit amet, consectetur adipiscing elit. Nulla facilisi.</p>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi.</p>
         </div>
       </div>
     </div>
     <div class="card reveal">
       <h2>Überblick</h2>
-      <p><!-- Timeline Markup -->
-<div class="timeline-container">
-  <div class="timeline-controls">
-    <button id="prevBtn">&uarr;</button>
-    <button id="nextBtn">&darr;</button>
-  </div>
-
-  <div class="timeline-wrapper">
-    <div class="timeline-line"></div>
-    <div class="timeline-points" id="points"></div>
-  </div>
-
-  <div class="timeline-info" id="timelineInfo">
-    <h2 id="tpTitle">text eingeben</h2>
-    <p id="tpDesc">text eingeben</p>
-  </div>
-</div>
-
-<!-- Styles -->
-<style>
-.timeline-container {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  font-family: sans-serif;
-  position: relative;
-}
-
-.timeline-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.timeline-controls button {
-  padding: 0.5rem;
-  font-size: 1.2rem;
-  border: none;
-  background: #2563eb;
-  color: white;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.timeline-controls button:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
-}
-
-.timeline-wrapper {
-  flex: 1;
-  position: relative;
-  margin-top: 1.2rem;
-}
-.timeline-line {
-  position: absolute;
-  top: 12px;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: #d1d5db;
-  border-radius: 2px;
-}
-.timeline-points {
-  display: flex;
-  justify-content: space-between;
-  position: relative;
-  z-index: 1;
-}
-.timeline-point {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #9ca3af;
-  cursor: pointer;
-  transition: background 0.3s, transform 0.3s;
-}
-.timeline-point.active {
-  background: #2563eb;
-  transform: scale(1.3);
-}
-
-.timeline-info {
-  margin-top: 2rem;
-  flex: 1;
-  transition: opacity 0.5s ease-in-out;
-  opacity: 1;
-}
-.timeline-info.fade {
-  opacity: 0;
-}
-</style>
-
-<!-- Script -->
-<script>
-const timepoints = [
-  { title: "text eingeben", desc: "text eingeben", img: "add background" },
-  { title: "text eingeben", desc: "text eingeben", img: "add background" },
-  { title: "text eingeben", desc: "text eingeben", img: "add background" },
-  { title: "text eingeben", desc: "text eingeben", img: "add background" },
-  { title: "text eingeben", desc: "text eingeben", img: "add background" },
-  { title: "text eingeben", desc: "text eingeben", img: "add background" },
-  { title: "text eingeben", desc: "text eingeben", img: "add background" },
-  { title: "text eingeben", desc: "text eingeben", img: "add background" },
-  { title: "text eingeben", desc: "text eingeben", img: "add background" },
-  { title: "text eingeben", desc: "text eingeben", img: "add background" }
-];
-
-let index = 0;
-const infoBox = document.getElementById('timelineInfo');
-const titleEl = document.getElementById('tpTitle');
-const descEl = document.getElementById('tpDesc');
-const prevBtn = document.getElementById('prevBtn');
-const nextBtn = document.getElementById('nextBtn');
-const pointsContainer = document.getElementById('points');
-
-// Create points
-timepoints.forEach((_, i) => {
-  const p = document.createElement('div');
-  p.className = 'timeline-point';
-  if (i === 0) p.classList.add('active');
-  pointsContainer.appendChild(p);
-});
-
-// Update UI
-function updateTimeline() {
-  // Fade out info
-  infoBox.classList.add('fade');
-
-  setTimeout(() => {
-    const tp = timepoints[index];
-    titleEl.textContent = tp.title;
-    descEl.textContent = tp.desc;
-    // You can use tp.img for background handling if needed
-    document.body.style.backgroundImage = `url(${tp.img})`;
-
-    // Update active dot
-    [...pointsContainer.children].forEach((p, i) => {
-      p.classList.toggle('active', i === index);
-    });
-
-    // Fade in info
-    infoBox.classList.remove('fade');
-  }, 300);
-
-  // Button states
-  prevBtn.disabled = index === 0;
-  nextBtn.disabled = index === timepoints.length - 1;
-}
-
-// Navigation
-prevBtn.addEventListener('click', () => { if (index > 0) { index--; updateTimeline(); } });
-nextBtn.addEventListener('click', () => { if (index < timepoints.length - 1) { index++; updateTimeline(); } });
-
-updateTimeline();
-</script>
-</p>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis pharetra justo in odio pulvinar, eget blandit nulla luctus.</p>
       <p>Morbi feugiat, massa nec laoreet luctus, massa augue dictum lorem, eget hendrerit arcu orci vitae est.</p>
     </div>
   </div>
@@ -353,8 +179,8 @@ updateTimeline();
       <div class="layers-legend">
         <div class="row"><div>Tracker</div><button data-target="tracker">zeigen</button></div>
         <div class="row"><div>Elektromagnetischer Kalorimeter</div><button data-target="ecal">zeigen</button></div>
-        <div class="row"><div>Hadronen‑Kalorimeter</div><button data-target="hcal">zeigen</button></div>
-        <div class="row"><div>Muon‑System</div><button data-target="muon">zeigen</button></div>
+        <div class="row"><div>Hadronen-Kalorimeter</div><button data-target="hcal">zeigen</button></div>
+        <div class="row"><div>Muon-System</div><button data-target="muon">zeigen</button></div>
       </div>
     </div>
   </div>
@@ -396,9 +222,6 @@ const det=document.getElementById('detector');const buttons=document.querySelect
 </script>
 </body>
 </html>
-
-
-
 
 
 
