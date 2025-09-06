@@ -81,7 +81,7 @@
         .event-media img{ height:220px; }
       }
 
-      /* ================= HERO + REST (unverändert optisch) ================= */
+      /* ================= HERO + REST ================= */
       .hero{position:relative;min-height:88vh;display:grid;place-items:center;overflow:hidden}
       .hero .bg{position:absolute;inset:0;background:radial-gradient(1200px 600px at 70% 20%,rgba(255,255,255,.08),transparent),linear-gradient(180deg,#0c0c10, #09090b)}
       .hero .media{position:absolute;inset:0;opacity:.35;filter:grayscale(40%) contrast(105%);}
@@ -124,7 +124,9 @@
       .detector{position:relative;aspect-ratio:1/1;border-radius:18px;border:1px solid var(--line);overflow:hidden;background:radial-gradient(circle at 50% 50%,#1b1b1f, #101014)}
       .layer{position:absolute;border-radius:50%;border:3px solid rgba(255,255,255,.28);opacity:.2;transition:opacity .35s, transform .35s}
       .layer.show{opacity:.95;transform:scale(1.02)}
+
       .layers-legend .row{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:10px}
+      .layers-legend .row .name{font-weight:600}
       .layers-legend button{border:none;background:#fff;color:#000;padding:6px 10px;border-radius:10px;cursor:pointer;font-weight:600}
 
       .safety{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
@@ -165,7 +167,7 @@
       <div class="scrollhint">Scroll</div>
     </section>
 
-    <!-- ================= 2) TIMELINE (nach Hero) ================= -->
+    <!-- ================= 2) TIMELINE ================= -->
     <section class="section" id="timeline">
       <div class="container">
         <h2 class="reveal">Geschichte</h2>
@@ -273,20 +275,21 @@
         <p class="reveal">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus vitae arcu ac mauris accumsan gravida.</p>
         <div class="rings">
           <div class="detector" id="detector">
-            <!-- PS Booster (klein, links-unterhalb des PS) -->
-            <div class="layer" style="inset:auto; width:14%; height:14%; left:38%; top:83%; border-color:rgba(255,143,163,.9)" data-key="psb" title="PS Booster"></div>
-            <!-- PS (kleiner Ring unten) -->
-            <div class="layer" style="inset:auto; width:24%; height:24%; left:44%; top:74%; border-color:rgba(167,139,250,.9)" data-key="ps" title="PS"></div>
-            <!-- SPS (großer Ring unten rechts im LHC) -->
-            <div class="layer" style="inset:auto; width:58%; height:58%; left:42%; top:44%; border-color:rgba(255,209,102,.9)" data-key="sps" title="SPS"></div>
-            <!-- LHC (größter Ring) -->
+            <!-- Anordnung: LHC (zentriert), SPS (unten rechts versetzt), PS (unten), PSB (links-unterhalb des PS) -->
+            <!-- PS Booster -->
+            <div class="layer" style="inset:auto; width:14%; height:14%; left:40%; top:84%; border-color:rgba(255,143,163,.9)" data-key="psb" title="PS Booster"></div>
+            <!-- PS -->
+            <div class="layer" style="inset:auto; width:26%; height:26%; left:48%; top:73.5%; border-color:rgba(167,139,250,.9)" data-key="ps" title="PS"></div>
+            <!-- SPS -->
+            <div class="layer" style="inset:auto; width:58%; height:58%; left:38%; top:42%; border-color:rgba(255,209,102,.9)" data-key="sps" title="SPS"></div>
+            <!-- LHC -->
             <div class="layer" style="inset:auto; width:90%; height:90%; left:5%; top:5%; border-color:rgba(80,227,194,.95)" data-key="lhc" title="LHC"></div>
           </div>
           <div class="layers-legend">
-            <div class="row"><div>Highlight</div><button data-target="psb">PS Booster</button></div>
-            <div class="row"><div>Highlight</div><button data-target="ps">PS</button></div>
-            <div class="row"><div>Highlight</div><button data-target="sps">SPS</button></div>
-            <div class="row"><div>Highlight</div><button data-target="lhc">LHC</button></div>
+            <div class="row"><div class="name">PS Booster</div><button data-target="psb">zeigen</button></div>
+            <div class="row"><div class="name">PS</div><button data-target="ps">zeigen</button></div>
+            <div class="row"><div class="name">SPS</div><button data-target="sps">zeigen</button></div>
+            <div class="row"><div class="name">LHC</div><button data-target="lhc">zeigen</button></div>
           </div>
         </div>
       </div>
@@ -334,11 +337,11 @@
       const chainSec=document.getElementById('acceleration-chain');let last=0;document.addEventListener('scroll',()=>{const r=chainSec.getBoundingClientRect();if(r.top<window.innerHeight*0.6&&r.bottom>window.innerHeight*0.4){const p=(window.innerHeight*0.6-r.top)/(r.height+window.innerHeight*0.2);const idx=Math.max(0,Math.min(5,Math.floor(p*6)));if(idx!==last){setStep(idx);last=idx}}});
       const b=document.getElementById('bfield');const bval=document.getElementById('bval');const beam=document.getElementById('beam');function upd(){const v=+b.value;bval.textContent=v+'%';const minR=90,maxR=240;const R=maxR-(v/100)*(maxR-minR);const cx=160,cy=160;const ang=Math.min(110,3800/R);const rad=ang*Math.PI/180;const startX=20,startY=160;const endX=cx+R*Math.sin(rad)-(R-(cx-startX));const endY=cy-R*(1-Math.cos(rad));const large=ang>180?1:0;beam.setAttribute('d',`M ${startX} ${startY} A ${R} ${R} 0 ${large} 1 ${endX} ${endY}`)};b.addEventListener('input',upd);upd();
 
-      // Detector buttons (use ring names)
+      // Detector buttons (keep "zeigen"; left label is the ring name)
       const det=document.getElementById('detector');const buttons=document.querySelectorAll('.layers-legend button');const layers=det.querySelectorAll('.layer');
       buttons.forEach(btn=>btn.addEventListener('click',()=>{layers.forEach(l=>l.classList.remove('show'));const t=btn.dataset.target;const lay=det.querySelector(`.layer[data-key="${t}"]`);if(lay)lay.classList.add('show')}));
 
-      // ================= TIMELINE (nach Hero) =================
+      // ================= TIMELINE =================
       const events=[
         {date:'1949',title:'CERN Vorschlag',text:'Louis de Broglie schlug auf der Europäischen Kulturkonferenz in Lausanne die Gründung eines europäischen Physiklaboratoriums vor.',img:'1949.jpg',link:'https://de.wikipedia.org/wiki/Louis_de_Broglie'},
         {date:'1952',title:'Offizielle gründung Cerns',text:'11 Regierungen unterzeichneten in Genf ein Abkommen zur Gründung des “Conseil Européen pour la Recherche Nucléaire” (CERN).',img:'1952.jpg',link:'https://de.wikipedia.org/wiki/CERN#Gr%C3%BCndung'},
