@@ -17,7 +17,10 @@
     <style>
       /* ================= TOKENS / RESET ================= */
       * { box-sizing: border-box; }
-      :root { --bg:#0b0b0c;--fg:#fafafa;--muted:#a8a8ab;--card:#141416;--line:#242428; --accent:#9ecbff; --marker:#ffa600; --disabled:#3a3a3f; }
+      :root {
+        --bg:#0b0b0c; --fg:#fafafa; --muted:#a8a8ab; --card:#141416; --line:#242428;
+        --accent:#7dd3fc; --marker:#f59e0b; --disabled:#3a3a3f;
+      }
       html,body { margin:0; height:100%; scroll-behavior:smooth; }
       body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; background:var(--bg); color:var(--fg); }
       img { max-width:100%; display:block; }
@@ -59,7 +62,7 @@
       .pips { position:absolute; inset:0; pointer-events:none; }
       .pip { position:absolute; top:50%; width:12px; height:12px; border-radius:50%; background:var(--disabled); transform:translate(-6px,-50%); border:2px solid var(--bg); box-shadow:0 0 0 3px rgba(255,255,255,.06); pointer-events:auto; cursor:pointer; transition:background .2s ease, transform .2s ease; }
       .pip:hover { transform:translate(-6px,-50%) scale(1.07); }
-      .pip.active { background:var(--marker); box-shadow:0 0 0 4px rgba(255,165,0,.15); }
+      .pip.active { background:var(--marker); box-shadow:0 0 0 4px rgba(245,158,11,.15); }
 
       .labels { display:flex; justify-content:space-between; gap:8px; margin-top:8px; font-size:12px; color:var(--muted); white-space:nowrap; }
 
@@ -119,15 +122,19 @@
 
       #collision-detector .rings{display:grid;grid-template-columns:1fr 1fr;gap:22px}
       .detector{position:relative;aspect-ratio:1/1;border-radius:18px;border:1px solid var(--line);overflow:hidden;background:radial-gradient(circle at 50% 50%,#1b1b1f, #101014)}
-      .layer{position:absolute;border-radius:50%;border:2px solid rgba(255,255,255,.25);opacity:.2;transition:opacity .35s, transform .35s}
+      .layer{position:absolute;border-radius:50%;border:3px solid rgba(255,255,255,.28);opacity:.2;transition:opacity .35s, transform .35s}
       .layer.show{opacity:.95;transform:scale(1.02)}
       .layers-legend .row{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:10px}
-      .layers-legend button{border:none;background:#fff;color:#000;padding:6px 10px;border-radius:10px;cursor:pointer}
+      .layers-legend button{border:none;background:#fff;color:#000;padding:6px 10px;border-radius:10px;cursor:pointer;font-weight:600}
 
       .safety{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
       .footer{padding:40px 0;color:var(--muted);text-align:center;border-top:1px solid var(--line)}
 
-      @media (max-width:900px){#acceleration-chain .chain{grid-template-columns:1fr}#collision-detector .rings{grid-template-columns:1fr}.safety{grid-template-columns:1fr}}
+      @media (max-width:900px){
+        #acceleration-chain .chain{grid-template-columns:1fr}
+        #collision-detector .rings{grid-template-columns:1fr}
+        .safety{grid-template-columns:1fr}
+      }
     </style>
   </head>
   <body>
@@ -266,20 +273,20 @@
         <p class="reveal">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus vitae arcu ac mauris accumsan gravida.</p>
         <div class="rings">
           <div class="detector" id="detector">
-            <!-- PS Booster (klein, unten links vom PS) -->
-            <div class="layer" style="inset:auto; width:12%; height:12%; left:32%; top:86%; border-color:rgba(255,255,255,.35)" data-key="tracker"></div>
+            <!-- PS Booster (klein, links-unterhalb des PS) -->
+            <div class="layer" style="inset:auto; width:14%; height:14%; left:38%; top:83%; border-color:rgba(255,143,163,.9)" data-key="psb" title="PS Booster"></div>
             <!-- PS (kleiner Ring unten) -->
-            <div class="layer" style="inset:auto; width:24%; height:24%; left:35%; top:72%; border-color:rgba(66,160,255,.6)" data-key="ecal"></div>
-            <!-- SPS (großer Ring rechts/unten versetzt) -->
-            <div class="layer" style="inset:auto; width:53%; height:53%; left:39.5%; top:43.5%; border-color:rgba(255,180,64,.6)" data-key="hcal"></div>
-            <!-- LHC (größter Ring, nahezu zentriert) -->
-            <div class="layer" style="inset:auto; width:86%; height:86%; left:7%; top:7%; border-color:rgba(140,255,140,.6)" data-key="muon"></div>
+            <div class="layer" style="inset:auto; width:24%; height:24%; left:44%; top:74%; border-color:rgba(167,139,250,.9)" data-key="ps" title="PS"></div>
+            <!-- SPS (großer Ring unten rechts im LHC) -->
+            <div class="layer" style="inset:auto; width:58%; height:58%; left:42%; top:44%; border-color:rgba(255,209,102,.9)" data-key="sps" title="SPS"></div>
+            <!-- LHC (größter Ring) -->
+            <div class="layer" style="inset:auto; width:90%; height:90%; left:5%; top:5%; border-color:rgba(80,227,194,.95)" data-key="lhc" title="LHC"></div>
           </div>
           <div class="layers-legend">
-            <div class="row"><div>Tracker</div><button data-target="tracker">zeigen</button></div>
-            <div class="row"><div>Elektromagnetischer Kalorimeter</div><button data-target="ecal">zeigen</button></div>
-            <div class="row"><div>Hadronen-Kalorimeter</div><button data-target="hcal">zeigen</button></div>
-            <div class="row"><div>Muon-System</div><button data-target="muon">zeigen</button></div>
+            <div class="row"><div>Highlight</div><button data-target="psb">PS Booster</button></div>
+            <div class="row"><div>Highlight</div><button data-target="ps">PS</button></div>
+            <div class="row"><div>Highlight</div><button data-target="sps">SPS</button></div>
+            <div class="row"><div>Highlight</div><button data-target="lhc">LHC</button></div>
           </div>
         </div>
       </div>
@@ -327,8 +334,9 @@
       const chainSec=document.getElementById('acceleration-chain');let last=0;document.addEventListener('scroll',()=>{const r=chainSec.getBoundingClientRect();if(r.top<window.innerHeight*0.6&&r.bottom>window.innerHeight*0.4){const p=(window.innerHeight*0.6-r.top)/(r.height+window.innerHeight*0.2);const idx=Math.max(0,Math.min(5,Math.floor(p*6)));if(idx!==last){setStep(idx);last=idx}}});
       const b=document.getElementById('bfield');const bval=document.getElementById('bval');const beam=document.getElementById('beam');function upd(){const v=+b.value;bval.textContent=v+'%';const minR=90,maxR=240;const R=maxR-(v/100)*(maxR-minR);const cx=160,cy=160;const ang=Math.min(110,3800/R);const rad=ang*Math.PI/180;const startX=20,startY=160;const endX=cx+R*Math.sin(rad)-(R-(cx-startX));const endY=cy-R*(1-Math.cos(rad));const large=ang>180?1:0;beam.setAttribute('d',`M ${startX} ${startY} A ${R} ${R} 0 ${large} 1 ${endX} ${endY}`)};b.addEventListener('input',upd);upd();
 
-      // Detector buttons
-      const det=document.getElementById('detector');const buttons=document.querySelectorAll('.layers-legend button');const layers=det.querySelectorAll('.layer');buttons.forEach(btn=>btn.addEventListener('click',()=>{layers.forEach(l=>l.classList.remove('show'));const t=btn.dataset.target;const lay=det.querySelector(`.layer[data-key="${t}"]`);if(lay)lay.classList.add('show')}));
+      // Detector buttons (use ring names)
+      const det=document.getElementById('detector');const buttons=document.querySelectorAll('.layers-legend button');const layers=det.querySelectorAll('.layer');
+      buttons.forEach(btn=>btn.addEventListener('click',()=>{layers.forEach(l=>l.classList.remove('show'));const t=btn.dataset.target;const lay=det.querySelector(`.layer[data-key="${t}"]`);if(lay)lay.classList.add('show')}));
 
       // ================= TIMELINE (nach Hero) =================
       const events=[
@@ -415,7 +423,6 @@
     </script>
   </body>
 </html>
-
 
 
 
