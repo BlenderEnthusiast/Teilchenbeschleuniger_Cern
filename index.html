@@ -121,7 +121,7 @@
       .svgbox{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
 
       #collision-detector .rings{display:grid;grid-template-columns:1fr 1fr;gap:22px}
-      .detector{position:relative;aspect-ratio:2/1;border-radius:18px;border:1px solid var(--line);overflow:hidden;background:radial-gradient(circle at 50% 50%,#1b1b1f, #101014)}
+      .detector{position:relative;aspect-ratio:1/1;border-radius:18px;border:1px solid var(--line);overflow:hidden;background:radial-gradient(circle at 50% 50%,#1b1b1f, #101014)}
       .layer{position:absolute;border-radius:50%;border:3px solid rgba(255,255,255,.28);opacity:.2;transition:opacity .35s, transform .35s}
       .layer.show{opacity:.95;transform:scale(1.02)}
 
@@ -277,7 +277,7 @@
           <div class="detector" id="detector">
             <!-- Anordnung: LHC (zentriert), SPS (unten rechts versetzt), PS (unten), PSB (links-unterhalb des PS) -->
             <!-- PS Booster -->
-            <div class="layer" style="inset:auto; width:14%; height:14%; left:40%; top:84%; border-color:rgba(255,143,163,.9)" data-key="psb" title="PS Booster"></div>
+            <div class="layer" style="inset:auto; width:14%; height:14%; left:10%; top:94%; border-color:rgba(255,143,163,.9)" data-key="psb" title="PS Booster"></div>
             <!-- PS -->
             <div class="layer" style="inset:auto; width:26%; height:26%; left:48%; top:73.5%; border-color:rgba(167,139,250,.9)" data-key="ps" title="PS"></div>
             <!-- SPS -->
@@ -426,6 +426,7 @@
     </script>
   </body>
 </html>
+
 
 
 
