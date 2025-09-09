@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
+    <title>Teilchenbeschleuniger – Prototyp</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* ================= TOKENS / RESET ================= */
+      * { box-sizing: border-box; }
+      :root {
+        --bg:#0b0b0c; --fg:#fafafa; --muted:#a8a8ab; --card:#141416; --line:#242428;
+        --accent:#7dd3fc; --marker:#f59e0b; --disabled:#3a3a3f;
+      }
+      html,body { margin:0; height:100%; scroll-behavior:smooth; }
+      body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; background:var(--bg); color:var(--fg); }
+      img { max-width:100%; display:block; }
+
+      .container { max-width:1100px; margin:0 auto; padding:0 20px; }
+      .header { position:sticky; top:0; z-index:40; backdrop-filter:saturate(120%) blur(10px); background:rgba(11,11,12,.6); border-bottom:1px solid var(--line); }
+      .nav { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; }
+      .nav a { color:var(--muted); text-decoration:none; font-size:14px; margin-left:18px; }
+      .nav a:hover { color:var(--fg); }
+
+      .section { padding:80px 0; border-top:1px solid var(--line) }
+      .reveal{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .6s ease}
+      .reveal.show{opacity:1;transform:none}
+
+      /* ================= HORIZONTAL TIMELINE ================= */
+      #timeline h2 { font-size: clamp(26px, 3.8vw, 40px); margin:0 0 16px; }
+      .timeline-slider { display:flex; align-items:center; justify-content:center; gap:18px; margin:40px 0; }
+      .event-card { position:relative; display:flex; flex-direction:row; gap:22px; background:var(--card); border:1px solid var(--line); border-radius:18px; padding:22px; max-width:920px; width:100%; overflow:hidden; }
+      .event-media { flex:0 0 360px; }
+      .event-media img { width:100%; height:260px; border-radius:12px; object-fit:cover; }
+      .event-info { flex:1; display:flex; flex-direction:column; gap:8px; }
+      .event-info .date { color:var(--muted); font-size:14px; }
+      .event-info h3 { margin:0; font-size:clamp(18px,2vw,28px); font-weight:700; letter-spacing:-.01em; }
+      .event-info p { font-size:15px; color:var(--muted); margin:0; }
+      .event-info a { width:fit-content; margin-top:8px; color:var(--accent); text-decoration:none; font-weight:600; }
+
+      /* nav buttons */
+      .nav-btn { background:transparent; border:2px solid var(--line); border-radius:50%; width:44px; height:44px; color:var(--fg); cursor:pointer; display:grid; place-items:center; transition:transform .25s ease, background .25s ease, opacity .25s ease; }
+      .nav-btn:hover { background:var(--line); transform:scale(1.05); }
+      .nav-btn:active { transform:scale(.97); }
+      .nav-btn[disabled] { cursor:not-allowed; opacity:.4; background:transparent !important; transform:none !important; }
+
+      /* progress */
+      .progress { margin-top:22px; position:relative; }
+      .bar { height:4px; background:#2d2d32; border-radius:999px; position:relative; overflow:visible; }
+      .marker { position:absolute; top:50%; left:0; width:16px; height:16px; background:var(--marker); border-radius:50%; box-shadow:0 0 0 4px rgba(255,255,255,.08); transform:translate(-8px,-50%); transition:transform .55s cubic-bezier(.22,.61,.36,1); }
+
+      /* persistent clickable timepoints */
+      .pips { position:absolute; inset:0; pointer-events:none; }
+      .pip { position:absolute; top:50%; width:12px; height:12px; border-radius:50%; background:var(--disabled); transform:translate(-6px,-50%); border:2px solid var(--bg); box-shadow:0 0 0 3px rgba(255,255,255,.06); pointer-events:auto; cursor:pointer; transition:background .2s ease, transform .2s ease; }
+      .pip:hover { transform:translate(-6px,-50%) scale(1.07); }
+      .pip.active { background:var(--marker); box-shadow:0 0 0 4px rgba(245,158,11,.15); }
+
+      .labels { display:flex; justify-content:space-between; gap:8px; margin-top:8px; font-size:12px; color:var(--muted); white-space:nowrap; }
+
+      /* slide animations */
+      .event-card .anim-wrap{ position:relative; flex:1; display:flex; gap:22px; }
+      .slide { display:flex; gap:22px; width:100%; }
+      .slide.enter { animation: fadeIn .45s cubic-bezier(.22,.61,.36,1); }
+      .slide.leave { animation: fadeOut .38s cubic-bezier(.4,.0,.2,1); position:absolute; inset:0; }
+      @keyframes fadeIn { from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none} }
+      @keyframes fadeOut { from{opacity:1; transform:none} to{opacity:0; transform:translateY(-8px)} }
+
+      /* responsive */
+      @media (max-width: 900px){
+        .event-card{ flex-direction:column; }
+        .event-media{ flex-basis:auto; }
+        .event-media img{ height:220px; }
+      }
+
+      /* ================= HERO + REST ================= */
+      .hero{position:relative;min-height:88vh;display:grid;place-items:center;overflow:hidden}
+      .hero .bg{position:absolute;inset:0;background:radial-gradient(1200px 600px at 70% 20%,rgba(255,255,255,.08),transparent),linear-gradient(180deg,#0c0c10, #09090b)}
+      .hero .media{position:absolute;inset:0;opacity:.35;filter:grayscale(40%) contrast(105%);}
+      .hero .media img{width:100%;height:100%;object-fit:cover}
+      .hero .content{position:relative;text-align:center;padding:40px}
+      .title{font-size:clamp(36px,6vw,72px);font-weight:700;letter-spacing:-.02em}
+      .subtitle{max-width:750px;margin:14px auto 0;color:var(--muted);font-size:clamp(16px,2.2vw,18px)}
+      .scrollhint{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);font-size:12px;color:var(--muted);opacity:.8}
+
+      .grid{display:grid;gap:22px}
+      .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
+
+      #scale .visual{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(180deg,#111113,#0c0c0e)}
+      #scale .overlay{position:absolute;inset:0;display:grid;place-items:center;color:#fff;text-shadow:0 2px 20px rgba(0,0,0,.5);padding:24px;text-align:center}
+      #ring-hotspots .stage{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#0f0f12}
+      #ring-hotspots .stage img{width:100%;height:520px;object-fit:cover;opacity:.85;filter:grayscale(20%)}
+      .hotspot{position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 0 0 6px rgba(255,255,255,.15);cursor:pointer;border:none;padding:0}
+      .hotspot:focus{outline:2px solid #fff}
+      .fact{position:absolute;min-width:240px;max-width:320px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;line-height:1.4;transform:translate(-50%,-120%);display:none}
+      .fact h3{margin:0 0 6px;font-size:16px}
+      .fact p{margin:0;color:var(--muted);font-size:14px}
+      .fact.show{display:block}
+
+      #acceleration-chain .chain{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+      .timeline{position:relative;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
+      .timeline ul{list-style:none;padding:0;margin:0}
+      .timeline li{display:flex;align-items:center;gap:12px;padding:12px 6px;border-radius:12px}
+      .timeline .dot{width:10px;height:10px;border-radius:50%;background:#888}
+      .timeline li.active .dot{background:#fff}
+      .timeline li .label{font-weight:600}
+      .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+      .metric{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;text-align:center}
+      .metric .v{font-size:24px;font-weight:700}
+      #bfield{appearance:none;width:100%}
+      #bfield::-webkit-slider-thumb{appearance:none;width:18px;height:18px;border-radius:50%;background:#fff}
+      #bfield::-webkit-slider-runnable-track{height:4px;background:#2b2b30;border-radius:999px}
+      .svgbox{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
+
+      #collision-detector .rings{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+      .detector{position:relative;aspect-ratio:1/1;border-radius:18px;border:1px solid var(--line);overflow:hidden;background:radial-gradient(circle at 50% 50%,#1b1b1f, #101014)}
+      .layer{position:absolute;border-radius:50%;border:3px solid rgba(255,255,255,.28);opacity:.2;transition:opacity .35s, transform .35s}
+      .layer.show{opacity:.95;transform:scale(1.02)}
+
+      .layers-legend .row{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:10px}
+      .layers-legend .row .name{font-weight:600}
+      .layers-legend button{border:none;background:#fff;color:#000;padding:6px 10px;border-radius:10px;cursor:pointer;font-weight:600}
+
+      .safety{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+      .footer{padding:40px 0;color:var(--muted);text-align:center;border-top:1px solid var(--line)}
+
+      @media (max-width:900px){
+        #acceleration-chain .chain{grid-template-columns:1fr}
+        #collision-detector .rings{grid-template-columns:1fr}
+        .safety{grid-template-columns:1fr}
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ================= HEADER ================= -->
+    <header class="header">
+      <div class="nav container">
+        <div>Beschleuniger</div>
+        <nav>
+          <a href="#hero">Start</a>
+          <a href="#timeline">Timeline</a>
+          <a href="#scale">Größe</a>
+          <a href="#ring-hotspots">Stationen</a>
+          <a href="#acceleration-chain">Physik</a>
+          <a href="#collision-detector">Kollision</a>
+          <a href="#sources">Quellen</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- ================= 1) HERO ================= -->
+    <section class="hero" id="hero">
+      <div class="bg"></div>
+      <div class="media" aria-hidden="true"><img src="cern-hero.jpg" alt="" loading="lazy"></div>
+      <div class="content container">
+        <div class="title">Teilchen auf nahezu Lichtgeschwindigkeit</div>
+        <div class="subtitle">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer ac ante in lorem aliquet posuere.</div>
+      </div>
+      <div class="scrollhint">Scroll</div>
+    </section>
+
+    <!-- ================= 2) CERN UND SEINE TEILE ================= -->
+    <section class="section" id="cern-teile">
+      <div class="container">
+        <h2 class="reveal">CERN und seine Teile</h2>
+        <p class="reveal">
+          Kurzer Überblick über die einzelnen Bestandteile des CERN und wie sie zusammenarbeiten.
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        </p>
+      </div>
+    </section>
+
+
+    <!-- ================= 2) TIMELINE ================= -->
+    <section class="section" id="timeline">
+      <div class="container">
+        <h2 class="reveal">Geschichte</h2>
+
+        <div class="timeline-slider reveal">
+          <button class="nav-btn prev" aria-label="Zurück" title="Zurück">◀</button>
+
+          <div class="event-card" aria-live="polite">
+            <div class="anim-wrap"><!-- dynamic slide injected here --></div>
+          </div>
+
+          <button class="nav-btn next" aria-label="Weiter" title="Weiter">▶</button>
+        </div>
+
+        <div class="progress" aria-label="Zeitstrahl">
+          <div class="bar" id="bar">
+            <div class="marker" id="marker" aria-hidden="true"></div>
+            <div class="pips" id="pips"></div>
+          </div>
+          <div class="labels" id="labels"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 3) SCALE ================= -->
+    <section class="section" id="scale">
+      <div class="container grid" style="grid-template-columns:1.2fr .8fr">
+        <div class="visual reveal">
+          <img src="lhc-ring.jpg" alt="LHC Ring" style="width:100%;height:420px;object-fit:cover;opacity:.8;filter:grayscale(20%)" loading="lazy">
+          <div class="overlay">
+            <div>
+              <div style="font-size:42px;font-weight:700;letter-spacing:-.02em">Größenordnung</div>
+              <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi.</p>
+            </div>
+          </div>
+        </div>
+        <div class="card reveal">
+          <h2>Überblick</h2>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis pharetra justo in odio pulvinar, eget blandit nulla luctus.</p>
+          <p>Morbi feugiat, massa nec laoreet luctus, massa augue dictum lorem, eget hendrerit arcu orci vitae est.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 4) RING HOTSPOTS ================= -->
+    <section class="section" id="ring-hotspots">
+      <div class="container">
+        <h2 class="reveal">Stationen und Experimente</h2>
+        <p class="reveal">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer dignissim, lorem eget aliquet pulvinar, enim nibh sodales neque.</p>
+        <div class="stage reveal">
+          <img src="lhc-overview.jpg" alt="Ring Übersicht" loading="lazy">
+          <button class="hotspot" style="left:22%;top:60%" data-title="ATLAS" data-text="Lorem ipsum dolor sit amet." aria-label="Hotspot ATLAS"></button>
+          <div class="fact" style="left:22%;top:60%"></div>
+          <button class="hotspot" style="left:48%;top:25%" data-title="CMS" data-text="Lorem ipsum dolor sit amet." aria-label="Hotspot CMS"></button>
+          <div class="fact" style="left:48%;top:25%"></div>
+          <button class="hotspot" style="left:72%;top:63%" data-title="ALICE" data-text="Lorem ipsum dolor sit amet." aria-label="Hotspot ALICE"></button>
+          <div class="fact" style="left:72%;top:63%"></div>
+          <button class="hotspot" style="left:35%;top:78%" data-title="LHCb" data-text="Lorem ipsum dolor sit amet." aria-label="Hotspot LHCb"></button>
+          <div class="fact" style="left:35%;top:78%"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 5) ACCELERATION CHAIN ================= -->
+    <section class="section" id="acceleration-chain">
+      <div class="container">
+        <h2 class="reveal">Wie werden Teilchen schnell</h2>
+        <p class="reveal">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse potenti.</p>
+        <div class="chain">
+          <div class="timeline reveal">
+            <ul>
+              <li data-step="0" class="active"><span class="dot"></span><span class="label">Quelle</span></li>
+              <li data-step="1"><span class="dot"></span><span class="label">LINAC4</span></li>
+              <li data-step="2"><span class="dot"></span><span class="label">PS Booster</span></li>
+              <li data-step="3"><span class="dot"></span><span class="label">PS</span></li>
+              <li data-step="4"><span class="dot"></span><span class="label">SPS</span></li>
+              <li data-step="5"><span class="dot"></span><span class="label">LHC</span></li>
+            </ul>
+          </div>
+          <div class="grid">
+            <div class="metric"><div class="v" id="energy">0</div><div>Energie (relativ)</div></div>
+            <div class="metric"><div class="v" id="speed">0</div><div>Geschwindigkeit (relativ)</div></div>
+            <div class="metric"><div class="v" id="turns">0</div><div>Umläufe (relativ)</div></div>
+            <div class="card">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px"><div>Magnetfeld</div><div id="bval">50%</div></div>
+              <input id="bfield" type="range" min="0" max="100" value="50">
+              <div class="svgbox" style="margin-top:12px">
+                <svg viewBox="0 0 320 200" style="width:100%;height:220px">
+                  <defs><marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0 0, 6 3, 0 6" fill="#fff"/></marker></defs>
+                  <path id="beam" d="M 20 160 A 200 200 0 0 1 260 60" stroke="#fff" stroke-width="3" fill="none" marker-end="url(#arr)"/>
+                  <text x="24" y="150" fill="#bdbdc2" font-size="10">Strahl</text>
+                  <text x="180" y="30" fill="#bdbdc2" font-size="10">B↑ ⇒ Radius↓</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 6) COLLISION DETECTOR ================= -->
+    <section class="section" id="collision-detector">
+      <div class="container">
+        <h2 class="reveal">Was passiert in der Kollisionskammer</h2>
+        <p class="reveal">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus vitae arcu ac mauris accumsan gravida.</p>
+        <div class="rings">
+          <div class="detector" id="detector">
+            <!-- Anordnung: LHC (zentriert), SPS (unten rechts versetzt), PS (unten), PSB (links-unterhalb des PS) -->
+            <!-- PS Booster -->
+            <div class="layer" style="inset:auto; width:14%; height:14%; left:10%; top:94%; border-color:rgba(255,143,163,.9)" data-key="psb" title="PS Booster"></div>
+            <!-- PS -->
+            <div class="layer" style="inset:auto; width:26%; height:26%; left:48%; top:73.5%; border-color:rgba(167,139,250,.9)" data-key="ps" title="PS"></div>
+            <!-- SPS -->
+            <div class="layer" style="inset:auto; width:58%; height:58%; left:38%; top:42%; border-color:rgba(255,209,102,.9)" data-key="sps" title="SPS"></div>
+            <!-- LHC -->
+            <div class="layer" style="inset:auto; width:90%; height:90%; left:5%; top:5%; border-color:rgba(80,227,194,.95)" data-key="lhc" title="LHC"></div>
+          </div>
+          <div class="layers-legend">
+            <div class="row"><div class="name">PS Booster</div><button data-target="psb">zeigen</button></div>
+            <div class="row"><div class="name">PS</div><button data-target="ps">zeigen</button></div>
+            <div class="row"><div class="name">SPS</div><button data-target="sps">zeigen</button></div>
+            <div class="row"><div class="name">LHC</div><button data-target="lhc">zeigen</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 7) SAFETY ================= -->
+    <section class="section" id="safety">
+      <div class="container">
+        <h2 class="reveal">Sicherheit und Realität</h2>
+        <div class="safety">
+          <div class="card reveal"><h3>Abschirmung</h3><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p></div>
+          <div class="card reveal"><h3>Betrieb</h3><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p></div>
+          <div class="card reveal"><h3>Mythen</h3><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 8) SOURCES ================= -->
+    <section class="section" id="sources">
+      <div class="container">
+        <h2 class="reveal">Quellen</h2>
+        <ul>
+          <li><a href="#" style="color:#9ecbff">Lorem ipsum dolor</a></li>
+          <li><a href="#" style="color:#9ecbff">Sit amet consectetur</a></li>
+        </ul>
+      </div>
+    </section>
+
+    <footer class="footer"><div class="container">© 2025 Schulprojekt</div></footer>
+
+    <!-- ================= SCRIPTS ================= -->
+    <script>
+      // Reveal on view
+      const io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('show')})},{threshold:.2});
+      document.querySelectorAll('.reveal').forEach(x=>io.observe(x));
+
+      // Hotspots
+      const hotspots=document.querySelectorAll('.hotspot');
+      hotspots.forEach((h)=>{const f=h.nextElementSibling;h.addEventListener('click',()=>{document.querySelectorAll('.fact').forEach(x=>x.classList.remove('show'));f.innerHTML=`<h3>${h.dataset.title}</h3><p>${h.dataset.text}</p>`;f.classList.add('show')});document.addEventListener('click',ev=>{if(!h.contains(ev.target)&&!f.contains(ev.target))f.classList.remove('show')})});
+
+      // Acceleration chain
+      const steps=document.querySelectorAll('.timeline li');const energy=document.getElementById('energy');const speed=document.getElementById('speed');const turns=document.getElementById('turns');const vals=[{e:1,s:1,t:1},{e:2,s:2,t:3},{e:3,s:3,t:6},{e:5,s:4,t:10},{e:8,s:5,t:16},{e:13,s:6,t:24}];
+      function setStep(i){steps.forEach(s=>s.classList.remove('active'));steps[i].classList.add('active');energy.textContent=vals[i].e;speed.textContent=vals[i].s;turns.textContent=vals[i].t;}
+      steps.forEach((s,i)=>s.addEventListener('click',()=>setStep(i)));
+      const chainSec=document.getElementById('acceleration-chain');let last=0;document.addEventListener('scroll',()=>{const r=chainSec.getBoundingClientRect();if(r.top<window.innerHeight*0.6&&r.bottom>window.innerHeight*0.4){const p=(window.innerHeight*0.6-r.top)/(r.height+window.innerHeight*0.2);const idx=Math.max(0,Math.min(5,Math.floor(p*6)));if(idx!==last){setStep(idx);last=idx}}});
+      const b=document.getElementById('bfield');const bval=document.getElementById('bval');const beam=document.getElementById('beam');function upd(){const v=+b.value;bval.textContent=v+'%';const minR=90,maxR=240;const R=maxR-(v/100)*(maxR-minR);const cx=160,cy=160;const ang=Math.min(110,3800/R);const rad=ang*Math.PI/180;const startX=20,startY=160;const endX=cx+R*Math.sin(rad)-(R-(cx-startX));const endY=cy-R*(1-Math.cos(rad));const large=ang>180?1:0;beam.setAttribute('d',`M ${startX} ${startY} A ${R} ${R} 0 ${large} 1 ${endX} ${endY}`)};b.addEventListener('input',upd);upd();
+
+      // Detector buttons (keep "zeigen"; left label is the ring name)
+      const det=document.getElementById('detector');const buttons=document.querySelectorAll('.layers-legend button');const layers=det.querySelectorAll('.layer');
+      buttons.forEach(btn=>btn.addEventListener('click',()=>{layers.forEach(l=>l.classList.remove('show'));const t=btn.dataset.target;const lay=det.querySelector(`.layer[data-key="${t}"]`);if(lay)lay.classList.add('show')}));
+
+      // ================= TIMELINE =================
+      const events=[
+        {date:'1949',title:'CERN Vorschlag',text:'Louis de Broglie schlug auf der Europäischen Kulturkonferenz in Lausanne die Gründung eines europäischen Physiklaboratoriums vor.',img:'1949.jpg',link:'https://de.wikipedia.org/wiki/Louis_de_Broglie'},
+        {date:'1952',title:'Offizielle gründung Cerns',text:'11 Regierungen unterzeichneten in Genf ein Abkommen zur Gründung des “Conseil Européen pour la Recherche Nucléaire” (CERN).',img:'1952.jpg',link:'https://de.wikipedia.org/wiki/CERN#Gr%C3%BCndung'},
+        {date:'1959',title:'Protonensynchrotron Rekord',text:'Das Protonensynchrotron erreichte 24 GeV und wurde damit zum leistungsstärksten Beschleuniger der Welt zu dieser Zeit.',img:'1959.jpg',link:'https://timeline.web.cern.ch/proton-synchrotron-starts'},
+        {date:'1968',title:'Drahtkammer erfunden',text:'Georges Charpak entwickelt einen neuen Teilchendetektor mit hoher Auflösung, revolutioniert damit die Experimentalphysik und wird 1992 mit dem Nobelpreis ausgezeichnet.',img:'1960s.jpg',link:'https://de.wikipedia.org/wiki/CERN#Erste_Beschleuniger'},
+        {date:'1976',title:'Super Synchrotron gestartet',text:'Der Super Proton Synchrotron (SPS) startete mit 400 GeV, später auf 500 GeV aufgerüstet.',img:'1976.jpg',link:'https://timeline.web.cern.ch/super-proton-synchrotron-starts'},
+        {date:'1989',title:'LEP gestartet',text:'Der Large Electron-Positron Collider (LEP) nahm den Betrieb auf. Im 27 km langen Tunnel kollidierten Elektronen und Positronen mit bis zu 100 GeV.',img:'1989.jpg',link:'https://timeline.web.cern.ch/large-electron-positron-collider-first-injection'},
+        {date:'1996',title:'Antiwasserstoff erzeugt',text:'Am LEAR-Speicherring werden erstmals Antiwasserstoff-Atome hergestellt',img:'1989.jpg',link:'https://de.wikipedia.org/wiki/CERN#Large_Electron-Positron_Collider'},
+        {date:'2000',title:'LEP abgeschaltet. LHC-Bau beginnt',text:'Der LEP wird stillgelegt, um im selben Tunnel mit dem Bau des Large Hadron Collider (LHC) zu beginnen.',img:'1989.jpg',link:'https://timeline.web.cern.ch/leps-final-shutdown'},
+        {date:'2008',title:'LHC gestartet',text:'Am 10. September 2008 wird erstmals ein Protonenstrahl erfolgreich durch den 27 km langen Large Hadron Collider (LHC) gelenkt',img:'1989.jpg',link:'https://timeline.web.cern.ch/lhc-starts'}
+      ];
+
+      const labels=document.getElementById('labels');
+      const pips=document.getElementById('pips');
+      const bar=document.getElementById('bar');
+      const marker=document.getElementById('marker');
+      const animWrap=document.querySelector('.event-card .anim-wrap');
+      const prevBtn=document.querySelector('.prev');
+      const nextBtn=document.querySelector('.next');
+
+      // Render labels and pips
+      labels.innerHTML=events.map(e=>`<div>${e.date}</div>`).join('');
+      function layoutPips(){
+        const w=bar.offsetWidth; pips.innerHTML='';
+        const steps=events.length-1||1;
+        events.forEach((e,i)=>{
+          const x=(i*(w/steps));
+          const d=document.createElement('button');
+          d.className='pip'; d.type='button'; d.style.left=`${x}px`; d.title=e.date; d.setAttribute('aria-label',e.date);
+          d.addEventListener('click',()=>goTo(i));
+          pips.appendChild(d);
+        })
+      }
+      window.addEventListener('resize',()=>{ setMarker(idx); layoutPips(); });
+
+      let idx=0; let busy=false;
+
+      function slideTemplate(e){
+        return `\
+          <div class="slide">\
+            <div class="event-media"><img src="${e.img}" alt=""></div>\
+            <div class="event-info">\
+              <div class="date">${e.date}</div>\
+              <h3>${e.title}</h3>\
+              <p>${e.text}</p>\
+              <a href="${e.link}" target="_blank" rel="noopener noreferrer">Know more</a>\
+            </div>\
+          </div>`;
+      }
+
+      function setMarker(i){
+        const w=bar.offsetWidth; const steps=events.length-1||1; const x=(i*(w/steps));
+        marker.style.transform=`translate(${x-8}px, -50%)`;
+        [...pips.children].forEach((p,pi)=>p.classList.toggle('active',pi===i));
+      }
+
+      function updateButtons(){
+        prevBtn.disabled = (idx===0);
+        nextBtn.disabled = (idx===events.length-1);
+      }
+
+      function show(i){
+        if(busy) return; busy=true;
+        const leaving=animWrap.querySelector('.slide');
+        if(leaving){ leaving.classList.add('leave'); leaving.addEventListener('animationend',()=>leaving.remove(),{once:true}); }
+        const frag=document.createElement('div'); frag.innerHTML=slideTemplate(events[i]);
+        const entering=frag.firstElementChild; entering.classList.add('enter');
+        animWrap.appendChild(entering);
+        setMarker(i); updateButtons();
+        entering.addEventListener('animationend',()=>{busy=false;},{once:true});
+      }
+
+      function goTo(i){ if(i<0||i>events.length-1) return; idx=i; show(idx); }
+      function go(n){ goTo(idx+n); }
+
+      layoutPips();
+      show(idx);
+
+      prevBtn.addEventListener('click',()=>go(-1));
+      nextBtn.addEventListener('click',()=>go(1));
+      window.addEventListener('keydown',e=>{ if(e.key==='ArrowLeft') go(-1); if(e.key==='ArrowRight') go(1); });
+    </script>
+  </body>
+</html>
+
+
+
+
