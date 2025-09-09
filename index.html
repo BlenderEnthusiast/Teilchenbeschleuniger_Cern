@@ -131,6 +131,75 @@
 
       .safety{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
       .footer{padding:40px 0;color:var(--muted);text-align:center;border-top:1px solid var(--line)}
+      /* === Themen-Header (CERN & Teile) === */
+      .topic-header h2{margin:0 0 6px}
+      .topic-header p{margin:0;color:var(--muted)}
+      .topic-bar{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;margin:18px 0}
+      .topic-ctrl{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}
+      .topic-ctrl:hover{background:#1d1d21}
+      .topic-scroll{display:flex;gap:12px;overflow:auto;padding:6px;border-radius:14px;background:linear-gradient(180deg,#111113,#0c0c0e);border:1px solid var(--line);scroll-snap-type:x mandatory}
+      .topic-scroll::-webkit-scrollbar{height:8px}
+      .topic-scroll::-webkit-scrollbar-thumb{background:#2b2b30;border-radius:8px}
+      .topic-item{flex:0 0 auto;scroll-snap-align:start;text-decoration:none;color:var(--fg);background:#151518;border:1px solid var(--line);padding:10px 14px;border-radius:12px;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;transition:transform .2s ease, background .2s ease}
+      .topic-item span{opacity:.7}
+      .topic-item:hover{background:#1d1d21;transform:translateY(-1px)}
+      @media (max-width:900px){.topic-bar{grid-template-columns:1fr}.topic-ctrl{display:none}.topic-scroll{padding:8px}}
+      /* === Themen-Boxen (CERN & Teile) === */
+      .topic-grid{
+        display:grid; gap:14px; margin:18px 0;
+        grid-template-columns: repeat(3, 1fr);
+        perspective: 800px;
+      }
+      .topic-card{
+        position:relative; background:var(--card);
+        border:1px solid var(--line); border-radius:16px;
+        padding:16px; min-height:110px;
+        text-decoration:none; color:var(--fg);
+        display:flex; flex-direction:column; justify-content:center; gap:6px;
+        transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease, background .25s ease;
+        will-change: transform;
+      }
+      .topic-card h3{ margin:0; font-size:16px; letter-spacing:-.01em; }
+      .topic-card p{ margin:0; font-size:13px; color:var(--muted); }
+
+      .topic-card:hover, .topic-card:focus-visible{
+        transform: translateY(-2px) scale(1.01) rotateX(1deg);
+        border-color: var(--accent);
+        box-shadow: 0 6px 20px rgba(125,211,252,.18);
+        outline: none;
+        background: linear-gradient(180deg,#18181b,#141416);
+      }
+
+      /* mobile */
+      @media (max-width:900px){
+        .topic-grid{ grid-template-columns: 1fr 1fr; }
+      }
+      @media (max-width:600px){
+        .topic-grid{ grid-template-columns: 1fr; }
+      }
+
+       /* === Anchor-Scroll + Highlight === */
+      .section{scroll-margin-top:84px}
+      .section.flash{position:relative}
+      .section.flash::before{
+        content:"";
+        position:absolute; inset:-2px;
+        border-radius:20px;
+        border:2px solid var(--accent);
+        box-shadow:0 0 24px rgba(125,211,252,.35), 0 0 0 9999px rgba(0,0,0,0);
+        pointer-events:none; opacity:0;
+        animation:flashPulse 8000ms ease-out forwards;
+        animation: flashPulse 1200ms ease-out forwards 300ms;
+
+      }
+      @keyframes flashPulse{
+        0%{opacity:0}
+        20%{opacity:1}
+        60%{opacity:.85}
+        100%{opacity:0}
+      }
+        
+
 
       @media (max-width:900px){
         #acceleration-chain .chain{grid-template-columns:1fr}
@@ -145,7 +214,7 @@
       <div class="nav container">
         <div>Beschleuniger</div>
         <nav>
-          <a href="#hero">Start</a>
+          <a href="#cern-teile">Einleitung</a>
           <a href="#timeline">Timeline</a>
           <a href="#scale">Größe</a>
           <a href="#ring-hotspots">Stationen</a>
@@ -167,16 +236,54 @@
       <div class="scrollhint">Scroll</div>
     </section>
 
-    <!-- ================= 2) CERN UND SEINE TEILE ================= -->
+    <!-- === CERN & TEILE – Themen-Header === -->
     <section class="section" id="cern-teile">
       <div class="container">
-        <h2 class="reveal">CERN und seine Teile</h2>
-        <p class="reveal">
-          Kurzer Überblick über die einzelnen Bestandteile des CERN und wie sie zusammenarbeiten.
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        <div class="topic-header reveal">
+          <h2>CERN und seine Teile</h2>
+        </div>
+        <p class="topic-note reveal">
+          Das CERN (Europäische Organisation für Kernforschung) ist eines der größten und bedeutendsten Forschungszentren der Welt. Es liegt an der Grenze zwischen der Schweiz und Frankreich bei Genf und beschäftigt Wissenschaftlerinnen und Wissenschaftler aus über 100 Ländern. Am bekanntesten ist das CERN für seinen Teilchenbeschleuniger, den Large Hadron Collider (LHC), mit dem die kleinsten Bausteine des Universums erforscht werden. Ziel ist es, grundlegende Fragen der Physik über Materie und Energie zu beantworten.
         </p>
+        <!-- Themen-Boxen statt Leiste -->
+        <div class="topic-grid">
+          <a class="topic-card" href="#timeline">
+            <h3>Zeitleiste</h3>
+            <p>Wichtige Meilensteine</p>          
+          <a class="topic-card" href="#scale">
+            <h3>Größe</h3>
+            <p>Ringumfang, Lage, Maßstab</p>
+          </a>
+          <a class="topic-card" href="#ring-hotspots">
+            <h3>Stationen</h3>
+            <p>ATLAS, CMS, ALICE, LHCb</p>
+          </a>
+          <a class="topic-card" href="#acceleration-chain">
+            <h3>Physik</h3>
+            <p>RF-Kavitäten, Magnete, Beschleunigerkette</p>
+          </a>
+          <a class="topic-card" href="#collision-detector">
+            <h3>Kollision</h3>
+            <p>Tracker, ECAL, HCAL, Muonen</p>
+          </a>
+
+          </a>
+          <a class="topic-card" href="#sources">
+            <h3>Quellen</h3>
+            <p>Links & Nachweise</p>
+          </a>
+        </div>
+
+
+          
+          
+        </div>
+
+
       </div>
     </section>
+
+
 
 
     <!-- ================= 2) TIMELINE ================= -->
@@ -436,11 +543,51 @@
       nextBtn.addEventListener('click',()=>go(1));
       window.addEventListener('keydown',e=>{ if(e.key==='ArrowLeft') go(-1); if(e.key==='ArrowRight') go(1); });
     </script>
+    <script>
+      // === Themen-Header: Pfeile scrollen die Leiste ===
+      const bar = document.getElementById('topic-scroll');
+      const prevBtn = document.getElementById('topic-prev');
+      const nextBtn = document.getElementById('topic-next');
+      function scrollByAmount(px){ bar && bar.scrollBy({left:px, behavior:'smooth'}); }
+      prevBtn && prevBtn.addEventListener('click',()=>scrollByAmount(-300));
+      nextBtn && nextBtn.addEventListener('click',()=>scrollByAmount(300));
+    </script>
+    <script>
+      // === Anchor-Scroll + Abschnitt-Highlight ===
+      (function(){
+        function highlight(hash){
+          if(!hash) return;
+          const el=document.querySelector(hash);
+          if(!el) return;
+          el.classList.remove('flash'); // reset, falls doppelklick
+          // nach minimalem Delay, damit CSS-Animation sicher neu startet
+          requestAnimationFrame(()=>{ el.classList.add('flash'); });
+          setTimeout(()=>el.classList.remove('flash'), 1300);
+        }
+
+        // Alle internen Anker (Header, Topic-Bar, etc.)
+        document.querySelectorAll('a[href^="#"]').forEach(a=>{
+          a.addEventListener('click', (e)=>{
+            const hash=a.getAttribute('href');
+            const target=document.querySelector(hash);
+            if(!target) return;
+            e.preventDefault();
+            target.scrollIntoView({behavior:'smooth', block:'start'});
+            // URL-Hash setzen (für Back-Button & Copy-Paste)
+            history.pushState(null, "", hash);
+            highlight(hash);
+          });
+        });
+
+        // Hash direkt beim Laden hervorheben (wenn URL schon #... hat)
+        if(location.hash){ setTimeout(()=>highlight(location.hash), 300); }
+
+        // Auch reagieren, wenn Hash sich anders ändert (z.B. Back/Forward)
+        window.addEventListener('hashchange', ()=>highlight(location.hash));
+      })();
+    </script>
   </body>
 </html>
-
-
-
 
 
 
