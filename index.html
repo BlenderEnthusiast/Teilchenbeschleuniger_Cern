@@ -206,6 +206,43 @@
         #collision-detector .rings{grid-template-columns:1fr}
         .safety{grid-template-columns:1fr}
       }
+      /* === Accordion (smooth, ohne Jump) === */
+      .accordion{padding:0; overflow:hidden}
+      .accordion-header{
+        width:100%; display:flex; justify-content:space-between; align-items:center;
+        gap:12px; padding:16px 18px; background:transparent; border:0; color:var(--fg);
+        cursor:pointer; font-size:18px; text-align:left;
+      }
+      .accordion .chev{transition:transform .3s ease, color .3s ease; opacity:.9}
+      .accordion.open .chev{transform:rotate(90deg); color:#9affa7}
+
+      /* WICHTIG: Padding bleibt konstant; wir animieren nur height */
+      .accordion-content{
+        height:0; overflow:hidden; padding:0 18px 0 18px;
+        transition: height .42s cubic-bezier(.22,.61,.36,1);
+        will-change: height;
+        color:var(--muted);
+      }
+      .accordion.open .accordion-content{ /* keine padding-Änderung hier */ }
+
+      .accordion-inner{
+        padding:12px 0 16px 0;  /* Innenabstand, ändert sich NICHT beim Toggle */
+      }
+
+      .accordion{transition: border-color .28s ease, box-shadow .28s ease, background .28s ease}
+      .accordion.open{
+        border-color: #90ff86;
+        box-shadow: 0 6px 22px rgba(134,225,255,.16);
+        background: linear-gradient(180deg,#18181b,#141416);
+      }
+
+      /* Mobile Tweaks */
+      @media (max-width:900px){
+        .accordion-header{font-size:16px; padding:14px 16px}
+      }
+
+
+
     </style>
   </head>
   <body>
@@ -239,12 +276,25 @@
     <!-- === CERN & TEILE – Themen-Header === -->
     <section class="section" id="cern-teile">
       <div class="container">
-        <div class="topic-header reveal">
-          <h2>CERN und seine Teile</h2>
+        <!-- === Accordion: Was ist CERN? === -->
+        <!-- === Accordion: Was ist CERN? (breit + card) === -->
+        <div class="accordion card reveal" id="cern-accordion">
+          <button class="accordion-header" type="button" aria-expanded="false">
+            <span>Was ist CERN?</span>
+            <span class="chev">▸</span>
+          </button>
+            <div class="accordion-content" id="cern-accordion-content">
+              <div class="accordion-inner">
+                Das CERN (Europäische Organisation für Kernforschung) ist eines der größten und bedeutendsten Forschungszentren
+                der Welt. Es liegt an der Grenze zwischen der Schweiz und Frankreich bei Genf und beschäftigt Wissenschaftlerinnen
+                und Wissenschaftler aus über 100 Ländern. Am bekanntesten ist das CERN für seinen Teilchenbeschleuniger, den Large
+                Hadron Collider (LHC), mit dem die kleinsten Bausteine des Universums erforscht werden. Ziel ist es, grundlegende
+                Fragen der Physik über Materie und Energie zu beantworten.
+              </div>
+            </div>
         </div>
-        <p class="topic-note reveal">
-          Das CERN (Europäische Organisation für Kernforschung) ist eines der größten und bedeutendsten Forschungszentren der Welt. Es liegt an der Grenze zwischen der Schweiz und Frankreich bei Genf und beschäftigt Wissenschaftlerinnen und Wissenschaftler aus über 100 Ländern. Am bekanntesten ist das CERN für seinen Teilchenbeschleuniger, den Large Hadron Collider (LHC), mit dem die kleinsten Bausteine des Universums erforscht werden. Ziel ist es, grundlegende Fragen der Physik über Materie und Energie zu beantworten.
-        </p>
+
+
         <!-- Themen-Boxen statt Leiste -->
         <div class="topic-grid">
           <a class="topic-card" href="#timeline">
@@ -585,6 +635,75 @@
         // Auch reagieren, wenn Hash sich anders ändert (z.B. Back/Forward)
         window.addEventListener('hashchange', ()=>highlight(location.hash));
       })();
+    </script>
+    <script>
+    // === Accordion Smooth Height ohne Sprung ===
+    (function(){
+      const acc = document.getElementById('cern-accordion');
+      if(!acc) return;
+
+      const btn   = acc.querySelector('.accordion-header');
+      const panel = document.getElementById('cern-accordion-content');
+      const inner = panel.querySelector('.accordion-inner');
+
+      function openPanel(){
+        acc.classList.add('open');
+        btn.setAttribute('aria-expanded','true');
+
+        // 1) Höhe auf auto setzen, messen, dann animierbar machen
+        panel.style.height = 'auto';
+        const target = panel.scrollHeight;
+
+        // 2) von 0 -> target animieren (doppel-RAF für sicheren Reflow)
+        panel.style.height = '0px';
+        requestAnimationFrame(()=>{
+          requestAnimationFrame(()=>{
+            panel.style.height = target + 'px';
+          });
+        });
+      }
+
+      function closePanel(){
+        btn.setAttribute('aria-expanded','false');
+        // Von aktueller auto/px Höhe -> 0 animieren
+        panel.style.height = panel.scrollHeight + 'px';
+        requestAnimationFrame(()=>{
+          panel.style.height = '0px';
+        });
+        acc.classList.remove('open');
+      }
+
+      btn.addEventListener('click', ()=>{
+        const willOpen = !acc.classList.contains('open');
+        if(willOpen) openPanel(); else closePanel();
+      });
+
+      // Nach Ende der Transition Höhe fixen, damit Inhalt flexibel bleibt
+      panel.addEventListener('transitionend', (e)=>{
+        if(e.propertyName !== 'height') return;
+        if(acc.classList.contains('open')){
+          panel.style.height = 'auto';
+        }
+      });
+
+      // Auto-Einklappen, wenn kaum sichtbar
+      const io = new IntersectionObserver((entries)=>{
+        entries.forEach(entry=>{
+          if(entry.intersectionRatio < 0.2 && acc.classList.contains('open')){
+            closePanel();
+          }
+        });
+      },{threshold:[0,0.2,1]});
+      io.observe(acc);
+
+      // Falls Bilder/Schriften später laden und Höhe ändern → Höhe nachziehen
+      const ro = new ResizeObserver(()=>{
+        if(acc.classList.contains('open') && panel.style.height !== 'auto'){
+          panel.style.height = inner.getBoundingClientRect().height + 'px';
+        }
+      });
+      ro.observe(inner);
+    })();
     </script>
   </body>
 </html>
