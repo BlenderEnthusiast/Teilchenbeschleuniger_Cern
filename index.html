@@ -146,14 +146,14 @@
       @media (max-width:900px){.topic-bar{grid-template-columns:1fr}.topic-ctrl{display:none}.topic-scroll{padding:8px}}
       /* === Themen-Boxen (CERN & Teile) === */
       .topic-grid{
-        display:grid; gap:14px; margin:18px 0;
+        display:grid; gap:6px; margin:18px 0;
         grid-template-columns: repeat(1, 1fr);
         perspective: 800px;
       }
       .topic-card{
         position:relative; background:var(--card);
         border:1px solid var(--line); border-radius:16px;
-        padding:16px; min-height:110px;
+        padding:16px; min-height:60px;
         text-decoration:none; color:var(--fg);
         display:flex; flex-direction:column; justify-content:center; gap:6px;
         transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease, background .25s ease;
@@ -231,7 +231,7 @@
       <div class="media" aria-hidden="true"><img src="cern-hero.jpg" alt="" loading="lazy"></div>
       <div class="content container">
         <div class="title">Teilchen auf nahezu Lichtgeschwindigkeit</div>
-        <div class="subtitle">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer ac ante in lorem aliquet posuere.</div>
+        <div class="subtitle">Eine Einführung in CERN seine Geschichte seine Beschleuniger mit focus auf den LHC Komplex und ein Blick auf die Physik hinter CERN.</div>
       </div>
       <div class="scrollhint">Scroll</div>
     </section>
@@ -249,28 +249,28 @@
         <div class="topic-grid">
           <a class="topic-card" href="#timeline">
             <h3>Zeitleiste</h3>
-            <p>Wichtige Meilensteine</p>          
+            <p>Wichtige Geschenisse im Laufe der Zeit</p>          
           <a class="topic-card" href="#scale">
-            <h3>Größe</h3>
-            <p>Ringumfang, Lage, Maßstab</p>
+            <h3>Beschleunigerkette</h3>
+            <p>Ein näherer Blick in die Beschleuniger und Detektoren des LHC Komplexes</p>
           </a>
           <a class="topic-card" href="#ring-hotspots">
-            <h3>Stationen</h3>
-            <p>ATLAS, CMS, ALICE, LHCb</p>
+            <h3>Teilchenbeschleuniger</h3>
+            <p>Die Funktionsweise von Teilchenbeschleuniger generell und die verschiedenen Arten in CERN</p>
           </a>
           <a class="topic-card" href="#acceleration-chain">
             <h3>Physik</h3>
-            <p>RF-Kavitäten, Magnete, Beschleunigerkette</p>
+            <p>Die Physik hinter den Beschleunigern CERNs</p>
           </a>
           <a class="topic-card" href="#collision-detector">
-            <h3>Kollision</h3>
-            <p>Tracker, ECAL, HCAL, Muonen</p>
+            <h3>Kollisionen</h3>
+            <p>Die geschenisse in den Kollisionskammern</p>
           </a>
 
           </a>
           <a class="topic-card" href="#sources">
             <h3>Quellen</h3>
-            <p>Links & Nachweise</p>
+            <p>Quellen & Arbeitsnachweise</p>
           </a>
         </div>
 
@@ -588,6 +588,8 @@
     </script>
   </body>
 </html>
+
+
 
 
 
