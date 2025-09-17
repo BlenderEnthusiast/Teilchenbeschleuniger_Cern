@@ -227,7 +227,7 @@
     <section class="hero" id="hero" aria-labelledby="hero-title">
       <div class="bg" aria-hidden="true"></div>
       <div class="content container">
-        <h1 class="title" id="hero-title">Six Seven</h1>
+        <h1 class="title" id="hero-title">Teilchen auf nahezu Lichtgeschwindigkeit</h1>
         <p class="subtitle">Eine Einführung in CERN, seine Geschichte und seine Beschleuniger (Fokus: LHC-Komplex) – plus ein Blick auf die Physik dahinter.</p>
       </div>
     </section>
@@ -237,7 +237,7 @@
       <div class="container">
         <div class="accordion card reveal" id="cern-accordion">
           <button class="accordion-header" type="button" aria-expanded="false" aria-controls="cern-accordion-content">
-            <span>Six Seven</span>
+            <span>Was ist CERN?</span>
             <span class="chev" aria-hidden="true">▸</span>
           </button>
           <div class="accordion-content" id="cern-accordion-content">
@@ -322,8 +322,8 @@
             <div class="flow-viewport">
               <model-viewer
                 id="flow-model"
-                src="C:\Users\chris\Downloads\LHC KOMplex.glb"
-                alt="LHC KOMplex.glb"
+                src="LHC.glb"
+                alt="3D-Modell: Linear Accelerator 4 (LINAC4)"
                 camera-controls
                 auto-rotate
                 touch-action="pan-y"
@@ -694,18 +694,18 @@
       const nextBtn = document.getElementById('step-next');
 
       const protons = [
-        { key:'Linear Accelerator 4 (LINAC4)',            model:'LHC KOMplex.glb', text:'LINAC4 beschleunigt H⁻-Ionen, Injektor für den PS Booster.' },
-        { key:'Proton Synchrotron Booster (PS Booster)',  model:'models/psb.glb',    text:'Booster komprimiert die Bündel und erhöht die Energie.' },
-        { key:'Proton Synchrotron (PS)',                  model:'models/ps.glb',     text:'PS verteilt Strahlen und bereitet für SPS/Experimente vor.' },
-        { key:'Super Proton Synchrotron (SPS)',           model:'models/sps.glb',    text:'SPS dient als Vorbeschleuniger für den LHC.' },
-        { key:'Large Hadron Collider (LHC)',              model:'models/lhc.glb',    text:'Kollisionen bei sehr hoher Schwerpunktsenergie.' },
+        { key:'Linear Accelerator 4 (LINAC4)',            model:'LHC.glb', text:'LINAC4 beschleunigt H⁻-Ionen, Injektor für den PS Booster.' },
+        { key:'Proton Synchrotron Booster (PS Booster)',  model:'LHC.glb',    text:'Booster komprimiert die Bündel und erhöht die Energie.' },
+        { key:'Proton Synchrotron (PS)',                  model:'LHC.glb',     text:'PS verteilt Strahlen und bereitet für SPS/Experimente vor.' },
+        { key:'Super Proton Synchrotron (SPS)',           model:'LHC.glb',    text:'SPS dient als Vorbeschleuniger für den LHC.' },
+        { key:'Large Hadron Collider (LHC)',              model:'LHC.glb',    text:'Kollisionen bei sehr hoher Schwerpunktsenergie.' },
       ];
       const ions = [
-        { key:'Linear Accelerator 3 (LINAC3)',            model:'models/linac3.glb', text:'LINAC3 erzeugt und beschleunigt Schwerionen (z. B. Pb).' },
-        { key:'Low Energy Ion Ring (LEIR)',               model:'models/leir.glb',   text:'LEIR kühlt und formt die Ionen-Bündel.' },
-        { key:'Proton Synchrotron (PS)',                  model:'models/ps.glb',     text:'Weitere Beschleunigung und Verteilung.' },
-        { key:'Super Proton Synchrotron (SPS)',           model:'models/sps.glb',    text:'Vorbereitung auf die LHC-Injektion.' },
-        { key:'Large Hadron Collider (LHC)',              model:'models/lhc.glb',    text:'Schwerionen-Kollisionen (z. B. Pb–Pb).' },
+        { key:'Linear Accelerator 3 (LINAC3)',            model:'LHC.glb', text:'LINAC3 erzeugt und beschleunigt Schwerionen (z. B. Pb).' },
+        { key:'Low Energy Ion Ring (LEIR)',               model:'LHC.glb',   text:'LEIR kühlt und formt die Ionen-Bündel.' },
+        { key:'Proton Synchrotron (PS)',                  model:'LHC.glb',     text:'Weitere Beschleunigung und Verteilung.' },
+        { key:'Super Proton Synchrotron (SPS)',           model:'LHC.glb',    text:'Vorbereitung auf die LHC-Injektion.' },
+        { key:'Large Hadron Collider (LHC)',              model:'LHC.glb',    text:'Schwerionen-Kollisionen (z. B. Pb–Pb).' },
       ];
 
       let mode = 'protons';
@@ -758,11 +758,120 @@
     })();
     </script>
 
+    <script defer>
+      (function(){
+        // ====== CONFIG: Fokus-Presets (Platzhalter – mit echten Werten ersetzen) ======
+        // target: "x y z" in Modellkoordinaten (Meter), orbit: "theta phi radius%"
+        // Tipp: radius% = 10–60% je nach gewünschter Nähe (relativ zur Modellgröße)
+        const FOCUS = {
+          // Experimente am LHC
+          ATLAS: { target: "10 0 25", orbit: "30deg 75deg 28%", fov: "35deg" },
+          CMS:   { target: "-12 2 -18", orbit: "-35deg 70deg 26%", fov: "35deg" },
+          ALICE: { target: "22 1 -5", orbit: "120deg 75deg 30%", fov: "35deg" },
+          LHCb:  { target: "-25 -1 14", orbit: "210deg 70deg 28%", fov: "35deg" },
+
+          // Ketten-Stationen (Beispiele)
+          LINAC4: { target: "-60 0 0", orbit: "0deg 75deg 35%", fov: "40deg" },
+          PSB:    { target: "-40 0 10", orbit: "20deg 75deg 32%", fov: "40deg" },
+          PS:     { target: "-22 0 15", orbit: "35deg 75deg 32%", fov: "40deg" },
+          SPS:    { target: "0 0 0",    orbit: "60deg 75deg 38%", fov: "38deg" },
+          LHC:    { target: "0 0 0",    orbit: "120deg 75deg 55%", fov: "45deg" }
+        };
+
+        // ====== Helpers ======
+        const mv = document.getElementById('flow-model');
+        if(!mv) return;
+
+        // Sanftes Fokussieren
+        function focusOn({target, orbit, fov}){
+          if(target) mv.setAttribute('camera-target', target);
+          if(orbit)  mv.setAttribute('camera-orbit',  orbit);
+          if(fov)    mv.setAttribute('field-of-view', fov);
+          // Optional: Orbit-Grenzen etwas lockern
+          mv.setAttribute('min-camera-orbit', 'auto auto 8%');
+          mv.setAttribute('max-camera-orbit', 'auto auto 120%');
+        }
+
+        // ====== Hook 1: Hotspots (ATLAS/CMS/ALICE/LHCb) ======
+        // Deine Hotspots haben data-title="ATLAS" usw. → daran hängen wir uns dran.
+        document.querySelectorAll('#ring-hotspots .hotspot').forEach(btn=>{
+          const key = (btn.dataset.title || '').toUpperCase();
+          btn.addEventListener('click', ()=>{
+            const preset = FOCUS[key];
+            if(preset) focusOn(preset);
+          });
+        });
+
+        // ====== Hook 2: Schritte der Beschleunigerkette ======
+        // Wir hängen uns an deine vorhandenen Step-Buttons und den Renderfluss an.
+        const modePro = document.getElementById('mode-protons');
+        const modeIon = document.getElementById('mode-ions');
+        const prevBtn = document.getElementById('step-prev');
+        const nextBtn = document.getElementById('step-next');
+
+        // Mapping: Index -> Preset-Key (pro Modus)
+        const STEP_MAP = {
+          protons: ['LINAC4','PSB','PS','SPS','LHC'],
+          ions:    ['LINAC3','LEIR','PS','SPS','LHC'] // LINAC3/LEIR kannst du unten ergänzen
+        };
+
+        let mode = 'protons';
+        let i = 0;
+
+        function applyStepFocus(){
+          const arr = STEP_MAP[mode];
+          const key = arr?.[i];
+          const preset = FOCUS[key];
+          if(preset) focusOn(preset);
+        }
+
+        // Moduswechsel abfangen (Buttons existieren schon bei dir)
+        modePro?.addEventListener('click', ()=>{ mode='protons'; i=0; applyStepFocus(); });
+        modeIon?.addEventListener('click', ()=>{ mode='ions';    i=0; applyStepFocus(); });
+
+        // Step-Navigation abfangen
+        prevBtn?.addEventListener('click', ()=>{ if(i>0){ i--; applyStepFocus(); } });
+        nextBtn?.addEventListener('click', ()=>{ const max=(STEP_MAP[mode]?.length||1)-1; if(i<max){ i++; applyStepFocus(); } });
+
+        // Init-Fokus (nachdem das Modell geladen ist)
+        mv.addEventListener('load', ()=>{ applyStepFocus(); }, {once:true});
+
+        // ====== (Optional) Hook 3: Timeline-Karten → zentrieren (wenn gewünscht)
+        // Beispiel: Wenn du die Timeline mit Events an Orte koppeln willst,
+        // kannst du hier per Custom-Map fokussieren, wenn .event-card wechselt.
+
+        // ====== Dev-Helper: 3D-Koordinaten im Modell finden ======
+        // Alt + Klick auf das Modell → gibt dir Position & Vorschlag für Preset aus.
+        mv.addEventListener('click', async (ev)=>{
+          if(!ev.altKey) return;
+          const rect = mv.getBoundingClientRect();
+          const x = ev.clientX - rect.left;
+          const y = ev.clientY - rect.top;
+          // positionAndNormalFromPoint(x, y) liefert Treffpunkt in Weltkoordinaten:
+          const hit = mv.positionAndNormalFromPoint && mv.positionAndNormalFromPoint(x, y);
+          if(!hit) { console.warn('Hit-Test nicht verfügbar. Stelle sicher, dass du eine aktuelle model-viewer-Version nutzt.'); return; }
+
+          const {position} = hit; // {x,y,z} in Modellkoordinaten
+          const posStr = `${position.x.toFixed(2)} ${position.y.toFixed(2)} ${position.z.toFixed(2)}`;
+          console.log('%c[model-viewer] target:', 'color:#7dd3fc', posStr);
+
+          // Beispiel: Sofort dorthin fokussieren (mit mittlerem Zoom)
+          focusOn({ target: posStr, orbit: `${mv.getCameraOrbit?.().theta || 45}deg 75deg 28%`, fov: '35deg' });
+
+          // Copy-ready Preset-Vorschlag:
+          console.log(`Preset-Vorschlag:\n{ target: "${posStr}", orbit: "30deg 75deg 28%", fov: "35deg" }`);
+        });
+
+        // ====== Bonus: Wenn du noch LINAC3/LEIR fokussieren willst ======
+        // Füge einfach hier echte Werte hinzu:
+        // FOCUS.LINAC3 = { target: "x y z", orbit: "30deg 75deg 28%", fov: "35deg" };
+        // FOCUS.LEIR   = { target: "x y z", orbit: "30deg 75deg 28%", fov: "35deg" };
+      })();
+      </script>
+
+
   </body>
 </html>
-
-
-
 
 
 
