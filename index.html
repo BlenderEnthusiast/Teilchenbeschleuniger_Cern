@@ -759,119 +759,127 @@ w<!doctype html>
     </script>
 
     <script defer>
-      (function(){
-        // ====== CONFIG: Fokus-Presets (Platzhalter – mit echten Werten ersetzen) ======
-        // target: "x y z" in Modellkoordinaten (Meter), orbit: "theta phi radius%"
-        // Tipp: radius% = 10–60% je nach gewünschter Nähe (relativ zur Modellgröße)
-        const FOCUS = {
-          // Experimente am LHC
-          ATLAS: { target: "1000 0 25", orbit: "30deg 75deg 28%", fov: "35deg" },
-          CMS:   { target: "-12 2 -18", orbit: "-35deg 70deg 26%", fov: "35deg" },
-          ALICE: { target: "22 1 -5", orbit: "120deg 75deg 30%", fov: "35deg" },
-          LHCb:  { target: "-25 -1 14", orbit: "210deg 70deg 28%", fov: "35deg" },
-
-          // Ketten-Stationen (Beispiele)
-          LINAC4: { target: "1000 1000 1000", orbit: "0deg 75deg 35%", fov: "40deg" },
-          PSB:    { target: "1000 1000 1000", orbit: "20deg 75deg 32%", fov: "40deg" },
-          PS:     { target: "1000 1000 1000", orbit: "35deg 75deg 32%", fov: "40deg" },
-          SPS:    { target: "0 0 0",    orbit: "60deg 75deg 38%", fov: "38deg" },
-          LHC:    { target: "0 0 0",    orbit: "120deg 75deg 55%", fov: "45deg" }
+    (function(){
+      // ========= EIN GESAMTMODELL LADEN (überschreibt evtl. vorhandene src) =========
+      const mv = document.getElementById('flow-model');
+      if(!mv){
+        console.warn('[LHC focus] Kein <model-viewer id="flow-model"> gefunden.');
+        return;
+      }
+      // Ein einziges Modell für alles
+      mv.src = 'models/LHC-Komplex.glb';
+      mv.alt = '3D-Modell: LHC-Komplex';
+    
+      // ========= FOKUS-PRESETS (BEISPIELWERTE, LÄUFT SOFORT) =========
+      // target: "x y z" in Modellkoordinaten; orbit: "theta phi radius%"
+      // Die Zahlen sind bewusst „brauchbar“ gewählt. Später kannst du sie verfeinern.
+      const FOCUS = {
+        // Experimente
+        ATLAS: { target: "12 0 28",   orbit: "35deg 70deg 26%", fov: "35deg" },
+        CMS:   { target: "-14 2 -20", orbit: "-30deg 70deg 26%", fov: "35deg" },
+        ALICE: { target: "24 1 -6",   orbit: "110deg 70deg 28%", fov: "35deg" },
+        LHCb:  { target: "-26 -1 16", orbit: "210deg 70deg 28%", fov: "35deg" },
+    
+        // Beschleuniger-Kette (ungefähre Bereiche rund um Einrichtungen)
+        LINAC4: { target: "-60 0 0",  orbit: "0deg 75deg 34%",  fov: "38deg" },
+        PSB:    { target: "-40 0 10", orbit: "20deg 75deg 32%", fov: "38deg" },
+        PS:     { target: "-22 0 15", orbit: "35deg 75deg 32%", fov: "38deg" },
+        SPS:    { target: "0 0 0",    orbit: "60deg 75deg 38%", fov: "40deg" },
+        LHC:    { target: "0 0 0",    orbit: "120deg 75deg 55%",fov: "45deg" },
+    
+        // Ionen-spezifisch (grobe Bereiche)
+        LINAC3: { target: "-58 0 -8", orbit: "-10deg 75deg 34%", fov: "38deg" },
+        LEIR:   { target: "-32 0 -6", orbit: "15deg 75deg 32%",  fov: "38deg" },
+    
+        // Fallback
+        DEFAULT:{ target: "0 0 0",    orbit: "45deg 75deg 65%", fov: "45deg" }
+      };
+    
+      // ========= HELPER: sanftes Fokussieren =========
+      function focusOn(key){
+        const p = FOCUS[key] || FOCUS.DEFAULT;
+        mv.setAttribute('camera-target', p.target);
+        mv.setAttribute('camera-orbit',  p.orbit);
+        mv.setAttribute('field-of-view', p.fov);
+        // etwas Bewegungsfreiheit
+        mv.setAttribute('min-camera-orbit', 'auto auto 8%');
+        mv.setAttribute('max-camera-orbit', 'auto auto 120%');
+      }
+    
+      // ========= HOTSPOTS: ATLAS/CMS/ALICE/LHCb zoomen =========
+      document.querySelectorAll('#ring-hotspots .hotspot').forEach(btn=>{
+        const key = (btn.dataset.title || '').toUpperCase();
+        btn.addEventListener('click', ()=> focusOn(key));
+      });
+    
+      // ========= BESCHLEUNIGER-KETTE: nur Kamera bewegen (kein Modellwechsel!) =========
+      const modePro = document.getElementById('mode-protons');
+      const modeIon = document.getElementById('mode-ions');
+      const elTitle = document.getElementById('flow-title');
+      const elText  = document.getElementById('flow-text');
+      const prevBtn = document.getElementById('step-prev');
+      const nextBtn = document.getElementById('step-next');
+    
+      // Schritte: nur key & text (kein model mehr)
+      const protons = [
+        { key:'LINAC4', text:'LINAC4 beschleunigt H⁻-Ionen; Injektor für den PS Booster.' },
+        { key:'PSB',    text:'PS Booster komprimiert Bündel & erhöht Energie.' },
+        { key:'PS',     text:'PS verteilt Strahlen und bereitet für SPS/Experimente vor.' },
+        { key:'SPS',    text:'SPS dient als Vorbeschleuniger für den LHC.' },
+        { key:'LHC',    text:'Kollisionen bei sehr hoher Schwerpunktsenergie.' }
+      ];
+      const ions = [
+        { key:'LINAC3', text:'LINAC3 erzeugt und beschleunigt Schwerionen (z. B. Pb).' },
+        { key:'LEIR',   text:'LEIR kühlt & formt Ionen-Bündel.' },
+        { key:'PS',     text:'Weitere Beschleunigung & Verteilung.' },
+        { key:'SPS',    text:'Vorbereitung auf LHC-Injektion.' },
+        { key:'LHC',    text:'Schwerionen-Kollisionen (z. B. Pb–Pb).' }
+      ];
+    
+      let mode = 'protons';
+      let i = 0;
+      const seq = () => (mode==='protons' ? protons : ions);
+    
+      // kleine Fade-Helfer für Text
+      function fade(el, text, dur=180){
+        const RDM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if(RDM){ el.textContent = text; return; }
+        el.animate([{opacity:1},{opacity:.2}],{duration:dur,easing:'ease'}).onfinish=()=>{
+          el.textContent = text;
+          el.animate([{opacity:.2},{opacity:1}],{duration:dur,easing:'ease'});
         };
-
-        // ====== Helpers ======
-        const mv = document.getElementById('flow-model');
-        if(!mv) return;
-
-        // Sanftes Fokussieren
-        function focusOn({target, orbit, fov}){
-          if(target) mv.setAttribute('camera-target', target);
-          if(orbit)  mv.setAttribute('camera-orbit',  orbit);
-          if(fov)    mv.setAttribute('field-of-view', fov);
-          // Optional: Orbit-Grenzen etwas lockern
-          mv.setAttribute('min-camera-orbit', 'auto auto 8%');
-          mv.setAttribute('max-camera-orbit', 'auto auto 120%');
-        }
-
-        // ====== Hook 1: Hotspots (ATLAS/CMS/ALICE/LHCb) ======
-        // Deine Hotspots haben data-title="ATLAS" usw. → daran hängen wir uns dran.
-        document.querySelectorAll('#ring-hotspots .hotspot').forEach(btn=>{
-          const key = (btn.dataset.title || '').toUpperCase();
-          btn.addEventListener('click', ()=>{
-            const preset = FOCUS[key];
-            if(preset) focusOn(preset);
-          });
-        });
-
-        // ====== Hook 2: Schritte der Beschleunigerkette ======
-        // Wir hängen uns an deine vorhandenen Step-Buttons und den Renderfluss an.
-        const modePro = document.getElementById('mode-protons');
-        const modeIon = document.getElementById('mode-ions');
-        const prevBtn = document.getElementById('step-prev');
-        const nextBtn = document.getElementById('step-next');
-
-        // Mapping: Index -> Preset-Key (pro Modus)
-        const STEP_MAP = {
-          protons: ['LINAC4','PSB','PS','SPS','LHC'],
-          ions:    ['LINAC3','LEIR','PS','SPS','LHC'] // LINAC3/LEIR kannst du unten ergänzen
-        };
-
-        let mode = 'protons';
-        let i = 0;
-
-        function applyStepFocus(){
-          const arr = STEP_MAP[mode];
-          const key = arr?.[i];
-          const preset = FOCUS[key];
-          if(preset) focusOn(preset);
-        }
-
-        // Moduswechsel abfangen (Buttons existieren schon bei dir)
-        modePro?.addEventListener('click', ()=>{ mode='protons'; i=0; applyStepFocus(); });
-        modeIon?.addEventListener('click', ()=>{ mode='ions';    i=0; applyStepFocus(); });
-
-        // Step-Navigation abfangen
-        prevBtn?.addEventListener('click', ()=>{ if(i>0){ i--; applyStepFocus(); } });
-        nextBtn?.addEventListener('click', ()=>{ const max=(STEP_MAP[mode]?.length||1)-1; if(i<max){ i++; applyStepFocus(); } });
-
-        // Init-Fokus (nachdem das Modell geladen ist)
-        mv.addEventListener('load', ()=>{ applyStepFocus(); }, {once:true});
-
-        // ====== (Optional) Hook 3: Timeline-Karten → zentrieren (wenn gewünscht)
-        // Beispiel: Wenn du die Timeline mit Events an Orte koppeln willst,
-        // kannst du hier per Custom-Map fokussieren, wenn .event-card wechselt.
-
-        // ====== Dev-Helper: 3D-Koordinaten im Modell finden ======
-        // Alt + Klick auf das Modell → gibt dir Position & Vorschlag für Preset aus.
-        mv.addEventListener('click', async (ev)=>{
-          if(!ev.altKey) return;
-          const rect = mv.getBoundingClientRect();
-          const x = ev.clientX - rect.left;
-          const y = ev.clientY - rect.top;
-          // positionAndNormalFromPoint(x, y) liefert Treffpunkt in Weltkoordinaten:
-          const hit = mv.positionAndNormalFromPoint && mv.positionAndNormalFromPoint(x, y);
-          if(!hit) { console.warn('Hit-Test nicht verfügbar. Stelle sicher, dass du eine aktuelle model-viewer-Version nutzt.'); return; }
-
-          const {position} = hit; // {x,y,z} in Modellkoordinaten
-          const posStr = `${position.x.toFixed(2)} ${position.y.toFixed(2)} ${position.z.toFixed(2)}`;
-          console.log('%c[model-viewer] target:', 'color:#7dd3fc', posStr);
-
-          // Beispiel: Sofort dorthin fokussieren (mit mittlerem Zoom)
-          focusOn({ target: posStr, orbit: `${mv.getCameraOrbit?.().theta || 45}deg 75deg 28%`, fov: '35deg' });
-
-          // Copy-ready Preset-Vorschlag:
-          console.log(`Preset-Vorschlag:\n{ target: "${posStr}", orbit: "30deg 75deg 28%", fov: "35deg" }`);
-        });
-
-        // ====== Bonus: Wenn du noch LINAC3/LEIR fokussieren willst ======
-        // Füge einfach hier echte Werte hinzu:
-        // FOCUS.LINAC3 = { target: "x y z", orbit: "30deg 75deg 28%", fov: "35deg" };
-        // FOCUS.LEIR   = { target: "x y z", orbit: "30deg 75deg 28%", fov: "35deg" };
-      })();
-      </script>
-
-
+      }
+    
+      function render(){
+        const step = seq()[i];
+        fade(elTitle, step.key);
+        fade(elText,  step.text);
+        focusOn(step.key); // <<< hier passiert die Magie
+        prevBtn.disabled = (i===0);
+        nextBtn.disabled = (i===seq().length-1);
+      }
+    
+      function setMode(m){
+        if(mode===m) return;
+        mode = m; i = 0;
+        modePro.classList.toggle('active', mode==='protons');
+        modeIon.classList.toggle('active', mode==='ions');
+        render();
+      }
+    
+      modePro?.addEventListener('click', ()=>setMode('protons'));
+      modeIon?.addEventListener('click', ()=>setMode('ions'));
+      prevBtn?.addEventListener('click', ()=>{ if(i>0){ i--; render(); } });
+      nextBtn?.addEventListener('click', ()=>{ if(i<seq().length-1){ i++; render(); } });
+    
+      // Nach dem Laden des Modells initial fokussieren
+      mv.addEventListener('load', ()=>{ render(); }, { once:true });
+    
+    })();
+    </script>
   </body>
 </html>
+
 
 
 
