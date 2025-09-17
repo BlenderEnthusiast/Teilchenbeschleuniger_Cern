@@ -188,6 +188,22 @@
         animation: flashPulse 1200ms ease-out forwards 300ms;
       }
       @keyframes flashPulse{ 0%{opacity:0} 20%{opacity:1} 60%{opacity:.85} 100%{opacity:0} }
+
+      .flow-viewport {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        overflow: hidden;
+        background: #0f1014;
+      }
+      model-viewer {
+        width: 100%;
+        height: 100%;
+        display: block;
+        outline: none;
+      }
+
     </style>
   </head>
   <body>
@@ -303,10 +319,24 @@
           <h3 class="flow-step-title" id="flow-title">Linear Accelerator 4 (LINAC4)</h3>
 
           <div class="flow-right">
-            <div class="flow-img">
-              <img id="flow-img" src="images/chain/linac4.jpg" alt="Linear Accelerator 4 (LINAC4)" loading="lazy">
+            <div class="flow-viewport">
+              <model-viewer
+                id="flow-model"
+                src="C:\Users\chris\Downloads\LHC KOMplex.glb"
+                alt="3D-Modell: Linear Accelerator 4 (LINAC4)"
+                camera-controls
+                auto-rotate
+                touch-action="pan-y"
+                ar
+                ar-modes="webxr scene-viewer quick-look"
+                exposure="0.9"
+                shadow-intensity="0.6"
+                environment-image="neutral"
+                poster="images/chain/linac4-poster.jpg">
+              </model-viewer>
             </div>
           </div>
+
 
           <div class="flow-left">
             <p id="flow-text" class="flow-mini-text">
@@ -425,6 +455,8 @@
     <footer class="footer"><div class="container">© 2025 Schulprojekt</div></footer>
 
     <!-- ================= SCRIPTS ================= -->
+     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
     <script defer>
       // Reveal on view
       const ioReveal = new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('show')})},{threshold:.2});
@@ -651,82 +683,83 @@
         window.addEventListener('hashchange', ()=>highlight(location.hash));
       })();
     </script>
+    <script>
+    (function(){
+      const modePro = document.getElementById('mode-protons');
+      const modeIon = document.getElementById('mode-ions');
+      const elTitle = document.getElementById('flow-title');
+      const elText  = document.getElementById('flow-text');
+      const elModel = document.getElementById('flow-model');
+      const prevBtn = document.getElementById('step-prev');
+      const nextBtn = document.getElementById('step-next');
 
-    <script defer>
-      // Beschleunigerkette – Modus & Schrittsteuerung
-      (function(){
-        const modePro = document.getElementById('mode-protons');
-        const modeIon = document.getElementById('mode-ions');
-        const elTitle = document.getElementById('flow-title');
-        const elText  = document.getElementById('flow-text');
-        const elImg   = document.getElementById('flow-img');
-        const prevBtn = document.getElementById('step-prev');
-        const nextBtn = document.getElementById('step-next');
+      const protons = [
+        { key:'Linear Accelerator 4 (LINAC4)',            model:'models/linac4.glb', text:'LINAC4 beschleunigt H⁻-Ionen, Injektor für den PS Booster.' },
+        { key:'Proton Synchrotron Booster (PS Booster)',  model:'models/psb.glb',    text:'Booster komprimiert die Bündel und erhöht die Energie.' },
+        { key:'Proton Synchrotron (PS)',                  model:'models/ps.glb',     text:'PS verteilt Strahlen und bereitet für SPS/Experimente vor.' },
+        { key:'Super Proton Synchrotron (SPS)',           model:'models/sps.glb',    text:'SPS dient als Vorbeschleuniger für den LHC.' },
+        { key:'Large Hadron Collider (LHC)',              model:'models/lhc.glb',    text:'Kollisionen bei sehr hoher Schwerpunktsenergie.' },
+      ];
+      const ions = [
+        { key:'Linear Accelerator 3 (LINAC3)',            model:'models/linac3.glb', text:'LINAC3 erzeugt und beschleunigt Schwerionen (z. B. Pb).' },
+        { key:'Low Energy Ion Ring (LEIR)',               model:'models/leir.glb',   text:'LEIR kühlt und formt die Ionen-Bündel.' },
+        { key:'Proton Synchrotron (PS)',                  model:'models/ps.glb',     text:'Weitere Beschleunigung und Verteilung.' },
+        { key:'Super Proton Synchrotron (SPS)',           model:'models/sps.glb',    text:'Vorbereitung auf die LHC-Injektion.' },
+        { key:'Large Hadron Collider (LHC)',              model:'models/lhc.glb',    text:'Schwerionen-Kollisionen (z. B. Pb–Pb).' },
+      ];
+
+      let mode = 'protons';
+      let i = 0;
+
+      const seq = () => mode==='protons' ? protons : ions;
+
+      function fade(el, text, dur=200){
         const RDM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if(RDM){ el.textContent = text; return; }
+        el.animate([{opacity:1},{opacity:0.15}],{duration:dur,easing:'ease'}).onfinish=()=>{
+          el.textContent = text;
+          el.animate([{opacity:0.15},{opacity:1}],{duration:dur,easing:'ease'});
+        };
+      }
 
-        const protons = [
-          { key:'Linear Accelerator 4 (LINAC4)',                 img:'images/chain/linac4.jpg', text:'LINAC4 beschleunigt H⁻-Ionen, Injektor für den PS Booster.' },
-          { key:'Proton Synchrotron Booster (PS Booster)',       img:'images/chain/psb.jpg',    text:'Booster komprimiert die Bündel und erhöht die Energie.' },
-          { key:'Proton Synchrotron (PS)',                        img:'images/chain/ps.jpg',     text:'PS verteilt Strahlen und bereitet für SPS/Experimente vor.' },
-          { key:'Super Proton Synchrotron (SPS)',                 img:'images/chain/sps.jpg',    text:'SPS dient als Vorbeschleuniger für den LHC.' },
-          { key:'Large Hadron Collider (LHC)',                    img:'images/chain/lhc.jpg',    text:'Kollisionen bei sehr hoher Schwerpunktsenergie.' },
-        ];
-        const ions = [
-          { key:'Linear Accelerator 3 (LINAC3)',                  img:'images/chain/linac3.jpg', text:'LINAC3 erzeugt und beschleunigt Schwerionen (z. B. Pb).' },
-          { key:'Low Energy Ion Ring (LEIR)',                     img:'images/chain/leir.jpg',   text:'LEIR kühlt und formt die Ionen-Bündel.' },
-          { key:'Proton Synchrotron (PS)',                        img:'images/chain/ps.jpg',     text:'Weitere Beschleunigung und Verteilung.' },
-          { key:'Super Proton Synchrotron (SPS)',                 img:'images/chain/sps.jpg',    text:'Vorbereitung auf die LHC-Injektion.' },
-          { key:'Large Hadron Collider (LHC)',                    img:'images/chain/lhc.jpg',    text:'Schwerionen-Kollisionen (z. B. Pb–Pb).' },
-        ];
+      function swapModel(src, alt){
+        const RDM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if(RDM){ elModel.src=src; elModel.alt=alt; return; }
+        elModel.animate([{opacity:1},{opacity:0.15}],{duration:220,easing:'ease'}).onfinish=()=>{
+          elModel.src=src; elModel.alt=alt;
+          elModel.animate([{opacity:0.15},{opacity:1}],{duration:220,easing:'ease'});
+        };
+      }
 
-        let mode = 'protons';
-        let i = 0;
+      function render(){
+        const step = seq()[i];
+        fade(elTitle, step.key);
+        fade(elText, step.text);
+        swapModel(step.model, `3D-Modell: ${step.key}`);
+        prevBtn.disabled = (i===0);
+        nextBtn.disabled = (i===seq().length-1);
+      }
 
-        const seq = () => mode==='protons' ? protons : ions;
-
-        function fade(el, newText, dur=180){
-          if(RDM){ el.textContent=newText; return; }
-          el.animate([{opacity:1},{opacity:.25}],{duration:dur,easing:'ease'}).onfinish=()=>{
-            el.textContent=newText;
-            el.animate([{opacity:.25},{opacity:1}],{duration:dur,easing:'ease'});
-          };
-        }
-        function swapImg(img, src, alt, dur=200){
-          if(RDM){ img.src=src; img.alt=alt; return; }
-          img.animate([{opacity:1},{opacity:.15}],{duration:dur,easing:'ease'}).onfinish=()=>{
-            img.src=src; img.alt=alt;
-            img.animate([{opacity:.15},{opacity:1}],{duration:dur,easing:'ease'});
-          };
-        }
-
-        function render(){
-          const step = seq()[i];
-          fade(elTitle, step.key, 200);
-          fade(elText,  step.text, 200);
-          swapImg(elImg, step.img, step.key, 220);
-          prevBtn.disabled = (i===0);
-          nextBtn.disabled = (i===seq().length-1);
-        }
-
-        function setMode(m){
-          if(mode===m) return;
-          mode = m; i = 0;
-          modePro.classList.toggle('active', mode==='protons');
-          modeIon.classList.toggle('active', mode==='ions');
-          render();
-        }
-
-        modePro.addEventListener('click', ()=>setMode('protons'));
-        modeIon.addEventListener('click', ()=>setMode('ions'));
-        prevBtn.addEventListener('click', ()=>{ if(i>0){ i--; render(); } });
-        nextBtn.addEventListener('click', ()=>{ if(i<seq().length-1){ i++; render(); } });
-
+      function setMode(m){
+        if(mode===m) return;
+        mode = m; i=0;
+        modePro.classList.toggle('active', mode==='protons');
+        modeIon.classList.toggle('active', mode==='ions');
         render();
-      })();
+      }
+
+      modePro.addEventListener('click',()=>setMode('protons'));
+      modeIon.addEventListener('click',()=>setMode('ions'));
+      prevBtn.addEventListener('click',()=>{ if(i>0){i--;render();} });
+      nextBtn.addEventListener('click',()=>{ if(i<seq().length-1){i++;render();} });
+
+      // init
+      render();
+    })();
     </script>
+
   </body>
 </html>
-
 
 
 
