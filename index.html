@@ -121,16 +121,9 @@
       .flow-left { position:relative; display:flex; flex-direction:column; justify-content:flex-start; height:100%; max-height:490px; overflow-y:auto; padding-bottom:50px; }
       .flow-mini-text { margin:0 0 12px; font-size:15px; line-height:1.6; color:var(--muted); }
       .step-nav-fixed {
-        position: absolute;
-        bottom: 0px; /* Vorher: 0; Verschiebt die Buttons 30px nach unten */
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        gap: 12px;
-        justify-content: center;
-        align-items: center;
+        position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+        display: flex; gap: 12px; justify-content: center; align-items: center;
       }
-
       .step-btn { padding:10px 32px; min-width:160px; border-radius:12px; border:1px solid var(--line); background:#121215; color:var(--fg); font-weight:300; font-size:12px; text-align:center; cursor:pointer; transition: background .25s ease, border-color .25s ease, transform .12s ease, opacity .25s ease; }
       .step-btn:hover { background:#1b1b20; border-color:var(--accent); }
       .step-btn:disabled { opacity:.5; cursor:not-allowed; }
@@ -187,24 +180,8 @@
       }
       @keyframes flashPulse{ 0%{opacity:0} 20%{opacity:1} 60%{opacity:.85} 100%{opacity:0} }
 
-      .flow-viewport {
-        width: 100%;
-        aspect-ratio: 1 / 1;
-        border-radius: 14px;
-        border: 1px solid var(--line);
-        overflow: hidden;
-        background: #0f1014;
-      }
-      model-viewer {
-        width: 100%;
-        height: 100%;
-        display: block;
-        outline: none;
-      }
-
-
-
-
+      .flow-viewport { width: 100%; aspect-ratio: 1 / 1; border-radius: 14px; border: 1px solid var(--line); overflow: hidden; background: #0f1014; }
+      model-viewer { width: 100%; height: 100%; display: block; outline: none; }
     </style>
   </head>
   <body>
@@ -228,7 +205,7 @@
     <section class="hero" id="hero" aria-labelledby="hero-title">
       <div class="bg" aria-hidden="true"></div>
       <div class="content container">
-        <h1 class="title" id="hero-title">six seven</h1>
+        <h1 class="title" id="hero-title">Teilchen auf nahezu Lichtgeschwindigkeit</h1>
         <p class="subtitle">Eine Einführung in CERN, seine Geschichte und seine Beschleuniger (Fokus: LHC-Komplex) – plus ein Blick auf die Physik dahinter.</p>
       </div>
     </section>
@@ -238,8 +215,7 @@
       <div class="container">
         <div class="accordion card reveal" id="cern-accordion">
           <button class="accordion-header" type="button" aria-expanded="false" aria-controls="cern-accordion-content">
-            <span>Was ist CERN?</span>
-            <span class="chev" aria-hidden="true">▸</span>
+            <span>Was ist CERN?</span><span class="chev" aria-hidden="true">▸</span>
           </button>
           <div class="accordion-content" id="cern-accordion-content">
             <div class="accordion-inner">
@@ -252,30 +228,12 @@
 
         <!-- Links -->
         <div class="topic-grid" aria-label="Themen">
-          <a class="topic-card" href="#timeline">
-            <h3>Zeitleiste</h3>
-            <p>Wichtige Geschehnisse im Laufe der Zeit</p>
-          </a>
-          <a class="topic-card" href="#chain-switch">
-            <h3>Beschleunigerkette</h3>
-            <p>Stufen & Detektoren im LHC-Komplex</p>
-          </a>
-          <a class="topic-card" href="#ring-hotspots">
-            <h3>Teilchenbeschleuniger</h3>
-            <p>Funktionsweise und Arten am CERN</p>
-          </a>
-          <a class="topic-card" href="#acceleration-chain">
-            <h3>Physik</h3>
-            <p>Die Grundlagen hinter den Beschleunigern</p>
-          </a>
-          <a class="topic-card" href="#collision-detector">
-            <h3>Kollisionen</h3>
-            <p>Was in den Detektoren passiert</p>
-          </a>
-          <a class="topic-card" href="#sources">
-            <h3>Quellen</h3>
-            <p>Quellen & Arbeitsnachweise</p>
-          </a>
+          <a class="topic-card" href="#timeline"><h3>Zeitleiste</h3><p>Wichtige Geschehnisse im Laufe der Zeit</p></a>
+          <a class="topic-card" href="#chain-switch"><h3>Beschleunigerkette</h3><p>Stufen & Detektoren im LHC-Komplex</p></a>
+          <a class="topic-card" href="#ring-hotspots"><h3>Teilchenbeschleuniger</h3><p>Funktionsweise und Arten am CERN</p></a>
+          <a class="topic-card" href="#acceleration-chain"><h3>Physik</h3><p>Die Grundlagen hinter den Beschleunigern</p></a>
+          <a class="topic-card" href="#collision-detector"><h3>Kollisionen</h3><p>Was in den Detektoren passiert</p></a>
+          <a class="topic-card" href="#sources"><h3>Quellen</h3><p>Quellen & Arbeitsnachweise</p></a>
         </div>
       </div>
     </section>
@@ -287,11 +245,9 @@
 
         <div class="timeline-slider reveal">
           <button class="nav-btn prev" type="button" aria-label="Zurück" title="Zurück">◀</button>
-
           <div class="event-card" aria-live="polite">
             <div class="anim-wrap"><!-- dynamic slide injected here --></div>
           </div>
-
           <button class="nav-btn next" type="button" aria-label="Weiter" title="Weiter">▶</button>
         </div>
 
@@ -324,7 +280,7 @@
               <model-viewer
                 id="flow-model"
                 src="LHC.glb"
-                alt="3D-Modell: LHC.glb"
+                alt="3D-Modell: LHC-Komplex"
                 camera-controls
                 auto-rotate
                 touch-action="pan-y"
@@ -336,8 +292,6 @@
               </model-viewer>
             </div>
           </div>
-
-
 
           <div class="flow-left">
             <p id="flow-text" class="flow-mini-text">
@@ -456,27 +410,12 @@
     <footer class="footer"><div class="container">© 2025 Schulprojekt</div></footer>
 
     <!-- ================= SCRIPTS ================= -->
-     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 
     <script defer>
       // Reveal on view
       const ioReveal = new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('show')})},{threshold:.2});
       document.querySelectorAll('.reveal').forEach(x=>ioReveal.observe(x));
-    </script>
-
-    <script defer>
-      // Hotspots
-      document.querySelectorAll('.hotspot').forEach((hotspot)=>{
-        const fact = hotspot.nextElementSibling;
-        hotspot.addEventListener('click', ()=>{
-          document.querySelectorAll('.fact').forEach(x=>x.classList.remove('show'));
-          fact.innerHTML = `<h3>${hotspot.dataset.title}</h3><p>${hotspot.dataset.text}</p>`;
-          fact.classList.add('show');
-        });
-        document.addEventListener('click', (ev)=>{
-          if(!hotspot.contains(ev.target) && !fact.contains(ev.target)) fact.classList.remove('show');
-        });
-      });
     </script>
 
     <script defer>
@@ -545,14 +484,14 @@
       (function(){
         const events=[
           {date:'1949',title:'CERN Vorschlag',text:'Louis de Broglie schlug auf der Europäischen Kulturkonferenz in Lausanne die Gründung eines europäischen Physiklaboratoriums vor.',img:'14-fascinating-facts-about-louis-de-broglie-1696476450.jpg',link:'https://de.wikipedia.org/wiki/Louis_de_Broglie'},
-          {date:'1952',title:'Offizielle gründung Cerns',text:'11 Regierungen unterzeichneten in Genf ein Abkommen zur Gründung des “Conseil Européen pour la Recherche Nucléaire” kurz CERN.',img:'OIP.webp',link:'https://de.wikipedia.org/wiki/CERN#Gr%C3%BCndung'},
-          {date:'1959',title:'Protonensynchrotron Rekord',text:'Das Protonensynchrotron erreichte 24 GeV und wurde damit zum leistungsstärksten Beschleuniger der Welt zu dieser Zeit.',img:'OIP (1).webp',link:'https://timeline.web.cern.ch/proton-synchrotron-starts'},
-          {date:'1968',title:'Drahtkammer erfunden',text:'Georges Charpak entwickelt einen neuen Teilchendetektor mit hoher Auflösung, revolutioniert damit die Experimentalphysik und wird 1992 mit dem Nobelpreis ausgezeichnet.',img:'OIP (3).webp',link:'https://de.wikipedia.org/wiki/CERN#Erste_Beschleuniger'},
+          {date:'1952',title:'Offizielle Gründung Cerns',text:'11 Regierungen unterzeichneten in Genf ein Abkommen zur Gründung des “Conseil Européen pour la Recherche Nucléaire” kurz CERN.',img:'OIP.webp',link:'https://de.wikipedia.org/wiki/CERN#Gr%C3%BCndung'},
+          {date:'1959',title:'Protonensynchrotron Rekord',text:'Das Protonensynchrotron erreichte 24 GeV und wurde damit zum leistungsstärksten Beschleuniger der Welt zur damaligen Zeit.',img:'OIP (1).webp',link:'https://timeline.web.cern.ch/proton-synchrotron-starts'},
+          {date:'1968',title:'Drahtkammer erfunden',text:'Georges Charpak entwickelt einen neuen Teilchendetektor mit hoher Auflösung; 1992 gab’s den Nobelpreis.',img:'OIP (3).webp',link:'https://de.wikipedia.org/wiki/CERN#Erste_Beschleuniger'},
           {date:'1976',title:'Super Synchrotron gestartet',text:'Der Super Proton Synchrotron (SPS) startete mit 400 GeV, später auf 500 GeV aufgerüstet.',img:'IMG_0496.jpeg',link:'https://timeline.web.cern.ch/super-proton-synchrotron-starts'},
-          {date:'1989',title:'LEP gestartet',text:'Der Large Electron-Positron Collider (LEP) nahm den Betrieb auf. Im 27 km langen Tunnel kollidierten Elektronen und Positronen mit bis zu 100 GeV.',img:'IMG_0507.jpeg',link:'https://timeline.web.cern.ch/large-electron-positron-collider-first-injection'},
-          {date:'1996',title:'Antiwasserstoff erzeugt',text:'Am LEAR-Speicherring werden erstmals Antiwasserstoff-Atome hergestellt',img:'1989.jpg',link:'https://de.wikipedia.org/wiki/CERN#Large_Electron-Positron_Collider'},
-          {date:'2000',title:'LEP abgeschaltet. LHC-Bau beginnt',text:'Der LEP wird stillgelegt, um im selben Tunnel mit dem Bau des Large Hadron Collider (LHC) zu beginnen.',img:'1989.jpg',link:'https://timeline.web.cern.ch/leps-final-shutdown'},
-          {date:'2008',title:'LHC gestartet',text:'Am 10. September 2008 wird erstmals ein Protonenstrahl erfolgreich durch den 27 km langen Large Hadron Collider (LHC) gelenkt',img:'1989.jpg',link:'https://timeline.web.cern.ch/lhc-starts'}
+          {date:'1989',title:'LEP gestartet',text:'Der Large Electron-Positron Collider (LEP) nahm den Betrieb auf. 27 km Tunnel, Elektronen–Positronen bis 100 GeV.',img:'IMG_0507.jpeg',link:'https://timeline.web.cern.ch/large-electron-positron-collider-first-injection'},
+          {date:'1996',title:'Antiwasserstoff erzeugt',text:'Am LEAR-Speicherring wurden erstmals Antiwasserstoff-Atome hergestellt.',img:'1989.jpg',link:'https://de.wikipedia.org/wiki/CERN#Large_Electron-Positron_Collider'},
+          {date:'2000',title:'LEP abgeschaltet – LHC-Bau',text:'LEP wird stillgelegt, der LHC-Bau im selben Tunnel beginnt.',img:'1989.jpg',link:'https://timeline.web.cern.ch/leps-final-shutdown'},
+          {date:'2008',title:'LHC gestartet',text:'Erster Protonenstrahl erfolgreich durch den 27-km-LHC gelenkt.',img:'1989.jpg',link:'https://timeline.web.cern.ch/lhc-starts'}
         ];
 
         const labels = document.getElementById('tl-labels');
@@ -685,38 +624,35 @@
       })();
     </script>
 
-
     <script defer>
       (function(){
-        // === Referenz auf das einzige Model-Viewer-Element ===
+        // === Referenz auf das Model-Viewer-Element ===
         const mv = document.getElementById('flow-model');
         if(!mv){ console.warn('[LHC focus] Kein <model-viewer id="flow-model">'); return; }
-        // HIER KEIN mv.src MEHR SETZEN – ist bereits im HTML korrekt!
 
-        // === Fokus-Presets ===
+        // === Fokus-Presets (Targets ~ um 100 herum) ===
         // target: "x y z" (Modellkoordinaten), orbit: "theta phi radius%"
         const FOCUS = {
-          // Experimente (Beispiele)
-          ATLAS: { target: "12 0 28",   orbit: "35deg 70deg 28%", fov: "35deg" },
-          CMS:   { target: "-14 2 -20", orbit: "-30deg 70deg 28%", fov: "35deg" },
-          ALICE: { target: "24 1 -6",   orbit: "110deg 70deg 30%", fov: "35deg" },
-          LHCb:  { target: "-26 -1 16", orbit: "210deg 70deg 30%", fov: "35deg" },
+          // Experimente
+          ATLAS: { target: "112 98 104",  orbit: "35deg 70deg 28%", fov: "35deg" },
+          CMS:   { target: " 92 101  84", orbit: "-30deg 70deg 28%", fov: "35deg" },
+          ALICE: { target: "108  99  94", orbit: "110deg 70deg 30%", fov: "35deg" },
+          LHCb:  { target: " 88 100 116", orbit: "210deg 70deg 30%", fov: "35deg" },
 
-          // Kette (moderate Zooms – Feintuning nach Bedarf)
-          LINAC4: { target: "10000 10000 0",  orbit: "0deg 75deg 34%",  fov: "38deg" },
-          PSB:    { target: "-40000 0 10", orbit: "20deg 75deg 32%", fov: "38deg" },
-          PS:     { target: "-22 0 15", orbit: "35deg 75deg 32%", fov: "38deg" },
-          SPS:    { target: "0 0 0",    orbit: "60deg 75deg 38%", fov: "40deg" },
-          LHC:    { target: "0 0 0",    orbit: "120deg 75deg 55%", fov: "45deg" },
+          // Kette
+          LINAC4:{ target: "100 100 100", orbit: "0deg 75deg 34%",  fov: "38deg" },
+          PSB:   { target: " 96 103  98", orbit: "20deg 75deg 32%", fov: "38deg" },
+          PS:    { target: "104  97 102", orbit: "35deg 75deg 32%", fov: "38deg" },
+          SPS:   { target: " 99 101  99", orbit: "60deg 75deg 38%", fov: "40deg" },
+          LHC:   { target: "101  99 101", orbit: "120deg 75deg 55%", fov: "45deg" },
 
           // Ionen
-          LINAC3: { target: "-58 0 -8", orbit: "-10deg 75deg 34%", fov: "38deg" },
-          LEIR:   { target: "-32 0 -6", orbit: "15deg 75deg 32%",  fov: "38deg" },
+          LINAC3:{ target: " 95 100  92", orbit: "-10deg 75deg 34%", fov: "38deg" },
+          LEIR:  { target: "105 100  94", orbit: "15deg 75deg 32%",  fov: "38deg" },
 
-          DEFAULT:{ target: "0 0 0",    orbit: "45deg 75deg 65%", fov: "45deg" }
+          DEFAULT:{target: "100 100 100", orbit: "45deg 75deg 65%", fov: "45deg" }
         };
 
-        // Sanfter Fokus
         function focusOnKey(key){
           const p = FOCUS[key] || FOCUS.DEFAULT;
           mv.setAttribute('camera-target', p.target);
@@ -726,7 +662,7 @@
           mv.setAttribute('max-camera-orbit', 'auto auto 120%');
         }
 
-        // Hotspots koppeln
+        // Hotspots koppeln (ATLAS/CMS/ALICE/LHCb)
         document.querySelectorAll('#ring-hotspots .hotspot').forEach(btn=>{
           const key = (btn.dataset.title || '').toUpperCase();
           btn.addEventListener('click', ()=> focusOnKey(key));
@@ -790,13 +726,12 @@
         prevBtn?.addEventListener('click', ()=>{ if(i>0){ i--; render(); } });
         nextBtn?.addEventListener('click', ()=>{ const max=seq().length-1; if(i<max){ i++; render(); } });
 
-        // Nach dem Laden initial fokussieren
         mv.addEventListener('load', ()=>{ render(); }, { once:true });
       })();
     </script>
 
     <script defer>
-      // Hotspots
+      // Hotspots (einziger Block)
       const hotspots = [...document.querySelectorAll('.hotspot')];
       const facts = hotspots.map(h => h.nextElementSibling);
 
@@ -810,18 +745,14 @@
       });
 
       document.addEventListener('click', (ev) => {
-        // schließe, wenn Klick außerhalb ALLER Hotspots & Facts
         if (!hotspots.some(h => h.contains(ev.target)) &&
             !facts.some(f => f.contains(ev.target))) {
           facts.forEach(f => f.classList.remove('show'));
         }
       });
     </script>
-
-
   </body>
 </html>
-
 
 
 
