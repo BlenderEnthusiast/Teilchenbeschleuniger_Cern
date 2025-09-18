@@ -189,6 +189,7 @@
 
       .flow-viewport { width: 100%; aspect-ratio: 1 / 1; border-radius: 14px; border: 1px solid var(--line); overflow: hidden; background: #0f1014; }
       model-viewer { width: 100%; height: 100%; display: block; outline: none; }
+
       /* === PONG OVERLAY ===================================== */
       #pong-overlay[hidden]{ display:none !important; }
       #pong-overlay{
@@ -202,7 +203,6 @@
         display:grid; place-items:center;
         padding:16px;
       }
-
       #pong-canvas{
         width: min(100vw, 1000px);
         height: min(calc(100vh - 120px), 700px);
@@ -211,7 +211,6 @@
         background: radial-gradient(circle at 50% 50%, #0f1116, #0b0c10 60%);
         box-shadow: inset 0 20px 60px rgba(0,0,0,.45);
       }
-
       #pong-hud{
         display:flex; align-items:center; justify-content:space-between;
         gap:12px; padding:10px 16px; border-top:1px solid var(--line);
@@ -228,6 +227,7 @@
         border-radius:10px; padding:8px 12px; cursor:pointer;
       }
       #pong-close:hover{ background:#17181c; border-color:var(--accent); }
+
       /* Blaue MV-Hotspots */
       .mv-dot{
         --size: 14px;
@@ -353,7 +353,7 @@
       </div>
     </section>
 
-    <!-- ================= BESCHLEUNIGERKETTE (Model Viewer drin, aber ohne Kamerasteuerung) ================= -->
+    <!-- ================= BESCHLEUNIGERKETTE (Model Viewer) ================= -->
     <section class="section" id="chain-switch">
       <div class="container">
         <h2>Beschleunigerkette</h2>
@@ -370,7 +370,6 @@
           <div class="flow-right">
             <div class="flow-viewport">
 
-
               <model-viewer
                 id="flow-model"
                 src="LHC.glb"
@@ -386,35 +385,84 @@
                 environment-image="neutral">
 
                 <!-- 9 Hotspots mit initialen Koordinaten (x y z in m) -->
-                <button class="mv-dot" slot="hotspot-LINAC4"  data-name="LINAC4"
-                  data-position="20.69m -0.83m -112.80m" data-normal="0m 1m 0m"></button>
-                
-                <button class="mv-dot" slot="hotspot-PSBooster" data-name="PSBooster"
-                  data-position="-479.70m 6.79m 149.73m" data-normal="0m 1m 0m"></button>
-                
-                <button class="mv-dot" slot="hotspot-PS" data-name="PS"
-                  data-position="-321.08m 6.49m 355.12m" data-normal="0m 1m 0m"></button>
-                
-                <button class="mv-dot" slot="hotspot-SPS" data-name="SPS"
-                  data-position="-339.44m 6.06m -337.70m" data-normal="0m 1m 0m"></button>
-                
-                <button class="mv-dot" slot="hotspot-LHC" data-name="LHC"
-                  data-position="101.17m -1.49m 481.83m" data-normal="0m 1m 0m"></button>
-                
-                <button class="mv-dot" slot="hotspot-ATLAS" data-name="ATLAS"
-                  data-position="-138.40m 4.35m 479.38m" data-normal="0m 1m 0m"></button>
-                
-                <button class="mv-dot" slot="hotspot-CMS" data-name="CMS"
-                  data-position="334.57m 6.26m 339.61m" data-normal="0m 1m 0m"></button>
-                
-                <button class="mv-dot" slot="hotspot-ALICE" data-name="ALICE"
-                  data-position="460.98m 8.92m -125.27m" data-normal="0m 1m 0m"></button>
-                
-                <button class="mv-dot" slot="hotspot-LHCb" data-name="LHCb"
-                  data-position="-474.34m 7.72m -133.32m" data-normal="0m 1m 0m"></button>
+                <button class="mv-dot" slot="hotspot-LINAC4"  data-name="LINAC4"  data-position="-2.0m 0.25m 0m" data-normal="0m 1m 0m"></button>
+                <div class="mv-label" slot="hotspot-LINAC4">LINAC4</div>
 
+                <button class="mv-dot" slot="hotspot-PSBooster" data-name="PSBooster" data-position="-1.2m 0.25m 0m" data-normal="0m 1m 0m"></button>
+                <div class="mv-label" slot="hotspot-PSBooster">PSBooster</div>
 
+                <button class="mv-dot" slot="hotspot-PS"       data-name="PS"       data-position="-0.4m 0.25m 0m" data-normal="0m 1m 0m"></button>
+                <div class="mv-label" slot="hotspot-PS">PS</div>
+
+                <button class="mv-dot" slot="hotspot-SPS"      data-name="SPS"      data-position="0.4m 0.25m 0m" data-normal="0m 1m 0m"></button>
+                <div class="mv-label" slot="hotspot-SPS">SPS</div>
+
+                <button class="mv-dot" slot="hotspot-LHC"      data-name="LHC"      data-position="1.2m 0.25m 0m" data-normal="0m 1m 0m"></button>
+                <div class="mv-label" slot="hotspot-LHC">LHC</div>
+
+                <button class="mv-dot" slot="hotspot-ATLAS"    data-name="ATLAS"    data-position="-0.8m 0.55m 0m" data-normal="0m 1m 0m"></button>
+                <div class="mv-label" slot="hotspot-ATLAS">ATLAS</div>
+
+                <button class="mv-dot" slot="hotspot-CMS"      data-name="CMS"      data-position="0.8m 0.55m 0m" data-normal="0m 1m 0m"></button>
+                <div class="mv-label" slot="hotspot-CMS">CMS</div>
+
+                <button class="mv-dot" slot="hotspot-ALICE"    data-name="ALICE"    data-position="1.6m 0.40m 0m" data-normal="0m 1m 0m"></button>
+                <div class="mv-label" slot="hotspot-ALICE">ALICE</div>
+
+                <button class="mv-dot" slot="hotspot-LHCb"     data-name="LHCb"     data-position="-1.6m 0.40m 0m" data-normal="0m 1m 0m"></button>
+                <div class="mv-label" slot="hotspot-LHCb">LHCb</div>
               </model-viewer>
+
+              <!-- FOKUS/ZOOM Controller (liest Hotspot-Positionen + setzt Kamera) -->
+              <script>
+              (function(){
+                const mv = document.getElementById('flow-model');
+                if(!mv) return;
+
+                // aktuelle Hotspot-Positionen aus dem DOM als Quelle der Wahrheit
+                function readPositions(){
+                  const map = {};
+                  mv.querySelectorAll('button.mv-dot[data-name]').forEach(btn=>{
+                    const name = btn.dataset.name;
+                    const pos  = btn.dataset.position || '0m 0m 0m';
+                    map[name] = pos;
+                  });
+                  return map;
+                }
+
+                // Per-Punkt Zoom (Orbit-Radius) – passe hier die Werte an
+                const ORBIT = {
+                  LINAC4:    'auto auto 35m',
+                  PSBooster: 'auto auto 120m',
+                  PS:        'auto auto 140m',
+                  SPS:       'auto auto 220m',
+                  LHC:       'auto auto 260m'
+                };
+
+                let POS = readPositions();
+
+                // Wenn UI die data-position ändert, POS nachziehen
+                const mo = new MutationObserver(()=>{
+                  POS = readPositions();
+                });
+                mo.observe(mv, { attributes:true, subtree:true, attributeFilter:['data-position'] });
+
+                // Fokus-Funktion (wird vom Step-Controller aufgerufen)
+                async function focusTo(name){
+                  const pos = POS[name];
+                  if(!pos) return; // unbekannt oder (derzeit) Detektoren
+                  if(mv.updateComplete) await mv.updateComplete;
+                  mv.setAttribute('camera-target', pos);
+                  mv.setAttribute('camera-orbit', ORBIT[name] || 'auto auto 200m');
+                }
+
+                // öffentlich machen
+                window.__MV_FOCUS__ = { focusTo, ORBIT, get POS(){ return POS; } };
+
+                // Falls du beim Laden initial fokussieren willst:
+                // mv.addEventListener('load', ()=>focusTo('LINAC4'));
+              })();
+              </script>
 
               <!-- Control Panel -->
               <div id="mv-hotspot-controls" class="card" style="margin-top:12px">
@@ -444,12 +492,9 @@
                   <button id="mv-apply" class="step-btn" type="button">Setzen</button>
                 </div>
                 <div style="margin-top:8px; font-size:12px; color:var(--muted)">
-                  Tipp: Werte hängen von der Skalierung/Orientierung deines GLB ab. Bei Bedarf kannst du im Script auch z ändern.
+                  Tipp: Werte hängen von der Skalierung/Orientierung deines GLB ab. (Z bleibt hier 0 m, kannst du im Script erweitern.)
                 </div>
               </div>
-
-
-
             </div>
           </div>
 
@@ -580,7 +625,6 @@
       </div>
     </div>
 
-
     <footer class="footer"><div class="container">© 2025 Schulprojekt</div></footer>
 
     <!-- ================= SCRIPTS ================= -->
@@ -593,10 +637,9 @@
     </script>
 
     <script defer>
-      // Hotspots: nur Text-Bubbles anzeigen (keine Kamera-Änderung)
+      // Hotspots (Bild): nur Text-Bubbles anzeigen
       const hotspots = [...document.querySelectorAll('.hotspot')];
       const facts = hotspots.map(h => h.nextElementSibling);
-
       hotspots.forEach(h => {
         const fact = h.nextElementSibling;
         h.addEventListener('click', () => {
@@ -605,7 +648,6 @@
           fact.classList.add('show');
         });
       });
-
       document.addEventListener('click', (ev) => {
         if (!hotspots.some(h => h.contains(ev.target)) &&
             !facts.some(f => f.contains(ev.target))) {
@@ -622,17 +664,13 @@
         const energy = document.getElementById('energy');
         const speed  = document.getElementById('speed');
         const turns  = document.getElementById('turns');
-
         const vals=[{e:1,s:1,t:1},{e:2,s:2,t:3},{e:3,s:3,t:6},{e:5,s:4,t:10},{e:8,s:5,t:16},{e:13,s:6,t:24}];
-
         function setStep(i){
           stepLis.forEach(li=>li.classList.remove('active'));
           stepLis[i].classList.add('active');
           energy.textContent=vals[i].e; speed.textContent=vals[i].s; turns.textContent=vals[i].t;
         }
         stepLis.forEach((li,i)=>li.addEventListener('click',()=>setStep(i)));
-
-        // Scroll-gekoppelte Demo
         const section=document.getElementById('acceleration-chain'); let last=0;
         document.addEventListener('scroll',()=>{
           const r=section.getBoundingClientRect();
@@ -642,11 +680,9 @@
             if(idx!==last){ setStep(idx); last=idx; }
           }
         });
-
-        // Magnetfeld → Pfadradius (schematisch)
-        const b      = document.getElementById('bfield');
-        const bval   = document.getElementById('bval');
-        const beam   = document.getElementById('beam');
+        const b = document.getElementById('bfield');
+        const bval = document.getElementById('bval');
+        const beam = document.getElementById('beam');
         function upd(){
           const v=+b.value; bval.textContent=v+'%';
           const minR=90,maxR=240; const R=maxR-(v/100)*(maxR-minR);
@@ -675,7 +711,6 @@
           {date:'2000',title:'LEP abgeschaltet – LHC-Bau',text:'LEP wird stillgelegt, der LHC-Bau im selben Tunnel beginnt.',img:'IMG_0511.jpeg',link:'https://timeline.web.cern.ch/leps-final-shutdown'},
           {date:'2008',title:'LHC gestartet',text:'Erster Protonenstrahl erfolgreich durch den 27-km-LHC gelenkt.',img:'IMG_0512.jpeg',link:'https://timeline.web.cern.ch/lhc-starts'}
         ];
-
         const labels = document.getElementById('tl-labels');
         const pips   = document.getElementById('tl-pips');
         const bar    = document.getElementById('tl-bar');
@@ -683,9 +718,7 @@
         const animWrap = document.querySelector('.event-card .anim-wrap');
         const prevBtn = document.querySelector('.prev');
         const nextBtn = document.querySelector('.next');
-
         labels.innerHTML = events.map(e=>`<div>${e.date}</div>`).join('');
-
         function layoutPips(){
           const w=bar.offsetWidth; pips.innerHTML='';
           const steps=events.length-1||1;
@@ -698,9 +731,7 @@
           });
         }
         window.addEventListener('resize',()=>{ setMarker(idx); layoutPips(); });
-
         let idx=0; let busy=false;
-
         function slideTemplate(e){
           return `
             <div class="slide">
@@ -713,18 +744,15 @@
               </div>
             </div>`;
         }
-
         function setMarker(i){
           const w=bar.offsetWidth; const steps=events.length-1||1; const x=(i*(w/steps));
           marker.style.transform=`translate(${x-8}px, -50%)`;
           [...pips.children].forEach((p,pi)=>p.classList.toggle('active',pi===i));
         }
-
         function updateButtons(){
           prevBtn.disabled = (idx===0);
           nextBtn.disabled = (idx===events.length-1);
         }
-
         function show(i){
           if(busy) return; busy=true;
           const leaving=animWrap.querySelector('.slide');
@@ -735,13 +763,10 @@
           setMarker(i); updateButtons();
           entering.addEventListener('animationend',()=>{busy=false;},{once:true});
         }
-
         function goTo(i){ if(i<0||i>events.length-1) return; idx=i; show(idx); }
         function go(n){ goTo(idx+n); }
-
         layoutPips();
         show(idx);
-
         prevBtn.addEventListener('click',()=>go(-1));
         nextBtn.addEventListener('click',()=>go(1));
         window.addEventListener('keydown',e=>{ if(e.key==='ArrowLeft') go(-1); if(e.key==='ArrowRight') go(1); });
@@ -753,11 +778,9 @@
       (function(){
         const acc = document.getElementById('cern-accordion');
         if(!acc) return;
-
         const btn   = acc.querySelector('.accordion-header');
         const panel = document.getElementById('cern-accordion-content');
         const inner = panel.querySelector('.accordion-inner');
-
         function openPanel(){
           acc.classList.add('open');
           btn.setAttribute('aria-expanded','true');
@@ -773,16 +796,11 @@
           acc.classList.remove('open');
         }
         btn.addEventListener('click', ()=>{ const willOpen = !acc.classList.contains('open'); if(willOpen) openPanel(); else closePanel(); });
-
         panel.addEventListener('transitionend', (e)=>{ if(e.propertyName!=='height') return; if(acc.classList.contains('open')) panel.style.height='auto'; });
-
         const io = new IntersectionObserver((entries)=>{ entries.forEach(entry=>{ if(entry.intersectionRatio < 0.2 && acc.classList.contains('open')) closePanel(); }); },{threshold:[0,0.2,1]});
         io.observe(acc);
-
         const ro = new ResizeObserver(()=>{ if(acc.classList.contains('open') && panel.style.height!=='auto'){ panel.style.height = inner.getBoundingClientRect().height + 'px'; } });
         ro.observe(inner);
-
-        // Anchor-Flash
         function highlight(hash){
           if(!hash) return;
           const el=document.querySelector(hash);
@@ -806,8 +824,176 @@
       })();
     </script>
 
+    <!-- PONG: Overlay/Bridge -->
     <script defer>
-      // Beschleunigerkette: Buttons & Texte (ohne Kamera/Orbit-Änderung)
+      (function(){
+        const overlay = document.getElementById('pong-overlay');
+        const canvas  = document.getElementById('pong-canvas');
+        const scoreEl = document.getElementById('pong-score');
+        const bestEl  = document.getElementById('pong-best');
+        const closeBtn= document.getElementById('pong-close');
+        const LS_KEY = 'pong_highscore_v1';
+        const best = +localStorage.getItem(LS_KEY) || 0;
+        bestEl.textContent = best;
+        function isOpen(){ return !overlay.hasAttribute('hidden'); }
+        function open(){
+          if(isOpen()) return;
+          overlay.removeAttribute('hidden');
+          document.body.style.overflow='hidden';
+          resizeCanvas();
+          window.__PONG__?._start?.();
+        }
+        function close(){
+          if(!isOpen()) return;
+          overlay.setAttribute('hidden','');
+          document.body.style.overflow='';
+          window.__PONG__?._stop?.();
+        }
+        window.addEventListener('keydown', (ev)=>{
+          if(ev.altKey && (ev.key.toLowerCase()==='p')){
+            ev.preventDefault();
+            isOpen() ? close() : open();
+          } else if(isOpen() && (ev.key.toLowerCase()==='p')){
+            ev.preventDefault();
+            window.__PONG__?._togglePause?.();
+          }
+        });
+        closeBtn.addEventListener('click', close);
+        const ctx = canvas.getContext('2d');
+        function resizeCanvas(){
+          const dpr = Math.max(1, window.devicePixelRatio || 1);
+          const cssW = canvas.clientWidth;
+          const cssH = canvas.clientHeight;
+          canvas.width  = Math.floor(cssW * dpr);
+          canvas.height = Math.floor(cssH * dpr);
+          ctx.setTransform(dpr,0,0,dpr,0,0);
+        }
+        window.addEventListener('resize', ()=>{ if(isOpen()) resizeCanvas(); });
+        window.__PONG__ = { open, close, isOpen, ctx, canvas, scoreEl, bestEl, LS_KEY, resizeCanvas };
+      })();
+    </script>
+
+    <!-- PONG: Game-Logic -->
+    <script defer>
+      (function(){
+        const { isOpen, ctx, canvas, scoreEl, bestEl, LS_KEY, resizeCanvas } = window.__PONG__;
+        const WORLD  = { w: 900, h: 600, pad: 18 };
+        const PADDLE = { w: 14, h: 110, x: 28, y: 300, speed: 8 };
+        const BALL   = { x: 450, y: 300, r: 8, vx: 5, vy: 3.2, base: 6.0 };
+        const RAMP_PER_SEC = 0.02;
+        let raf = null, paused = false, running = false;
+        let score = 0, best = +bestEl.textContent || 0;
+        const keys = new Set();
+        window.addEventListener('keydown', e=>{
+          if(!isOpen()) return;
+          if(['ArrowUp','ArrowDown','w','s','W','S'].includes(e.key)) { keys.add(e.key); e.preventDefault(); }
+        });
+        window.addEventListener('keyup', e=>{ keys.delete(e.key); });
+        function resetBall(dir = 1){
+          BALL.x  = WORLD.w * 0.5;
+          BALL.y  = WORLD.h * 0.5;
+          const angle = (Math.random()*0.6 - 0.3);
+          const speed = BALL.base;
+          BALL.vx = dir * speed * Math.cos(angle);
+          BALL.vy = speed * Math.sin(angle);
+        }
+        function speedUp(f=1.05){ BALL.vx *= f; BALL.vy *= f; }
+        function start(){
+          if(running) return;
+          running = true; paused = false; score = 0;
+          scoreEl.textContent = '0';
+          resetBall(Math.random()<0.5 ? 1 : -1);
+          resizeCanvas(); loop();
+        }
+        function stop(){ running = false; if(raf){ cancelAnimationFrame(raf); raf=null; } }
+        function togglePause(){ if(!running) return; paused = !paused; if(!paused) loop(); drawHUD(); }
+        let lastT = 0;
+        function loop(ts=0){
+          if(!running) return;
+          raf = requestAnimationFrame(loop);
+          const dtMs = ts - (lastT||ts);
+          lastT = ts;
+          const dt = Math.min(33, Math.max(0, dtMs)) / 16.67;
+          update(dt); draw();
+        }
+        function update(dt){
+          const up = keys.has('ArrowUp') || keys.has('w') || keys.has('W');
+          const dn = keys.has('ArrowDown') || keys.has('s') || keys.has('S');
+          if(up && !dn)   PADDLE.y -= PADDLE.speed * dt * 1.2;
+          if(dn && !up)   PADDLE.y += PADDLE.speed * dt * 1.2;
+          PADDLE.y = Math.max(PADDLE.h/2, Math.min(WORLD.h - PADDLE.h/2, PADDLE.y));
+          if(paused) return;
+          const factor = 1 + (RAMP_PER_SEC * (dt/60));
+          BALL.vx *= factor; BALL.vy *= factor;
+          BALL.x += BALL.vx * dt; BALL.y += BALL.vy * dt;
+          if(BALL.y - BALL.r < 0){ BALL.y = BALL.r; BALL.vy *= -1; }
+          if(BALL.y + BALL.r > WORLD.h){ BALL.y = WORLD.h - BALL.r; BALL.vy *= -1; }
+          if(BALL.x + BALL.r > WORLD.w){ BALL.x = WORLD.w - BALL.r; BALL.vx *= -1; }
+          const padLeft = PADDLE.x, padRight = PADDLE.x + PADDLE.w;
+          const padTop  = PADDLE.y - PADDLE.h/2, padBot = PADDLE.y + PADDLE.h/2;
+          if(BALL.x - BALL.r < padRight && BALL.x + BALL.r > padLeft &&
+             BALL.y + BALL.r > padTop && BALL.y - BALL.r < padBot && BALL.vx < 0){
+            const rel = (BALL.y - PADDLE.y) / (PADDLE.h/2);
+            BALL.x = padRight + BALL.r;
+            const speed = Math.hypot(BALL.vx, BALL.vy) * 1.04;
+            const maxAngle = Math.PI * 0.35;
+            const angle = rel * maxAngle;
+            BALL.vx =  Math.cos(angle) * speed;
+            BALL.vy =  Math.sin(angle) * speed;
+            score += 1; scoreEl.textContent = String(score);
+            if(score % 5 === 0) speedUp(1.06);
+          }
+          if(BALL.x + BALL.r < 0){
+            if(score > best){ best = score; bestEl.textContent = String(best); try{ localStorage.setItem(LS_KEY, String(best)); }catch{} }
+            score = 0; scoreEl.textContent='0';
+            resetBall(+1); BALL.vx *= 0.85; BALL.vy *= 0.85;
+          }
+        }
+        function draw(){
+          const cssW = canvas.clientWidth, cssH = canvas.clientHeight;
+          ctx.clearRect(0,0,cssW,cssH);
+          ctx.strokeStyle = '#2b2d33'; ctx.lineWidth = 2; ctx.strokeRect(0,0,cssW,cssH);
+          ctx.setLineDash([8,16]); ctx.lineDashOffset = 2;
+          ctx.beginPath(); ctx.moveTo(cssW/2, 0); ctx.lineTo(cssW/2, cssH);
+          ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.lineWidth = 3; ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = '#ffffff'; ctx.font = '700 28px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+          ctx.fillText(String(score), cssW/2, 36);
+          const padScaleX = cssW / WORLD.w, padScaleY = cssH / WORLD.h;
+          const px = PADDLE.x * padScaleX, py = PADDLE.y * padScaleY;
+          const pw = PADDLE.w * padScaleX, ph = PADDLE.h * padScaleY;
+          ctx.fillStyle = '#e5e7eb'; roundRect(ctx, px, py - ph/2, pw, ph, 8); ctx.fill();
+          const bx = BALL.x * padScaleX, by = BALL.y * padScaleY;
+          const br = BALL.r * ((padScaleX + padScaleY)/2);
+          ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI*2);
+          ctx.fillStyle = '#ffffff'; ctx.shadowColor = 'rgba(255,255,255,.2)'; ctx.shadowBlur = 8; ctx.fill(); ctx.shadowBlur = 0;
+          if(paused) drawHUD(true);
+        }
+        function drawHUD(pausedOnly=false){
+          if(!pausedOnly) return;
+          const cssW = canvas.clientWidth, cssH = canvas.clientHeight;
+          ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(0,0,cssW,cssH);
+          ctx.fillStyle = '#fff'; ctx.font = '700 28px Inter, system-ui, sans-serif'; ctx.textAlign = 'center';
+          ctx.fillText('PAUSE – P zum Fortsetzen', cssW/2, cssH/2);
+        }
+        function roundRect(ctx, x, y, w, h, r){
+          const rr = Math.min(r, w/2, h/2);
+          ctx.beginPath();
+          ctx.moveTo(x+rr, y);
+          ctx.arcTo(x+w, y, x+w, y+h, rr);
+          ctx.arcTo(x+w, y+h, x, y+h, rr);
+          ctx.arcTo(x, y+h, x, y, rr);
+          ctx.arcTo(x, y, x+w, y, rr);
+          ctx.closePath();
+        }
+        window.__PONG__._start = start;
+        window.__PONG__._stop = stop;
+        window.__PONG__._togglePause = togglePause;
+      })();
+    </script>
+
+    <!-- Beschleunigerkette: Buttons & Texte + CAMERA FOCUS -->
+    <script defer>
       (function(){
         const elTitle = document.getElementById('flow-title');
         const elText  = document.getElementById('flow-text');
@@ -833,8 +1019,16 @@
 
         let mode = 'protons';
         let i = 0;
-
         const seq = () => (mode==='protons' ? protons : ions);
+
+        function stepToHotspotName(stepKey){
+          if(/LINAC4/i.test(stepKey)) return 'LINAC4';
+          if(/PS Booster/i.test(stepKey)) return 'PSBooster';
+          if(/^PS$|^PS[, ]/i.test(stepKey) || stepKey==='PS') return 'PS';
+          if(/SPS/i.test(stepKey)) return 'SPS';
+          if(/LHC/i.test(stepKey)) return 'LHC';
+          return null; // z.B. LINAC3, LEIR => kein Fokus (wie gewünscht)
+        }
 
         function fade(el, text, dur=180){
           const RDM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -845,12 +1039,18 @@
           };
         }
 
-        function render(){
+        async function render(){
           const step = seq()[i];
           fade(elTitle, step.key);
           fade(elText,  step.text);
           prevBtn.disabled = (i===0);
           nextBtn.disabled = (i===seq().length-1);
+
+          // Kamera auf passenden Beschleuniger fokussieren (Detektoren ignoriert)
+          const hotspotName = stepToHotspotName(step.key);
+          if(hotspotName && window.__MV_FOCUS__){
+            await window.__MV_FOCUS__.focusTo(hotspotName);
+          }
         }
 
         function setMode(m){
@@ -871,368 +1071,48 @@
       })();
     </script>
 
-    <!-- PONG: Overlay/Bridge (nur kleine Anpassung: Proxy-Aufrufe bleiben) -->
-      <script defer>
-        (function(){
-          // --- DOM refs
-          const overlay = document.getElementById('pong-overlay');
-          const canvas  = document.getElementById('pong-canvas');
-          const scoreEl = document.getElementById('pong-score');
-          const bestEl  = document.getElementById('pong-best');
-          const closeBtn= document.getElementById('pong-close');
-
-          // --- persistent highscore
-          const LS_KEY = 'pong_highscore_v1';
-          const best = +localStorage.getItem(LS_KEY) || 0;
-          bestEl.textContent = best;
-
-          // --- open/close
-          function isOpen(){ return !overlay.hasAttribute('hidden'); }
-          function open(){
-            if(isOpen()) return;
-            overlay.removeAttribute('hidden');
-            document.body.style.overflow='hidden';
-            resizeCanvas(); // initial scale
-            window.__PONG__?._start?.();
-          }
-          function close(){
-            if(!isOpen()) return;
-            overlay.setAttribute('hidden','');
-            document.body.style.overflow='';
-            window.__PONG__?._stop?.();
-          }
-
-          // --- hotkeys: Alt+P toggle, P pause/resume
-          window.addEventListener('keydown', (ev)=>{
-            if(ev.altKey && (ev.key.toLowerCase()==='p')){
-              ev.preventDefault();
-              isOpen() ? close() : open();
-            } else if(isOpen() && (ev.key.toLowerCase()==='p')){
-              ev.preventDefault();
-              window.__PONG__?._togglePause?.();
-            }
-          });
-          closeBtn.addEventListener('click', close);
-
-          // --- canvas DPR scaling
-          const ctx = canvas.getContext('2d');
-          function resizeCanvas(){
-            const dpr = Math.max(1, window.devicePixelRatio || 1);
-            const cssW = canvas.clientWidth;
-            const cssH = canvas.clientHeight;
-            canvas.width  = Math.floor(cssW * dpr);
-            canvas.height = Math.floor(cssH * dpr);
-            ctx.setTransform(dpr,0,0,dpr,0,0); // draw in CSS pixels
-          }
-          window.addEventListener('resize', ()=>{ if(isOpen()) resizeCanvas(); });
-
-          // Bridge
-          window.__PONG__ = {
-            open, close, isOpen,
-            ctx, canvas, scoreEl, bestEl, LS_KEY, resizeCanvas
-          };
-        })();
-     </script>
-
-     <!-- PONG: Game-Logic (hier sind die gewünschten Erweiterungen) -->
-     <script defer>
+    <!-- Hotspot XY-Control für <model-viewer> -->
+    <script defer>
       (function(){
-        const {
-          isOpen, ctx, canvas, scoreEl, bestEl, LS_KEY, resizeCanvas
-        } = window.__PONG__;
+        const mv = document.getElementById('flow-model');
+        if(!mv) return;
+        const sel = document.getElementById('mv-hotspot-select');
+        const xIn = document.getElementById('mv-x');
+        const yIn = document.getElementById('mv-y');
+        const btn = document.getElementById('mv-apply');
 
-        // --- world config (CSS-pixel space)
-        const WORLD  = { w: 900, h: 600, pad: 18 };
-        const PADDLE = { w: 14, h: 110, x: 28, y: 300, speed: 8 };
-        const BALL   = { x: 450, y: 300, r: 8, vx: 5, vy: 3.2, base: 6.0 };
+        const getBtn = (name) => mv.querySelector(`button.mv-dot[data-name="${name}"]`);
+        const getLabel = (slotName) => mv.querySelector(`.mv-label[slot="hotspot-${slotName}"]`);
 
-        // --- progression
-        const RAMP_PER_SEC = 0.02; // ~+2% Geschwindigkeit pro Sekunde
-
-        let raf = null, paused = false, running = false;
-        let score = 0, best = +bestEl.textContent || 0;
-
-        // input (nur Tastatur; Maussteuerung -> aus)
-        const keys = new Set();
-        window.addEventListener('keydown', e=>{
-          if(!isOpen()) return;
-          if(['ArrowUp','ArrowDown','w','s','W','S'].includes(e.key)) { keys.add(e.key); e.preventDefault(); }
-        });
-        window.addEventListener('keyup', e=>{ keys.delete(e.key); });
-
-        // helpers
-        function resetBall(dir = 1){
-          BALL.x  = WORLD.w * 0.5;
-          BALL.y  = WORLD.h * 0.5;
-          const angle = (Math.random()*0.6 - 0.3); // -0.3..0.3 rad
-          const speed = BALL.base;
-          BALL.vx = dir * speed * Math.cos(angle);
-          BALL.vy = speed * Math.sin(angle);
+        function load(name){
+          const b = getBtn(name);
+          if(!b) return;
+          const pos = (b.dataset.position || '0m 0m 0m').split(' ');
+          const [xm, ym] = pos;
+          xIn.value = parseFloat(xm);
+          yIn.value = parseFloat(ym);
         }
-        function speedUp(f=1.05){
-          BALL.vx *= f;
-          BALL.vy *= f;
-        }
-
-        // game control
-        function start(){
-          if(running) return;
-          running = true; paused = false; score = 0;
-          scoreEl.textContent = '0';
-          resetBall(Math.random()<0.5 ? 1 : -1);
-          resizeCanvas();
-          loop();
-        }
-        function stop(){
-          running = false;
-          if(raf){ cancelAnimationFrame(raf); raf=null; }
-        }
-        function togglePause(){
-          if(!running) return;
-          paused = !paused;
-          if(!paused) loop();
-          drawHUD();
-        }
-
-        // main loop
-        let lastT = 0;
-        function loop(ts=0){
-          if(!running) return;
-          raf = requestAnimationFrame(loop);
-          const dtMs = ts - (lastT||ts);
-          lastT = ts;
-          const dt = Math.min(33, Math.max(0, dtMs)) / 16.67; // ~60fps ticks normalisiert
-
-          update(dt);
-          draw();
-        }
-
-        function update(dt){
-          // paddle keyboard control
-          const up = keys.has('ArrowUp') || keys.has('w') || keys.has('W');
-          const dn = keys.has('ArrowDown') || keys.has('s') || keys.has('S');
-          if(up && !dn)   PADDLE.y -= PADDLE.speed * dt * 1.2;
-          if(dn && !up)   PADDLE.y += PADDLE.speed * dt * 1.2;
-          PADDLE.y = Math.max(PADDLE.h/2, Math.min(WORLD.h - PADDLE.h/2, PADDLE.y));
-
-          if(paused) return;
-
-          // kontinuierliche Beschleunigung (Zeit-basiert)
-          const factor = 1 + (RAMP_PER_SEC * (dt/60)); // dt ist ~frames, also dt/60 ≈ Sekunden
-          BALL.vx *= factor;
-          BALL.vy *= factor;
-
-          // ball move
-          BALL.x += BALL.vx * dt;
-          BALL.y += BALL.vy * dt;
-
-          // top/bottom bounce
-          if(BALL.y - BALL.r < 0){ BALL.y = BALL.r; BALL.vy *= -1; }
-          if(BALL.y + BALL.r > WORLD.h){ BALL.y = WORLD.h - BALL.r; BALL.vy *= -1; }
-
-          // right wall bounce
-          if(BALL.x + BALL.r > WORLD.w){
-            BALL.x = WORLD.w - BALL.r;
-            BALL.vx *= -1;
-          }
-
-          // left paddle collision / miss
-          const padLeft = PADDLE.x, padRight = PADDLE.x + PADDLE.w;
-          const padTop  = PADDLE.y - PADDLE.h/2, padBot = PADDLE.y + PADDLE.h/2;
-
-          if(BALL.x - BALL.r < padRight && BALL.x + BALL.r > padLeft &&
-             BALL.y + BALL.r > padTop && BALL.y - BALL.r < padBot &&
-             BALL.vx < 0){
-            const rel = (BALL.y - PADDLE.y) / (PADDLE.h/2); // -1..1
-            BALL.x = padRight + BALL.r;
-            const speed = Math.hypot(BALL.vx, BALL.vy) * 1.04; // leicht schneller
-            const maxAngle = Math.PI * 0.35; // ~63°
-            const angle = rel * maxAngle;
-            BALL.vx =  Math.cos(angle) * speed;
-            BALL.vy =  Math.sin(angle) * speed;
-
-            score += 1;
-            scoreEl.textContent = String(score);
-
-            if(score % 5 === 0) speedUp(1.06);
-          }
-
-          // miss -> "life lost" & soft reset
-          if(BALL.x + BALL.r < 0){
-            if(score > best){
-              best = score; bestEl.textContent = String(best);
-              try{ localStorage.setItem(LS_KEY, String(best)); }catch{}
-            }
-            score = 0; scoreEl.textContent='0';
-            resetBall(+1);
-            // etwas gnädiger neu starten
-            BALL.vx *= 0.85; BALL.vy *= 0.85;
+        function apply(){
+          const name = sel.value;
+          const b = getBtn(name);
+          if(!b) return;
+          const x = parseFloat(xIn.value)||0;
+          const y = parseFloat(yIn.value)||0;
+          const z = 0;
+          b.dataset.position = `${x}m ${y}m ${z}m`;
+          const label = getLabel(name);
+          if(label && label.animate){
+            label.animate([{transform:'translate(-50%,-140%) scale(0.96)'},{transform:'translate(-50%,-140%) scale(1)'}],{duration:180,easing:'ease-out'});
           }
         }
-
-        // drawing (in CSS pixel coords)
-        function draw(){
-          const cssW = canvas.clientWidth, cssH = canvas.clientHeight;
-
-          ctx.clearRect(0,0,cssW,cssH);
-
-          // bounds
-          ctx.strokeStyle = '#2b2d33';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(0,0,cssW,cssH);
-
-          // --- Mittellinie (gestrichelt)
-          ctx.setLineDash([8,16]); ctx.lineDashOffset = 2;
-          ctx.beginPath();
-          ctx.moveTo(cssW/2, 0);
-          ctx.lineTo(cssW/2, cssH);
-          ctx.strokeStyle = 'rgba(255,255,255,.18)';
-          ctx.lineWidth = 3;
-          ctx.stroke();
-          ctx.setLineDash([]);
-
-          // --- Score oben mittig im Feld
-          ctx.fillStyle = '#ffffff';
-          ctx.font = '700 28px Inter, system-ui, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText(String(score), cssW/2, 36);
-
-          // paddle
-          const padScaleX = cssW / WORLD.w, padScaleY = cssH / WORLD.h;
-          const px = PADDLE.x * padScaleX;
-          const py = PADDLE.y * padScaleY;
-          const pw = PADDLE.w * padScaleX;
-          const ph = PADDLE.h * padScaleY;
-
-          ctx.fillStyle = '#e5e7eb';
-          roundRect(ctx, px, py - ph/2, pw, ph, 8);
-          ctx.fill();
-
-          // ball
-          const bx = BALL.x * padScaleX;
-          const by = BALL.y * padScaleY;
-          const br = BALL.r * ((padScaleX + padScaleY)/2);
-          ctx.beginPath();
-          ctx.arc(bx, by, br, 0, Math.PI*2);
-          ctx.fillStyle = '#ffffff';
-          ctx.shadowColor = 'rgba(255,255,255,.2)';
-          ctx.shadowBlur = 8;
-          ctx.fill();
-          ctx.shadowBlur = 0;
-
-          if(paused) drawHUD(true);
-        }
-
-        function drawHUD(pausedOnly=false){
-          if(!pausedOnly) return;
-          const cssW = canvas.clientWidth, cssH = canvas.clientHeight;
-          ctx.fillStyle = 'rgba(0,0,0,.45)';
-          ctx.fillRect(0,0,cssW,cssH);
-          ctx.fillStyle = '#fff';
-          ctx.font = '700 28px Inter, system-ui, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText('PAUSE – P zum Fortsetzen', cssW/2, cssH/2);
-        }
-
-        function roundRect(ctx, x, y, w, h, r){
-          const rr = Math.min(r, w/2, h/2);
-          ctx.beginPath();
-          ctx.moveTo(x+rr, y);
-          ctx.arcTo(x+w, y, x+w, y+h, rr);
-          ctx.arcTo(x+w, y+h, x, y+h, rr);
-          ctx.arcTo(x, y+h, x, y, rr);
-          ctx.arcTo(x, y, x+w, y, rr);
-          ctx.closePath();
-        }
-
-        // Methoden an die Bridge hängen
-        window.__PONG__._start = start;
-        window.__PONG__._stop = stop;
-        window.__PONG__._togglePause = togglePause;
-
-        // optional auto-open:
-        // window.__PONG__.open();
+        sel.addEventListener('change', ()=>load(sel.value));
+        btn.addEventListener('click', apply);
+        load(sel.value);
       })();
-     </script>
-
-
-
-      <script defer>
-        // Hotspot XY-Control für <model-viewer>
-        (function(){
-          const mv = document.getElementById('flow-model');
-          if(!mv) return;
-
-          const sel = document.getElementById('mv-hotspot-select');
-          const xIn = document.getElementById('mv-x');
-          const yIn = document.getElementById('mv-y');
-          const btn = document.getElementById('mv-apply');
-
-          // Map: Name -> Button (Hotspot)
-          const getBtn = (name) => mv.querySelector(`button.mv-dot[data-name="${name}"]`);
-          const getLabel = (slotName) => mv.querySelector(`.mv-label[slot="hotspot-${slotName}"]`);
-
-          // aktuelle Werte in Inputs laden
-          function load(name){
-            const b = getBtn(name);
-            if(!b) return;
-            const pos = (b.dataset.position || '0m 0m 0m').split(' ');
-            const [xm, ym] = pos; // z ignorieren
-            xIn.value = parseFloat(xm);
-            yIn.value = parseFloat(ym);
-          }
-
-          // position setzen: x/y aus Inputs, z = 0m (bei Bedarf anpassen)
-          function apply(){
-            const name = sel.value;
-            const b = getBtn(name);
-            if(!b) return;
-
-            const x = parseFloat(xIn.value)||0;
-            const y = parseFloat(yIn.value)||0;
-            const z = 0; // <— falls nötig hier ändern/auch in UI anbieten
-
-            b.dataset.position = `${x}m ${y}m ${z}m`;
-
-            // optional: Label leicht „ploppen“ lassen
-            const label = getLabel(name);
-            if(label && label.animate){
-              label.animate([{transform:'translate(-50%,-140%) scale(0.96)'},{transform:'translate(-50%,-140%) scale(1)'}],{duration:180,easing:'ease-out'});
-            }
-          }
-
-          // Events
-          sel.addEventListener('change', ()=>load(sel.value));
-          btn.addEventListener('click', apply);
-
-          // Init
-          load(sel.value);
-        })();
-      </script>
+    </script>
 
   </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
