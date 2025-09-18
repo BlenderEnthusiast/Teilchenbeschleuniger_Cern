@@ -386,45 +386,35 @@
                 environment-image="neutral">
 
                 <!-- 9 Hotspots mit initialen Koordinaten (x y z in m) -->
-                <button class="mv-dot" slot="hotspot-LINAC4"  data-name="LINAC4"  data-position="-40m  5m  0m" data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-PSBooster" data-name="PSBooster" data-position="-24m  5m  0m" data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-PS"       data-name="PS"       data-position="-8m   5m  0m" data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-SPS"      data-name="SPS"      data-position="8m    5m  0m" data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-LHC"      data-name="LHC"      data-position="24m   5m  0m" data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-ATLAS"    data-name="ATLAS"    data-position="-16m 11m  0m" data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-CMS"      data-name="CMS"      data-position="16m  11m  0m" data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-ALICE"    data-name="ALICE"    data-position="32m   8m  0m" data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-LHCb"     data-name="LHCb"     data-position="-32m  8m  0m" data-normal="0m 1m 0m"></button>
+                <button class="mv-dot" slot="hotspot-LINAC4"  data-name="LINAC4"
+                  data-position="20.69m -0.83m -112.80m" data-normal="0m 1m 0m"></button>
+                
+                <button class="mv-dot" slot="hotspot-PSBooster" data-name="PSBooster"
+                  data-position="-479.70m 6.79m 149.73m" data-normal="0m 1m 0m"></button>
+                
+                <button class="mv-dot" slot="hotspot-PS" data-name="PS"
+                  data-position="-321.08m 6.49m 355.12m" data-normal="0m 1m 0m"></button>
+                
+                <button class="mv-dot" slot="hotspot-SPS" data-name="SPS"
+                  data-position="-339.44m 6.06m -337.70m" data-normal="0m 1m 0m"></button>
+                
+                <button class="mv-dot" slot="hotspot-LHC" data-name="LHC"
+                  data-position="101.17m -1.49m 481.83m" data-normal="0m 1m 0m"></button>
+                
+                <button class="mv-dot" slot="hotspot-ATLAS" data-name="ATLAS"
+                  data-position="-138.40m 4.35m 479.38m" data-normal="0m 1m 0m"></button>
+                
+                <button class="mv-dot" slot="hotspot-CMS" data-name="CMS"
+                  data-position="334.57m 6.26m 339.61m" data-normal="0m 1m 0m"></button>
+                
+                <button class="mv-dot" slot="hotspot-ALICE" data-name="ALICE"
+                  data-position="460.98m 8.92m -125.27m" data-normal="0m 1m 0m"></button>
+                
+                <button class="mv-dot" slot="hotspot-LHCb" data-name="LHCb"
+                  data-position="-474.34m 7.72m -133.32m" data-normal="0m 1m 0m"></button>
+
 
               </model-viewer>
-
-              <script>
-                (function(){
-                  const mv = document.getElementById('flow-model');
-                  if(!mv) return;
-                
-                  const POS = {
-                    LINAC4:     '20.69m -0.83m -112.80m',
-                    PSBooster:  '-479.70m 6.79m 149.73m',
-                    PS:         '-321.08m 6.49m 355.12m',
-                    SPS:        '-339.44m 6.06m -337.70m',
-                    LHC:        '101.17m -1.49m 481.83m',
-                    ATLAS:      '-138.40m 4.35m 479.38m',
-                    CMS:        '334.57m 6.26m 339.61m',
-                    ALICE:      '460.98m 8.92m -125.27m',
-                    LHCb:       '-474.34m 7.72m -133.32m'
-                  };
-                
-                  mv.addEventListener('load', () => {
-                    Object.entries(POS).forEach(([name, pos]) => {
-                      const btn = mv.querySelector(`button.mv-dot[data-name="${name}"]`);
-                      if(btn) btn.dataset.position = pos;
-                    });
-                  });
-                })();
-              </script>
-
-
 
               <!-- Control Panel -->
               <div id="mv-hotspot-controls" class="card" style="margin-top:12px">
@@ -1222,6 +1212,7 @@
 
   </body>
 </html>
+
 
 
 
