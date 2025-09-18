@@ -228,6 +228,31 @@
         border-radius:10px; padding:8px 12px; cursor:pointer;
       }
       #pong-close:hover{ background:#17181c; border-color:var(--accent); }
+      /* Blaue MV-Hotspots */
+      .mv-dot{
+        --size: 14px;
+        width: var(--size);
+        height: var(--size);
+        border-radius: 50%;
+        border: 2px solid #0ea5ff;
+        background: #38bdf8;
+        box-shadow: 0 0 0 6px rgba(56,189,248,.18);
+        cursor: pointer;
+      }
+      .mv-dot:focus{ outline: 2px solid #fff; outline-offset: 2px; }
+
+      .mv-label{
+        position: absolute;
+        transform: translate(-50%,-140%);
+        background: rgba(10,12,16,.9);
+        border: 1px solid #243042;
+        color:#e8f3ff;
+        padding: 4px 8px;
+        border-radius: 8px;
+        font-size: 12px;
+        white-space: nowrap;
+        pointer-events: none;
+      }
     </style>
   </head>
   <body>
@@ -344,19 +369,85 @@
 
           <div class="flow-right">
             <div class="flow-viewport">
+
+
               <model-viewer
                 id="flow-model"
                 src="LHC.glb"
                 alt="3D-Modell: LHC.glb"
                 camera-controls
                 auto-rotate
+                disable-pan
                 touch-action="pan-y"
                 ar
                 ar-modes="webxr scene-viewer quick-look"
                 exposure="0.9"
                 shadow-intensity="0.6"
                 environment-image="neutral">
+
+                <!-- 9 Hotspots (Startposition x/y=0/0, z=0) -->
+                <button class="mv-dot" slot="hotspot-LINAC4" data-name="LINAC4" data-position="0m 0m 0m" data-normal="0m 1m 0m"></button>
+                <div class="mv-label" slot="hotspot-LINAC4">LINAC4</div>
+
+                <button class="mv-dot" slot="hotspot-PSBooster" data-name="PSBooster" data-position="0m 0m 0m" data-normal="0m 1m 0m"></button>
+                <div class="mv-label" slot="hotspot-PSBooster">PSBooster</div>
+
+                <button class="mv-dot" slot="hotspot-PS" data-name="PS" data-position="0m 0m 0m" data-normal="0m 1m 0m"></button>
+                <div class="mv-label" slot="hotspot-PS">PS</div>
+
+                <button class="mv-dot" slot="hotspot-SPS" data-name="SPS" data-position="0m 0m 0m" data-normal="0m 1m 0m"></button>
+                <div class="mv-label" slot="hotspot-SPS">SPS</div>
+
+                <button class="mv-dot" slot="hotspot-LHC" data-name="LHC" data-position="0m 0m 0m" data-normal="0m 1m 0m"></button>
+                <div class="mv-label" slot="hotspot-LHC">LHC</div>
+
+                <button class="mv-dot" slot="hotspot-ATLAS" data-name="ATLAS" data-position="0m 0m 0m" data-normal="0m 1m 0m"></button>
+                <div class="mv-label" slot="hotspot-ATLAS">ATLAS</div>
+
+                <button class="mv-dot" slot="hotspot-CMS" data-name="CMS" data-position="0m 0m 0m" data-normal="0m 1m 0m"></button>
+                <div class="mv-label" slot="hotspot-CMS">CMS</div>
+
+                <button class="mv-dot" slot="hotspot-ALICE" data-name="ALICE" data-position="0m 0m 0m" data-normal="0m 1m 0m"></button>
+                <div class="mv-label" slot="hotspot-ALICE">ALICE</div>
+
+                <button class="mv-dot" slot="hotspot-LHCb" data-name="LHCb" data-position="0m 0m 0m" data-normal="0m 1m 0m"></button>
+                <div class="mv-label" slot="hotspot-LHCb">LHCb</div>
               </model-viewer>
+
+              <!-- Control Panel -->
+              <div id="mv-hotspot-controls" class="card" style="margin-top:12px">
+                <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:end">
+                  <label>
+                    <div style="font-size:12px;color:var(--muted)">Hotspot</div>
+                    <select id="mv-hotspot-select">
+                      <option>LINAC4</option>
+                      <option>PSBooster</option>
+                      <option>PS</option>
+                      <option>SPS</option>
+                      <option>LHC</option>
+                      <option>ATLAS</option>
+                      <option>CMS</option>
+                      <option>ALICE</option>
+                      <option>LHCb</option>
+                    </select>
+                  </label>
+                  <label>
+                    <div style="font-size:12px;color:var(--muted)">x (m)</div>
+                    <input id="mv-x" type="number" step="0.1" value="0" style="width:110px">
+                  </label>
+                  <label>
+                    <div style="font-size:12px;color:var(--muted)">y (m)</div>
+                    <input id="mv-y" type="number" step="0.1" value="0" style="width:110px">
+                  </label>
+                  <button id="mv-apply" class="step-btn" type="button">Setzen</button>
+                </div>
+                <div style="margin-top:8px; font-size:12px; color:var(--muted)">
+                  Tipp: Werte hängen von der Skalierung/Orientierung deines GLB ab. Bei Bedarf kannst du im Script auch z ändern.
+                </div>
+              </div>
+
+
+
             </div>
           </div>
 
@@ -779,66 +870,66 @@
     </script>
 
     <!-- PONG: Overlay/Bridge (nur kleine Anpassung: Proxy-Aufrufe bleiben) -->
-    <script defer>
-      (function(){
-        // --- DOM refs
-        const overlay = document.getElementById('pong-overlay');
-        const canvas  = document.getElementById('pong-canvas');
-        const scoreEl = document.getElementById('pong-score');
-        const bestEl  = document.getElementById('pong-best');
-        const closeBtn= document.getElementById('pong-close');
+      <script defer>
+        (function(){
+          // --- DOM refs
+          const overlay = document.getElementById('pong-overlay');
+          const canvas  = document.getElementById('pong-canvas');
+          const scoreEl = document.getElementById('pong-score');
+          const bestEl  = document.getElementById('pong-best');
+          const closeBtn= document.getElementById('pong-close');
 
-        // --- persistent highscore
-        const LS_KEY = 'pong_highscore_v1';
-        const best = +localStorage.getItem(LS_KEY) || 0;
-        bestEl.textContent = best;
+          // --- persistent highscore
+          const LS_KEY = 'pong_highscore_v1';
+          const best = +localStorage.getItem(LS_KEY) || 0;
+          bestEl.textContent = best;
 
-        // --- open/close
-        function isOpen(){ return !overlay.hasAttribute('hidden'); }
-        function open(){
-          if(isOpen()) return;
-          overlay.removeAttribute('hidden');
-          document.body.style.overflow='hidden';
-          resizeCanvas(); // initial scale
-          window.__PONG__?._start?.();
-        }
-        function close(){
-          if(!isOpen()) return;
-          overlay.setAttribute('hidden','');
-          document.body.style.overflow='';
-          window.__PONG__?._stop?.();
-        }
-
-        // --- hotkeys: Alt+P toggle, P pause/resume
-        window.addEventListener('keydown', (ev)=>{
-          if(ev.altKey && (ev.key.toLowerCase()==='p')){
-            ev.preventDefault();
-            isOpen() ? close() : open();
-          } else if(isOpen() && (ev.key.toLowerCase()==='p')){
-            ev.preventDefault();
-            window.__PONG__?._togglePause?.();
+          // --- open/close
+          function isOpen(){ return !overlay.hasAttribute('hidden'); }
+          function open(){
+            if(isOpen()) return;
+            overlay.removeAttribute('hidden');
+            document.body.style.overflow='hidden';
+            resizeCanvas(); // initial scale
+            window.__PONG__?._start?.();
           }
-        });
-        closeBtn.addEventListener('click', close);
+          function close(){
+            if(!isOpen()) return;
+            overlay.setAttribute('hidden','');
+            document.body.style.overflow='';
+            window.__PONG__?._stop?.();
+          }
 
-        // --- canvas DPR scaling
-        const ctx = canvas.getContext('2d');
-        function resizeCanvas(){
-          const dpr = Math.max(1, window.devicePixelRatio || 1);
-          const cssW = canvas.clientWidth;
-          const cssH = canvas.clientHeight;
-          canvas.width  = Math.floor(cssW * dpr);
-          canvas.height = Math.floor(cssH * dpr);
-          ctx.setTransform(dpr,0,0,dpr,0,0); // draw in CSS pixels
-        }
-        window.addEventListener('resize', ()=>{ if(isOpen()) resizeCanvas(); });
+          // --- hotkeys: Alt+P toggle, P pause/resume
+          window.addEventListener('keydown', (ev)=>{
+            if(ev.altKey && (ev.key.toLowerCase()==='p')){
+              ev.preventDefault();
+              isOpen() ? close() : open();
+            } else if(isOpen() && (ev.key.toLowerCase()==='p')){
+              ev.preventDefault();
+              window.__PONG__?._togglePause?.();
+            }
+          });
+          closeBtn.addEventListener('click', close);
 
-        // Bridge
-        window.__PONG__ = {
-          open, close, isOpen,
-          ctx, canvas, scoreEl, bestEl, LS_KEY, resizeCanvas
-        };
-      })();
+          // --- canvas DPR scaling
+          const ctx = canvas.getContext('2d');
+          function resizeCanvas(){
+            const dpr = Math.max(1, window.devicePixelRatio || 1);
+            const cssW = canvas.clientWidth;
+            const cssH = canvas.clientHeight;
+            canvas.width  = Math.floor(cssW * dpr);
+            canvas.height = Math.floor(cssH * dpr);
+            ctx.setTransform(dpr,0,0,dpr,0,0); // draw in CSS pixels
+          }
+          window.addEventListener('resize', ()=>{ if(isOpen()) resizeCanvas(); });
+
+          // Bridge
+          window.__PONG__ = {
+            open, close, isOpen,
+            ctx, canvas, scoreEl, bestEl, LS_KEY, resizeCanvas
+          };
+        })();
      </script>
 
      <!-- PONG: Game-Logic (hier sind die gewünschten Erweiterungen) -->
@@ -1061,6 +1152,62 @@
         // window.__PONG__.open();
       })();
      </script>
+
+
+
+      <script defer>
+        // Hotspot XY-Control für <model-viewer>
+        (function(){
+          const mv = document.getElementById('flow-model');
+          if(!mv) return;
+
+          const sel = document.getElementById('mv-hotspot-select');
+          const xIn = document.getElementById('mv-x');
+          const yIn = document.getElementById('mv-y');
+          const btn = document.getElementById('mv-apply');
+
+          // Map: Name -> Button (Hotspot)
+          const getBtn = (name) => mv.querySelector(`button.mv-dot[data-name="${name}"]`);
+          const getLabel = (slotName) => mv.querySelector(`.mv-label[slot="hotspot-${slotName}"]`);
+
+          // aktuelle Werte in Inputs laden
+          function load(name){
+            const b = getBtn(name);
+            if(!b) return;
+            const pos = (b.dataset.position || '0m 0m 0m').split(' ');
+            const [xm, ym] = pos; // z ignorieren
+            xIn.value = parseFloat(xm);
+            yIn.value = parseFloat(ym);
+          }
+
+          // position setzen: x/y aus Inputs, z = 0m (bei Bedarf anpassen)
+          function apply(){
+            const name = sel.value;
+            const b = getBtn(name);
+            if(!b) return;
+
+            const x = parseFloat(xIn.value)||0;
+            const y = parseFloat(yIn.value)||0;
+            const z = 0; // <— falls nötig hier ändern/auch in UI anbieten
+
+            b.dataset.position = `${x}m ${y}m ${z}m`;
+
+            // optional: Label leicht „ploppen“ lassen
+            const label = getLabel(name);
+            if(label && label.animate){
+              label.animate([{transform:'translate(-50%,-140%) scale(0.96)'},{transform:'translate(-50%,-140%) scale(1)'}],{duration:180,easing:'ease-out'});
+            }
+          }
+
+          // Events
+          sel.addEventListener('change', ()=>load(sel.value));
+          btn.addEventListener('click', apply);
+
+          // Init
+          load(sel.value);
+        })();
+      </script>
+
   </body>
 </html>
 
