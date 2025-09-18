@@ -398,6 +398,33 @@
 
               </model-viewer>
 
+              <script>
+                (function(){
+                  const mv = document.getElementById('flow-model');
+                  if(!mv) return;
+                
+                  const POS = {
+                    LINAC4:     '20.69m -0.83m -112.80m',
+                    PSBooster:  '-479.70m 6.79m 149.73m',
+                    PS:         '-321.08m 6.49m 355.12m',
+                    SPS:        '-339.44m 6.06m -337.70m',
+                    LHC:        '101.17m -1.49m 481.83m',
+                    ATLAS:      '-138.40m 4.35m 479.38m',
+                    CMS:        '334.57m 6.26m 339.61m',
+                    ALICE:      '460.98m 8.92m -125.27m',
+                    LHCb:       '-474.34m 7.72m -133.32m'
+                  };
+                
+                  mv.addEventListener('load', () => {
+                    Object.entries(POS).forEach(([name, pos]) => {
+                      const btn = mv.querySelector(`button.mv-dot[data-name="${name}"]`);
+                      if(btn) btn.dataset.position = pos;
+                    });
+                  });
+                })();
+              </script>
+
+
 
               <!-- Control Panel -->
               <div id="mv-hotspot-controls" class="card" style="margin-top:12px">
@@ -1195,6 +1222,7 @@
 
   </body>
 </html>
+
 
 
 
