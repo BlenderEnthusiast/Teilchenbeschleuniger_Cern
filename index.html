@@ -104,7 +104,7 @@
       .accordion.open .chev{transform:rotate(90deg); color:#9affa7}
       .accordion-content{ height:0; overflow:hidden; padding:0 18px; transition: height .42s cubic-bezier(.22,.61,.36,1); will-change: height; color:var(--muted); }
       .accordion-inner{ padding:12px 0 16px; }
-      .accordion.open{ border-color:#90ff86; box-shadow:0 6px 22px rgba(134,225,255,.16); background:linear-gradient(180deg,#18181b,#141416); }
+      .accordion.open{ border-color:#90ff86; box-shadow:0 6px 22px rgba(134,225,255,.16); }
       @media (max-width:900px){ .accordion-header{font-size:16px; padding:14px 16px} }
 
       /* ================= Beschleuniger kette ================= */
@@ -121,9 +121,16 @@
       .flow-left { position:relative; display:flex; flex-direction:column; justify-content:flex-start; height:100%; max-height:490px; overflow-y:auto; padding-bottom:50px; }
       .flow-mini-text { margin:0 0 12px; font-size:15px; line-height:1.6; color:var(--muted); }
       .step-nav-fixed {
-        position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-        display: flex; gap: 12px; justify-content: center; align-items: center;
+        position: absolute;
+        bottom: 0px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        align-items: center;
       }
+
       .step-btn { padding:10px 32px; min-width:160px; border-radius:12px; border:1px solid var(--line); background:#121215; color:var(--fg); font-weight:300; font-size:12px; text-align:center; cursor:pointer; transition: background .25s ease, border-color .25s ease, transform .12s ease, opacity .25s ease; }
       .step-btn:hover { background:#1b1b20; border-color:var(--accent); }
       .step-btn:disabled { opacity:.5; cursor:not-allowed; }
@@ -134,7 +141,7 @@
       #ring-hotspots .stage img{width:100%;height:520px;object-fit:cover;opacity:.85;filter:grayscale(20%)}
       .hotspot{position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 0 0 6px rgba(255,255,255,.15);cursor:pointer;border:none;padding:0}
       .hotspot:focus{outline:2px solid #fff}
-      .fact{position:absolute;min-width:240px;max-width:320px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;line-height:1.4;transform:translate(-50%,-120%);display:none}
+      .fact{position:absolute;min-width:240px;max-width:320px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;line-height:1.4;display:none}
       .fact h3{margin:0 0 6px;font-size:16px}
       .fact p{margin:0;color:var(--muted);font-size:14px}
       .fact.show{display:block}
@@ -152,7 +159,7 @@
       .metric .v{font-size:24px;font-weight:700}
       #bfield{appearance:none;width:100%}
       #bfield::-webkit-slider-thumb{appearance:none;width:18px;height:18px;border-radius:50%;background:#fff}
-      #bfield::-webkit-slider-runnable-track{height:4px;background:#2b2b30;border-radius:999px}
+      #bfield::-webkit-slider-runnable-track{height:4px;background:#2d2b30;border-radius:999px}
       .svgbox{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
       @media (max-width:900px){ #acceleration-chain .chain{grid-template-columns:1fr} }
 
@@ -182,6 +189,45 @@
 
       .flow-viewport { width: 100%; aspect-ratio: 1 / 1; border-radius: 14px; border: 1px solid var(--line); overflow: hidden; background: #0f1014; }
       model-viewer { width: 100%; height: 100%; display: block; outline: none; }
+      /* === PONG OVERLAY ===================================== */
+      #pong-overlay[hidden]{ display:none !important; }
+      #pong-overlay{
+        position:fixed; inset:0; z-index:9999;
+        background:rgba(5,6,8,.92);
+        display:grid; grid-template-rows:1fr auto; gap:0;
+        backdrop-filter:saturate(115%) blur(6px);
+      }
+      #pong-stage{
+        position:relative;
+        display:grid; place-items:center;
+        padding:16px;
+      }
+
+      #pong-canvas{
+        width: min(100vw, 1000px);
+        height: min(calc(100vh - 120px), 700px);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: radial-gradient(circle at 50% 50%, #0f1116, #0b0c10 60%);
+        box-shadow: inset 0 20px 60px rgba(0,0,0,.45);
+      }
+
+      #pong-hud{
+        display:flex; align-items:center; justify-content:space-between;
+        gap:12px; padding:10px 16px; border-top:1px solid var(--line);
+        background:linear-gradient(180deg,#131418,#0e0f13);
+      }
+      .pong-pill{
+        display:inline-flex; align-items:center; gap:10px;
+        border:1px solid var(--line); border-radius:9999px;
+        padding:8px 12px; background:var(--card); color:var(--fg); font-weight:600; font-size:13px;
+      }
+      .pong-muted{ color:var(--muted); font-weight:500; }
+      #pong-close{
+        border:1px solid var(--line); background:transparent; color:var(--fg);
+        border-radius:10px; padding:8px 12px; cursor:pointer;
+      }
+      #pong-close:hover{ background:#17181c; border-color:var(--accent); }
     </style>
   </head>
   <body>
@@ -215,7 +261,8 @@
       <div class="container">
         <div class="accordion card reveal" id="cern-accordion">
           <button class="accordion-header" type="button" aria-expanded="false" aria-controls="cern-accordion-content">
-            <span>Was ist CERN?</span><span class="chev" aria-hidden="true">▸</span>
+            <span>Was ist CERN?</span>
+            <span class="chev" aria-hidden="true">▸</span>
           </button>
           <div class="accordion-content" id="cern-accordion-content">
             <div class="accordion-inner">
@@ -228,12 +275,30 @@
 
         <!-- Links -->
         <div class="topic-grid" aria-label="Themen">
-          <a class="topic-card" href="#timeline"><h3>Zeitleiste</h3><p>Wichtige Geschehnisse im Laufe der Zeit</p></a>
-          <a class="topic-card" href="#chain-switch"><h3>Beschleunigerkette</h3><p>Stufen & Detektoren im LHC-Komplex</p></a>
-          <a class="topic-card" href="#ring-hotspots"><h3>Teilchenbeschleuniger</h3><p>Funktionsweise und Arten am CERN</p></a>
-          <a class="topic-card" href="#acceleration-chain"><h3>Physik</h3><p>Die Grundlagen hinter den Beschleunigern</p></a>
-          <a class="topic-card" href="#collision-detector"><h3>Kollisionen</h3><p>Was in den Detektoren passiert</p></a>
-          <a class="topic-card" href="#sources"><h3>Quellen</h3><p>Quellen & Arbeitsnachweise</p></a>
+          <a class="topic-card" href="#timeline">
+            <h3>Zeitleiste</h3>
+            <p>Wichtige Geschehnisse im Laufe der Zeit</p>
+          </a>
+          <a class="topic-card" href="#chain-switch">
+            <h3>Beschleunigerkette</h3>
+            <p>Stufen & Detektoren im LHC-Komplex</p>
+          </a>
+          <a class="topic-card" href="#ring-hotspots">
+            <h3>Teilchenbeschleuniger</h3>
+            <p>Funktionsweise und Arten am CERN</p>
+          </a>
+          <a class="topic-card" href="#acceleration-chain">
+            <h3>Physik</h3>
+            <p>Die Grundlagen hinter den Beschleunigern</p>
+          </a>
+          <a class="topic-card" href="#collision-detector">
+            <h3>Kollisionen</h3>
+            <p>Was in den Detektoren passiert</p>
+          </a>
+          <a class="topic-card" href="#sources">
+            <h3>Quellen</h3>
+            <p>Quellen & Arbeitsnachweise</p>
+          </a>
         </div>
       </div>
     </section>
@@ -245,9 +310,11 @@
 
         <div class="timeline-slider reveal">
           <button class="nav-btn prev" type="button" aria-label="Zurück" title="Zurück">◀</button>
+
           <div class="event-card" aria-live="polite">
             <div class="anim-wrap"><!-- dynamic slide injected here --></div>
           </div>
+
           <button class="nav-btn next" type="button" aria-label="Weiter" title="Weiter">▶</button>
         </div>
 
@@ -261,7 +328,7 @@
       </div>
     </section>
 
-    <!-- ================= BESCHLEUNIGERKETTE ================= -->
+    <!-- ================= BESCHLEUNIGERKETTE (Model Viewer drin, aber ohne Kamerasteuerung) ================= -->
     <section class="section" id="chain-switch">
       <div class="container">
         <h2>Beschleunigerkette</h2>
@@ -280,7 +347,7 @@
               <model-viewer
                 id="flow-model"
                 src="LHC.glb"
-                alt="3D-Modell: LHC-Komplex"
+                alt="3D-Modell: LHC.glb"
                 camera-controls
                 auto-rotate
                 touch-action="pan-y"
@@ -407,6 +474,20 @@
       </div>
     </section>
 
+    <!-- === PONG OVERLAY =================================== -->
+    <div id="pong-overlay" role="dialog" aria-modal="true" aria-label="Pong" hidden>
+      <div id="pong-stage">
+        <canvas id="pong-canvas" aria-label="Pong Spielfeld"></canvas>
+      </div>
+      <div id="pong-hud" class="container">
+        <div class="pong-pill">Score: <span id="pong-score">0</span></div>
+        <div class="pong-pill">Highscore: <span id="pong-best">0</span></div>
+        <div class="pong-pill pong-muted">Toggle: Alt+P · Pause/Resume: P · Steuerung: Pfeile/W-S</div>
+        <button id="pong-close" type="button" title="Schließen (Alt+P)">Schließen</button>
+      </div>
+    </div>
+
+
     <footer class="footer"><div class="container">© 2025 Schulprojekt</div></footer>
 
     <!-- ================= SCRIPTS ================= -->
@@ -416,6 +497,28 @@
       // Reveal on view
       const ioReveal = new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('show')})},{threshold:.2});
       document.querySelectorAll('.reveal').forEach(x=>ioReveal.observe(x));
+    </script>
+
+    <script defer>
+      // Hotspots: nur Text-Bubbles anzeigen (keine Kamera-Änderung)
+      const hotspots = [...document.querySelectorAll('.hotspot')];
+      const facts = hotspots.map(h => h.nextElementSibling);
+
+      hotspots.forEach(h => {
+        const fact = h.nextElementSibling;
+        h.addEventListener('click', () => {
+          facts.forEach(x => x.classList.remove('show'));
+          fact.innerHTML = `<h3>${h.dataset.title}</h3><p>${h.dataset.text}</p>`;
+          fact.classList.add('show');
+        });
+      });
+
+      document.addEventListener('click', (ev) => {
+        if (!hotspots.some(h => h.contains(ev.target)) &&
+            !facts.some(f => f.contains(ev.target))) {
+          facts.forEach(f => f.classList.remove('show'));
+        }
+      });
     </script>
 
     <script defer>
@@ -462,20 +565,6 @@
           beam.setAttribute('d',`M ${startX} ${startY} A ${R} ${R} 0 ${large} 1 ${endX} ${endY}`);
         }
         b.addEventListener('input',upd); upd();
-      })();
-    </script>
-
-    <script defer>
-      // Detector buttons
-      (function(){
-        const det=document.getElementById('detector');
-        const buttons=document.querySelectorAll('.layers-legend button');
-        const layers=det.querySelectorAll('.layer');
-        buttons.forEach(btn=>btn.addEventListener('click',()=>{
-          layers.forEach(l=>l.classList.remove('show'));
-          const lay=det.querySelector(`.layer[data-key="${btn.dataset.target}"]`);
-          if(lay) lay.classList.add('show');
-        }));
       })();
     </script>
 
@@ -625,63 +714,21 @@
     </script>
 
     <script defer>
+      // Beschleunigerkette: Buttons & Texte (ohne Kamera/Orbit-Änderung)
       (function(){
-        // === Referenz auf das Model-Viewer-Element ===
-        const mv = document.getElementById('flow-model');
-        if(!mv){ console.warn('[LHC focus] Kein <model-viewer id="flow-model">'); return; }
-
-        // === Fokus-Presets (Targets ~ um 100 herum) ===
-        // target: "x y z" (Modellkoordinaten), orbit: "theta phi radius%"
-        const FOCUS = {
-          // Experimente
-          ATLAS: { target: "112 98 104",  orbit: "35deg 70deg 28%", fov: "35deg" },
-          CMS:   { target: " 92 101  84", orbit: "-30deg 70deg 28%", fov: "35deg" },
-          ALICE: { target: "108  99  94", orbit: "110deg 70deg 30%", fov: "35deg" },
-          LHCb:  { target: " 88 100 116", orbit: "210deg 70deg 30%", fov: "35deg" },
-
-          // Kette
-          LINAC4:{ target: "100 100 100", orbit: "0deg 75deg 34%",  fov: "38deg" },
-          PSB:   { target: " 96 103  98", orbit: "20deg 75deg 32%", fov: "38deg" },
-          PS:    { target: "104  97 102", orbit: "35deg 75deg 32%", fov: "38deg" },
-          SPS:   { target: " 99 101  99", orbit: "60deg 75deg 38%", fov: "40deg" },
-          LHC:   { target: "101  99 101", orbit: "120deg 75deg 55%", fov: "45deg" },
-
-          // Ionen
-          LINAC3:{ target: " 95 100  92", orbit: "-10deg 75deg 34%", fov: "38deg" },
-          LEIR:  { target: "105 100  94", orbit: "15deg 75deg 32%",  fov: "38deg" },
-
-          DEFAULT:{target: "100 100 100", orbit: "45deg 75deg 65%", fov: "45deg" }
-        };
-
-        function focusOnKey(key){
-          const p = FOCUS[key] || FOCUS.DEFAULT;
-          mv.setAttribute('camera-target', p.target);
-          mv.setAttribute('camera-orbit',  p.orbit);
-          mv.setAttribute('field-of-view', p.fov);
-          mv.setAttribute('min-camera-orbit', 'auto auto 8%');
-          mv.setAttribute('max-camera-orbit', 'auto auto 120%');
-        }
-
-        // Hotspots koppeln (ATLAS/CMS/ALICE/LHCb)
-        document.querySelectorAll('#ring-hotspots .hotspot').forEach(btn=>{
-          const key = (btn.dataset.title || '').toUpperCase();
-          btn.addEventListener('click', ()=> focusOnKey(key));
-        });
-
-        // Beschleunigerkette
-        const modePro = document.getElementById('mode-protons');
-        const modeIon = document.getElementById('mode-ions');
         const elTitle = document.getElementById('flow-title');
         const elText  = document.getElementById('flow-text');
+        const modePro = document.getElementById('mode-protons');
+        const modeIon = document.getElementById('mode-ions');
         const prevBtn = document.getElementById('step-prev');
         const nextBtn = document.getElementById('step-next');
 
         const protons = [
-          { key:'LINAC4', text:'LINAC4 beschleunigt H⁻-Ionen; Injektor für den PS Booster.' },
-          { key:'PSB',    text:'PS Booster komprimiert Bündel & erhöht Energie.' },
-          { key:'PS',     text:'PS verteilt Strahlen, bereitet für SPS/Experimente vor.' },
-          { key:'SPS',    text:'SPS dient als Vorbeschleuniger für den LHC.' },
-          { key:'LHC',    text:'Kollisionen bei sehr hoher Schwerpunktsenergie.' }
+          { key:'Linear Accelerator 4 (LINAC4)', text:'LINAC4 beschleunigt H⁻-Ionen und dient als Injektor für den PS Booster.' },
+          { key:'PS Booster', text:'PS Booster komprimiert Bündel & erhöht Energie.' },
+          { key:'PS',         text:'PS verteilt Strahlen, bereitet für SPS/Experimente vor.' },
+          { key:'SPS',        text:'SPS dient als Vorbeschleuniger für den LHC.' },
+          { key:'LHC',        text:'Kollisionen bei sehr hoher Schwerpunktsenergie.' }
         ];
         const ions = [
           { key:'LINAC3', text:'LINAC3 erzeugt & beschleunigt Schwerionen (z. B. Pb).' },
@@ -693,6 +740,7 @@
 
         let mode = 'protons';
         let i = 0;
+
         const seq = () => (mode==='protons' ? protons : ions);
 
         function fade(el, text, dur=180){
@@ -708,7 +756,6 @@
           const step = seq()[i];
           fade(elTitle, step.key);
           fade(elText,  step.text);
-          focusOnKey(step.key);
           prevBtn.disabled = (i===0);
           nextBtn.disabled = (i===seq().length-1);
         }
@@ -726,34 +773,296 @@
         prevBtn?.addEventListener('click', ()=>{ if(i>0){ i--; render(); } });
         nextBtn?.addEventListener('click', ()=>{ const max=seq().length-1; if(i<max){ i++; render(); } });
 
-        mv.addEventListener('load', ()=>{ render(); }, { once:true });
+        // Initial
+        render();
       })();
     </script>
 
+    <!-- PONG: Overlay/Bridge (nur kleine Anpassung: Proxy-Aufrufe bleiben) -->
     <script defer>
-      // Hotspots (einziger Block)
-      const hotspots = [...document.querySelectorAll('.hotspot')];
-      const facts = hotspots.map(h => h.nextElementSibling);
+      (function(){
+        // --- DOM refs
+        const overlay = document.getElementById('pong-overlay');
+        const canvas  = document.getElementById('pong-canvas');
+        const scoreEl = document.getElementById('pong-score');
+        const bestEl  = document.getElementById('pong-best');
+        const closeBtn= document.getElementById('pong-close');
 
-      hotspots.forEach(h => {
-        const fact = h.nextElementSibling;
-        h.addEventListener('click', () => {
-          facts.forEach(x => x.classList.remove('show'));
-          fact.innerHTML = `<h3>${h.dataset.title}</h3><p>${h.dataset.text}</p>`;
-          fact.classList.add('show');
-        });
-      });
+        // --- persistent highscore
+        const LS_KEY = 'pong_highscore_v1';
+        const best = +localStorage.getItem(LS_KEY) || 0;
+        bestEl.textContent = best;
 
-      document.addEventListener('click', (ev) => {
-        if (!hotspots.some(h => h.contains(ev.target)) &&
-            !facts.some(f => f.contains(ev.target))) {
-          facts.forEach(f => f.classList.remove('show'));
+        // --- open/close
+        function isOpen(){ return !overlay.hasAttribute('hidden'); }
+        function open(){
+          if(isOpen()) return;
+          overlay.removeAttribute('hidden');
+          document.body.style.overflow='hidden';
+          resizeCanvas(); // initial scale
+          window.__PONG__?._start?.();
         }
-      });
-    </script>
+        function close(){
+          if(!isOpen()) return;
+          overlay.setAttribute('hidden','');
+          document.body.style.overflow='';
+          window.__PONG__?._stop?.();
+        }
+
+        // --- hotkeys: Alt+P toggle, P pause/resume
+        window.addEventListener('keydown', (ev)=>{
+          if(ev.altKey && (ev.key.toLowerCase()==='p')){
+            ev.preventDefault();
+            isOpen() ? close() : open();
+          } else if(isOpen() && (ev.key.toLowerCase()==='p')){
+            ev.preventDefault();
+            window.__PONG__?._togglePause?.();
+          }
+        });
+        closeBtn.addEventListener('click', close);
+
+        // --- canvas DPR scaling
+        const ctx = canvas.getContext('2d');
+        function resizeCanvas(){
+          const dpr = Math.max(1, window.devicePixelRatio || 1);
+          const cssW = canvas.clientWidth;
+          const cssH = canvas.clientHeight;
+          canvas.width  = Math.floor(cssW * dpr);
+          canvas.height = Math.floor(cssH * dpr);
+          ctx.setTransform(dpr,0,0,dpr,0,0); // draw in CSS pixels
+        }
+        window.addEventListener('resize', ()=>{ if(isOpen()) resizeCanvas(); });
+
+        // Bridge
+        window.__PONG__ = {
+          open, close, isOpen,
+          ctx, canvas, scoreEl, bestEl, LS_KEY, resizeCanvas
+        };
+      })();
+     </script>
+
+     <!-- PONG: Game-Logic (hier sind die gewünschten Erweiterungen) -->
+     <script defer>
+      (function(){
+        const {
+          isOpen, ctx, canvas, scoreEl, bestEl, LS_KEY, resizeCanvas
+        } = window.__PONG__;
+
+        // --- world config (CSS-pixel space)
+        const WORLD  = { w: 900, h: 600, pad: 18 };
+        const PADDLE = { w: 14, h: 110, x: 28, y: 300, speed: 8 };
+        const BALL   = { x: 450, y: 300, r: 8, vx: 5, vy: 3.2, base: 6.0 };
+
+        // --- progression
+        const RAMP_PER_SEC = 0.02; // ~+2% Geschwindigkeit pro Sekunde
+
+        let raf = null, paused = false, running = false;
+        let score = 0, best = +bestEl.textContent || 0;
+
+        // input (nur Tastatur; Maussteuerung -> aus)
+        const keys = new Set();
+        window.addEventListener('keydown', e=>{
+          if(!isOpen()) return;
+          if(['ArrowUp','ArrowDown','w','s','W','S'].includes(e.key)) { keys.add(e.key); e.preventDefault(); }
+        });
+        window.addEventListener('keyup', e=>{ keys.delete(e.key); });
+
+        // helpers
+        function resetBall(dir = 1){
+          BALL.x  = WORLD.w * 0.5;
+          BALL.y  = WORLD.h * 0.5;
+          const angle = (Math.random()*0.6 - 0.3); // -0.3..0.3 rad
+          const speed = BALL.base;
+          BALL.vx = dir * speed * Math.cos(angle);
+          BALL.vy = speed * Math.sin(angle);
+        }
+        function speedUp(f=1.05){
+          BALL.vx *= f;
+          BALL.vy *= f;
+        }
+
+        // game control
+        function start(){
+          if(running) return;
+          running = true; paused = false; score = 0;
+          scoreEl.textContent = '0';
+          resetBall(Math.random()<0.5 ? 1 : -1);
+          resizeCanvas();
+          loop();
+        }
+        function stop(){
+          running = false;
+          if(raf){ cancelAnimationFrame(raf); raf=null; }
+        }
+        function togglePause(){
+          if(!running) return;
+          paused = !paused;
+          if(!paused) loop();
+          drawHUD();
+        }
+
+        // main loop
+        let lastT = 0;
+        function loop(ts=0){
+          if(!running) return;
+          raf = requestAnimationFrame(loop);
+          const dtMs = ts - (lastT||ts);
+          lastT = ts;
+          const dt = Math.min(33, Math.max(0, dtMs)) / 16.67; // ~60fps ticks normalisiert
+
+          update(dt);
+          draw();
+        }
+
+        function update(dt){
+          // paddle keyboard control
+          const up = keys.has('ArrowUp') || keys.has('w') || keys.has('W');
+          const dn = keys.has('ArrowDown') || keys.has('s') || keys.has('S');
+          if(up && !dn)   PADDLE.y -= PADDLE.speed * dt * 1.2;
+          if(dn && !up)   PADDLE.y += PADDLE.speed * dt * 1.2;
+          PADDLE.y = Math.max(PADDLE.h/2, Math.min(WORLD.h - PADDLE.h/2, PADDLE.y));
+
+          if(paused) return;
+
+          // kontinuierliche Beschleunigung (Zeit-basiert)
+          const factor = 1 + (RAMP_PER_SEC * (dt/60)); // dt ist ~frames, also dt/60 ≈ Sekunden
+          BALL.vx *= factor;
+          BALL.vy *= factor;
+
+          // ball move
+          BALL.x += BALL.vx * dt;
+          BALL.y += BALL.vy * dt;
+
+          // top/bottom bounce
+          if(BALL.y - BALL.r < 0){ BALL.y = BALL.r; BALL.vy *= -1; }
+          if(BALL.y + BALL.r > WORLD.h){ BALL.y = WORLD.h - BALL.r; BALL.vy *= -1; }
+
+          // right wall bounce
+          if(BALL.x + BALL.r > WORLD.w){
+            BALL.x = WORLD.w - BALL.r;
+            BALL.vx *= -1;
+          }
+
+          // left paddle collision / miss
+          const padLeft = PADDLE.x, padRight = PADDLE.x + PADDLE.w;
+          const padTop  = PADDLE.y - PADDLE.h/2, padBot = PADDLE.y + PADDLE.h/2;
+
+          if(BALL.x - BALL.r < padRight && BALL.x + BALL.r > padLeft &&
+             BALL.y + BALL.r > padTop && BALL.y - BALL.r < padBot &&
+             BALL.vx < 0){
+            const rel = (BALL.y - PADDLE.y) / (PADDLE.h/2); // -1..1
+            BALL.x = padRight + BALL.r;
+            const speed = Math.hypot(BALL.vx, BALL.vy) * 1.04; // leicht schneller
+            const maxAngle = Math.PI * 0.35; // ~63°
+            const angle = rel * maxAngle;
+            BALL.vx =  Math.cos(angle) * speed;
+            BALL.vy =  Math.sin(angle) * speed;
+
+            score += 1;
+            scoreEl.textContent = String(score);
+
+            if(score % 5 === 0) speedUp(1.06);
+          }
+
+          // miss -> "life lost" & soft reset
+          if(BALL.x + BALL.r < 0){
+            if(score > best){
+              best = score; bestEl.textContent = String(best);
+              try{ localStorage.setItem(LS_KEY, String(best)); }catch{}
+            }
+            score = 0; scoreEl.textContent='0';
+            resetBall(+1);
+            // etwas gnädiger neu starten
+            BALL.vx *= 0.85; BALL.vy *= 0.85;
+          }
+        }
+
+        // drawing (in CSS pixel coords)
+        function draw(){
+          const cssW = canvas.clientWidth, cssH = canvas.clientHeight;
+
+          ctx.clearRect(0,0,cssW,cssH);
+
+          // bounds
+          ctx.strokeStyle = '#2b2d33';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(0,0,cssW,cssH);
+
+          // --- Mittellinie (gestrichelt)
+          ctx.setLineDash([8,16]); ctx.lineDashOffset = 2;
+          ctx.beginPath();
+          ctx.moveTo(cssW/2, 0);
+          ctx.lineTo(cssW/2, cssH);
+          ctx.strokeStyle = 'rgba(255,255,255,.18)';
+          ctx.lineWidth = 3;
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // --- Score oben mittig im Feld
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '700 28px Inter, system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(String(score), cssW/2, 36);
+
+          // paddle
+          const padScaleX = cssW / WORLD.w, padScaleY = cssH / WORLD.h;
+          const px = PADDLE.x * padScaleX;
+          const py = PADDLE.y * padScaleY;
+          const pw = PADDLE.w * padScaleX;
+          const ph = PADDLE.h * padScaleY;
+
+          ctx.fillStyle = '#e5e7eb';
+          roundRect(ctx, px, py - ph/2, pw, ph, 8);
+          ctx.fill();
+
+          // ball
+          const bx = BALL.x * padScaleX;
+          const by = BALL.y * padScaleY;
+          const br = BALL.r * ((padScaleX + padScaleY)/2);
+          ctx.beginPath();
+          ctx.arc(bx, by, br, 0, Math.PI*2);
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowColor = 'rgba(255,255,255,.2)';
+          ctx.shadowBlur = 8;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          if(paused) drawHUD(true);
+        }
+
+        function drawHUD(pausedOnly=false){
+          if(!pausedOnly) return;
+          const cssW = canvas.clientWidth, cssH = canvas.clientHeight;
+          ctx.fillStyle = 'rgba(0,0,0,.45)';
+          ctx.fillRect(0,0,cssW,cssH);
+          ctx.fillStyle = '#fff';
+          ctx.font = '700 28px Inter, system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('PAUSE – P zum Fortsetzen', cssW/2, cssH/2);
+        }
+
+        function roundRect(ctx, x, y, w, h, r){
+          const rr = Math.min(r, w/2, h/2);
+          ctx.beginPath();
+          ctx.moveTo(x+rr, y);
+          ctx.arcTo(x+w, y, x+w, y+h, rr);
+          ctx.arcTo(x+w, y+h, x, y+h, rr);
+          ctx.arcTo(x, y+h, x, y, rr);
+          ctx.arcTo(x, y, x+w, y, rr);
+          ctx.closePath();
+        }
+
+        // Methoden an die Bridge hängen
+        window.__PONG__._start = start;
+        window.__PONG__._stop = stop;
+        window.__PONG__._togglePause = togglePause;
+
+        // optional auto-open:
+        // window.__PONG__.open();
+      })();
+     </script>
   </body>
 </html>
-
 
 
 
