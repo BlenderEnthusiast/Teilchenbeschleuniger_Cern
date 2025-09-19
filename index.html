@@ -136,7 +136,7 @@
       .step-btn:disabled { opacity:.5; cursor:not-allowed; }
       @media (max-width:900px){ .flow-card{ grid-template-columns:1fr; } .flow-left{ max-height:none; padding-bottom:60px; } }
 
-      /* ================= HOTSPOTS ================= */
+      /* ================= HOTSPOTS (Bild) ================= */
       #ring-hotspots .stage{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#0f0f12}
       #ring-hotspots .stage img{width:100%;height:520px;object-fit:cover;opacity:.85;filter:grayscale(20%)}
       .hotspot{position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 0 0 6px rgba(255,255,255,.15);cursor:pointer;border:none;padding:0}
@@ -228,7 +228,7 @@
       }
       #pong-close:hover{ background:#17181c; border-color:var(--accent); }
 
-      /* Blaue MV-Hotspots */
+      /* Blaue MV-Hotspots (ohne Labels) */
       .mv-dot{
         --size: 14px;
         width: var(--size);
@@ -240,19 +240,6 @@
         cursor: pointer;
       }
       .mv-dot:focus{ outline: 2px solid #fff; outline-offset: 2px; }
-
-      .mv-label{
-        position: absolute;
-        transform: translate(-50%,-140%);
-        background: rgba(10,12,16,.9);
-        border: 1px solid #243042;
-        color:#e8f3ff;
-        padding: 4px 8px;
-        border-radius: 8px;
-        font-size: 12px;
-        white-space: nowrap;
-        pointer-events: none;
-      }
     </style>
   </head>
   <body>
@@ -276,7 +263,7 @@
     <section class="hero" id="hero" aria-labelledby="hero-title">
       <div class="bg" aria-hidden="true"></div>
       <div class="content container">
-        <h1 class="title" id="hero-title">six seven</h1>
+        <h1 class="title" id="hero-title">Teilchen auf nahezu Lichtgeschwindigkeit</h1>
         <p class="subtitle">Eine Einführung in CERN, seine Geschichte und seine Beschleuniger (Fokus: LHC-Komplex) – plus ein Blick auf die Physik dahinter.</p>
       </div>
     </section>
@@ -340,7 +327,7 @@
             <div class="anim-wrap"><!-- dynamic slide injected here --></div>
           </div>
 
-        <button class="nav-btn next" type="button" aria-label="Weiter" title="Weiter">▶</button>
+          <button class="nav-btn next" type="button" aria-label="Weiter" title="Weiter">▶</button>
         </div>
 
         <div class="progress" aria-label="Zeitstrahl">
@@ -384,93 +371,175 @@
                 shadow-intensity="0.6"
                 environment-image="neutral">
 
-                <!-- 9 Hotspots mit deinen Koordinaten (x y z in m) -->
+                <!-- 9 Hotspots (ohne Labels) -->
                 <!-- LINAC4 -->
                 <button class="mv-dot" slot="hotspot-LINAC4" data-name="LINAC4"
                   data-position="26m 0.25m -110.6m" data-normal="0m 1m 0m"></button>
-                <div class="mv-label" slot="hotspot-LINAC4">LINAC4</div>
 
                 <!-- PS Booster -->
                 <button class="mv-dot" slot="hotspot-PSBooster" data-name="PSBooster"
                   data-position="36.691m 0.25m -77.884m" data-normal="0m 1m 0m"></button>
-                <div class="mv-label" slot="hotspot-PSBooster">PSBooster</div>
 
                 <!-- PS -->
                 <button class="mv-dot" slot="hotspot-PS" data-name="PS"
                   data-position="-0.06m 0.25m -80.025m" data-normal="0m 1m 0m"></button>
-                <div class="mv-label" slot="hotspot-PS">PS</div>
 
                 <!-- SPS -->
                 <button class="mv-dot" slot="hotspot-SPS" data-name="SPS"
                   data-position="0m 0.25m 253.5m" data-normal="0m 1m 0m"></button>
-                <div class="mv-label" slot="hotspot-SPS">SPS</div>
 
                 <!-- LHC -->
                 <button class="mv-dot" slot="hotspot-LHC" data-name="LHC"
                   data-position="0m 0.25m 877.53m" data-normal="0m 1m 0m"></button>
-                <div class="mv-label" slot="hotspot-LHC">LHC</div>
 
                 <!-- ATLAS -->
                 <button class="mv-dot" slot="hotspot-ATLAS" data-name="ATLAS"
                   data-position="0m 0.25m -4.5m" data-normal="0m 1m 0m"></button>
-                <div class="mv-label" slot="hotspot-ATLAS">ATLAS</div>
 
                 <!-- ALICE -->
                 <button class="mv-dot" slot="hotspot-ALICE" data-name="ALICE"
                   data-position="473m 0.25m 144.7m" data-normal="0m 1m 0m"></button>
-                <div class="mv-label" slot="hotspot-ALICE">ALICE</div>
 
                 <!-- LHCb -->
                 <button class="mv-dot" slot="hotspot-LHCb" data-name="LHCb"
                   data-position="-518.19m 0.25m 178.78m" data-normal="0m 1m 0m"></button>
-                <div class="mv-label" slot="hotspot-LHCb">LHCb</div>
 
                 <!-- CMS -->
                 <button class="mv-dot" slot="hotspot-CMS" data-name="CMS"
                   data-position="-16.125m 0.25m 1762m" data-normal="0m 1m 0m"></button>
-                <div class="mv-label" slot="hotspot-CMS">CMS</div>
 
               </model-viewer>
 
-              <!-- FOKUS Controller (setzt NUR den camera-target und springt hin) -->
+              <!-- FOKUS Controller: weicher Übergang (camera-target & -orbit Radius werden getweened) -->
               <script>
               (function(){
                 const mv = document.getElementById('flow-model');
                 if(!mv) return;
 
+                // --- helpers
+                const parsePos = (s) => {
+                  // "Xm Ym Zm" -> [x,y,z] (number meters)
+                  const parts = (s || '0m 0m 0m').split(' ');
+                  return parts.map(p => parseFloat(String(p).replace('m','')) || 0);
+                };
+                const fmtPos = (v) => `${v[0].toFixed(3)}m ${v[1].toFixed(3)}m ${v[2].toFixed(3)}m`;
+
+                const parseOrbit = (s) => {
+                  // "theta phi radius" -> {theta,phi,r} ; supports "auto"
+                  const parts = (s || 'auto auto 200m').split(' ');
+                  const getNum = (p) => {
+                    if(!p || p === 'auto') return null;
+                    if(p.endsWith('deg')) return parseFloat(p);
+                    if(p.endsWith('m')) return parseFloat(p);
+                    return parseFloat(p);
+                  };
+                  return {
+                    theta: parts[0] === 'auto' ? null : getNum(parts[0]),
+                    phi:   parts[1] === 'auto' ? null : getNum(parts[1]),
+                    r:     parts[2] ? getNum(parts[2]) : 200
+                  };
+                };
+                const fmtOrbit = ({theta=null, phi=null, r=200}) =>
+                  `${theta==null?'auto':theta+'deg'} ${phi==null?'auto':phi+'deg'} ${(+r).toFixed(3)}m`;
+
+                const easeInOutCubic = (t) => t<0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+
+                // aktuelle Hotspot-Positionen aus dem DOM als Quelle der Wahrheit
                 function readPositions(){
                   const map = {};
                   mv.querySelectorAll('button.mv-dot[data-name]').forEach(btn=>{
-                    const name = btn.dataset.name;
-                    const pos  = btn.dataset.position || '0m 0m 0m';
-                    map[name] = pos;
+                    map[btn.dataset.name] = btn.dataset.position || '0m 0m 0m';
                   });
                   return map;
                 }
-
                 let POS = readPositions();
-
-                const mo = new MutationObserver(()=>{
-                  POS = readPositions();
-                });
+                const mo = new MutationObserver(()=>{ POS = readPositions(); });
                 mo.observe(mv, { attributes:true, subtree:true, attributeFilter:['data-position'] });
 
-                async function focusTo(name){
-                  const pos = POS[name];
-                  if(!pos) return;
+                // Per-Punkt gewünschter Orbit-Radius (nur Radius wird animiert; Winkel bleiben wie aktuell)
+                const ORBIT_RADIUS = {
+                  LINAC4:    120,
+                  PSBooster: 180,
+                  PS:        220,
+                  SPS:       400,
+                  LHC:       900,
+                  ATLAS:     260,
+                  CMS:       340,
+                  ALICE:     420,
+                  LHCb:      380
+                };
+
+                let currTarget = null; // [x,y,z]
+                let currOrbit  = null; // {theta,phi,r}
+                let animId = null;
+
+                // init nach Modell-Ladung
+                mv.addEventListener('load', ()=>{
+                  // versuche aus Attributen zu lesen, sonst LINAC4
+                  const attrTarget = mv.getAttribute('camera-target');
+                  currTarget = attrTarget && !/auto/i.test(attrTarget) ? parsePos(attrTarget)
+                              : POS.LINAC4 ? parsePos(POS.LINAC4) : [0,0,0];
+
+                  const attrOrbit = mv.getAttribute('camera-orbit') || 'auto auto 200m';
+                  currOrbit = parseOrbit(attrOrbit);
+                  if(currOrbit.r == null || isNaN(currOrbit.r)) currOrbit.r = 200;
+
+                  // erste Setzung (ohne jump, Model-Viewer eased ohnehin leicht)
+                  mv.setAttribute('camera-target', fmtPos(currTarget));
+                  mv.setAttribute('camera-orbit',  fmtOrbit(currOrbit));
+                }, { once:true });
+
+                function stopAnim(){ if(animId){ cancelAnimationFrame(animId); animId = null; } }
+
+                // weiches Fokussieren
+                async function focusTo(name, duration=900){
+                  const targetStr = POS[name];
+                  if(!targetStr) return;
+
                   if(mv.updateComplete) await mv.updateComplete;
-                  mv.setAttribute('camera-target', pos);
-                  // Keine Orbit/FoV-Änderung -> keine Value-Änderung am Zoom
-                  if(typeof mv.jumpCameraToGoal === 'function'){
-                    mv.jumpCameraToGoal();
-                  }
+
+                  const startPos = currTarget || (mv.getAttribute('camera-target') ? parsePos(mv.getAttribute('camera-target')) : [0,0,0]);
+                  const endPos   = parsePos(targetStr);
+
+                  const startOrbit = currOrbit || parseOrbit(mv.getAttribute('camera-orbit'));
+                  const desiredR   = ORBIT_RADIUS[name] ?? startOrbit.r ?? 200;
+                  const endOrbit   = { theta:startOrbit.theta, phi:startOrbit.phi, r:desiredR };
+
+                  const t0 = performance.now();
+                  stopAnim();
+
+                  const step = (now) => {
+                    const t = Math.min(1, (now - t0) / duration);
+                    const k = easeInOutCubic(t);
+
+                    const pos = [
+                      startPos[0] + (endPos[0]-startPos[0]) * k,
+                      startPos[1] + (endPos[1]-startPos[1]) * k,
+                      startPos[2] + (endPos[2]-startPos[2]) * k,
+                    ];
+
+                    const r = (startOrbit.r ?? 200) + ((endOrbit.r)-(startOrbit.r ?? 200)) * k;
+
+                    mv.setAttribute('camera-target', fmtPos(pos));
+                    mv.setAttribute('camera-orbit',  fmtOrbit({theta:startOrbit.theta, phi:startOrbit.phi, r}));
+
+                    if(t < 1){
+                      animId = requestAnimationFrame(step);
+                    }else{
+                      currTarget = endPos;
+                      currOrbit  = {theta:startOrbit.theta, phi:startOrbit.phi, r:endOrbit.r};
+                      animId = null;
+                    }
+                  };
+                  animId = requestAnimationFrame(step);
                 }
 
+                // öffentlich machen
                 window.__MV_FOCUS__ = { focusTo, get POS(){ return POS; } };
               })();
               </script>
 
-              <!-- Control Panel -->
+              <!-- Control Panel (nur X/Y Editing – keine Labels) -->
               <div id="mv-hotspot-controls" class="card" style="margin-top:12px">
                 <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:end">
                   <label>
@@ -498,7 +567,7 @@
                   <button id="mv-apply" class="step-btn" type="button">Setzen</button>
                 </div>
                 <div style="margin-top:8px; font-size:12px; color:var(--muted)">
-                  Tipp: Werte hängen von der Skalierung/Orientierung deines GLB ab.
+                  Hinweis: Z bleibt hier 0 m (kannst du im Script erweitern).
                 </div>
               </div>
             </div>
@@ -517,7 +586,7 @@
       </div>
     </section>
 
-    <!-- ================= TEILCHENBESCHLEUNIGER ================= -->
+    <!-- ================= TEILCHENBESCHLEUNIGER (Bild-Hotspots) ================= -->
     <section class="section" id="ring-hotspots">
       <div class="container">
         <h2 class="reveal">Teilchenbeschleuniger allgemein</h2>
@@ -998,7 +1067,7 @@
       })();
     </script>
 
-    <!-- Beschleunigerkette: Buttons & Texte + CAMERA FOCUS -->
+    <!-- Beschleunigerkette: Buttons & Texte + CAMERA FOCUS (smooth) -->
     <script defer>
       (function(){
         const elTitle = document.getElementById('flow-title');
@@ -1054,7 +1123,7 @@
 
           const hotspotName = stepToHotspotName(step.key);
           if(hotspotName && window.__MV_FOCUS__){
-            await window.__MV_FOCUS__.focusTo(hotspotName);
+            await window.__MV_FOCUS__.focusTo(hotspotName, 900);
           }
         }
 
@@ -1087,7 +1156,6 @@
         const btn = document.getElementById('mv-apply');
 
         const getBtn = (name) => mv.querySelector(`button.mv-dot[data-name="${name}"]`);
-        const getLabel = (slotName) => mv.querySelector(`.mv-label[slot="hotspot-${slotName}"]`);
 
         function load(name){
           const b = getBtn(name);
@@ -1105,10 +1173,6 @@
           const y = parseFloat(yIn.value)||0;
           const z = 0;
           b.dataset.position = `${x}m ${y}m ${z}m`;
-          const label = getLabel(name);
-          if(label && label.animate){
-            label.animate([{transform:'translate(-50%,-140%) scale(0.96)'},{transform:'translate(-50%,-140%) scale(1)'}],{duration:180,easing:'ease-out'});
-          }
         }
         sel.addEventListener('change', ()=>load(sel.value));
         btn.addEventListener('click', apply);
@@ -1118,24 +1182,6 @@
 
   </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
