@@ -348,7 +348,8 @@
                 exposure="0.9"
                 shadow-intensity="0.6"
                 environment-image="neutral"
-              
+
+                field-of-view="45deg"
               
                 min-camera-orbit="auto auto 10m"
                 max-camera-orbit="auto auto 4000m"
@@ -356,7 +357,7 @@
                 interpolation-decay="200">
               
                 <!-- 9 Hotspots (ohne Labels) -->
-                <button class="mv-dot" slot="hotspot-LINAC4"    data-name="LINAC4"    data-position="20.6911m -1.184515m -112.797m"  data-normal="0m 1m 0m"></button>
+                <button class="mv-dot" slot="hotspot-LINAC4"    data-name="LINAC4"    data-position="20.6911m -0.684515m -112.797m"  data-normal="0m 1m 0m"></button>
                 <button class="mv-dot" slot="hotspot-PSBooster" data-name="PSBooster" data-position="36.691m 0.25m -77.884m"         data-normal="0m 1m 0m"></button>
                 <button class="mv-dot" slot="hotspot-PS"        data-name="PS"        data-position="-0.06m 0.25m -80.025m"           data-normal="0m 1m 0m"></button>
                 <button class="mv-dot" slot="hotspot-SPS"       data-name="SPS"       data-position="0m 0.25m 253.5m"                 data-normal="0m 1m 0m"></button>
@@ -400,8 +401,8 @@
                 // Per-point zoom (radius)
                 const ORBIT_RADIUS = {
                   LINAC4:   20,
-                  PSBooster:80,
-                  PS:      140,
+                  PSBooster:30,
+                  PS:      60,
                   SPS:     300,
                   LHC:     600,
                   ATLAS:   200,
@@ -1085,6 +1086,7 @@
     </script>
   </body>
 </html>
+
 
 
 
