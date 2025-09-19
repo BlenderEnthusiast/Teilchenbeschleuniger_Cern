@@ -231,6 +231,53 @@
         cursor: pointer;
       }
       .mv-dot:focus{ outline: 2px solid #fff; outline-offset: 2px; }
+
+      /* === Screensaver overlay === */
+      #ssv-overlay[hidden]{ display:none !important; }
+      #ssv-overlay{
+        position:fixed; inset:0; z-index:9998;
+        background:#000; /* we fade to/from black */
+        display:grid; place-items:center;
+        transition: opacity .6s ease;
+        opacity:0;
+      }
+      #ssv-overlay.active{ opacity:1; }
+      
+      /* staging area for image */
+      .ssv-stage{
+        position:relative; width:100vw; height:100vh; overflow:hidden;
+      }
+      
+      /* the image layer we animate */
+      .ssv-img{
+        position:absolute; inset:0;
+        background-position:center center;
+        background-repeat:no-repeat;
+        background-size:cover;            /* fill */
+        transform:scale(1) translateX(0); /* start */
+        will-change:transform, opacity;
+        opacity:0;                        /* fade in after black */
+        transition: opacity 900ms ease;   /* image fade-in */
+      }
+      
+      /* Ken-Burns-ish, very slow lateral pan */
+      @keyframes ssv-pan-left {
+        0%   { transform: scale(1.06) translateX(2%);  }
+        100% { transform: scale(1.06) translateX(-2%); }
+      }
+      @keyframes ssv-pan-right {
+        0%   { transform: scale(1.06) translateX(-2%); }
+        100% { transform: scale(1.06) translateX(2%);  }
+      }
+      
+      /* (optional) subtle vignette */
+      .ssv-vignette{
+        position:absolute; inset:0; pointer-events:none;
+        background:
+          radial-gradient(70% 60% at 50% 50%, rgba(0,0,0,0) 0%, rgba(0,0,0,.35) 100%);
+        opacity:.75;
+      }
+
     </style>
   </head>
   <body>
@@ -688,6 +735,15 @@
 
     <footer class="footer"><div class="container">© 2025 Schulprojekt</div></footer>
 
+
+    <!-- Screensaver Overlay -->
+    <div id="ssv-overlay" hidden aria-hidden="true">
+      <div class="ssv-stage">
+        <div class="ssv-img" id="ssv-img"></div>
+        <div class="ssv-vignette"></div>
+      </div>
+    </div>
+
     <!-- ================= SCRIPTS ================= -->
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 
@@ -1096,8 +1152,210 @@
         render();
       })();
     </script>
+    
+    
+    <script>
+      /** Configure your repo & folder (EDIT THESE) **/
+      const GH_IMG = {
+        owner: 'YOUR_USER_OR_ORG',
+        repo:  'YOUR_REPO',
+        path:  'path/to/images',   // folder inside repo, no leading slash
+        branch:'main',             // or 'master'
+        cacheHours: 24
+      };
+      
+      async function getImageListOnce() {
+        const metaKey = 'gh_image_list_meta_v1';
+      
+        // Use cache if fresh
+        try {
+          const meta = JSON.parse(localStorage.getItem(metaKey) || '{}');
+          const age  = Date.now() - (meta.timestamp || 0);
+          if (meta.urls && age < GH_IMG.cacheHours * 3600_000) {
+            window.__IMG_POOL__ = meta.urls.slice();
+            return window.__IMG_POOL__;
+          }
+        } catch {}
+      
+        // Fetch from GitHub API
+        const api = `https://api.github.com/repos/${GH_IMG.owner}/${GH_IMG.repo}/contents/${GH_IMG.path}?ref=${GH_IMG.branch}`;
+        const res = await fetch(api, { headers: { 'Accept': 'application/vnd.github+json' } });
+      
+        if (!res.ok) {
+          console.warn('GitHub API error', res.status);
+          window.__IMG_POOL__ = window.__IMG_POOL__ || [];
+          return window.__IMG_POOL__;
+        }
+      
+        const items = await res.json();
+        const urls = (items || [])
+          .filter(it => it.type === 'file' && /\.(png|jpe?g|webp|gif|avif)$/i.test(it.name))
+          .map(it => it.download_url);
+      
+        try {
+          localStorage.setItem(metaKey, JSON.stringify({ timestamp: Date.now(), urls }));
+        } catch {}
+      
+        window.__IMG_POOL__ = urls.slice();
+        return window.__IMG_POOL__;
+      }
+      
+      // Kick it off once on load
+      document.addEventListener('DOMContentLoaded', () => { getImageListOnce(); });
+    </script> 
+
+    <script>
+      /* ===== Config ===== */
+      const SSV = {
+        INACTIVITY_MS:      60_000, // 1 minute
+        SLIDE_MS:           18000,  // time each image is visible/panning
+        BETWEEN_FADE_MS:     700,   // black fade before next image
+        START_FADE_MS:       700,   // black fade when entering screensaver
+        END_FADE_MS:         300,   // fade out overlay when exiting
+        PAN_ANIM:            ['ssv-pan-left','ssv-pan-right'],
+        RANDOMIZE_ORDER:     true
+      };
+      
+      (function(){
+        const overlay = document.getElementById('ssv-overlay');
+        const imgBox  = document.getElementById('ssv-img');
+        let idleTimer = null;
+        let running   = false;
+        let stopNow   = false;
+        let pool      = [];     // active shuffled list
+        let idx       = 0;
+      
+        // ——— Helpers
+        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+        function shuffle(arr){
+          for (let i=arr.length-1;i>0;i--){
+            const j = Math.floor(Math.random() * (i+1));
+            [arr[i],arr[j]] = [arr[j],arr[i]];
+          }
+          return arr;
+        }
+        function nextDirection(){
+          // alternate left/right; randomize first
+          return idx % 2 ? SSV.PAN_ANIM[1] : SSV.PAN_ANIM[0];
+        }
+      
+        // ——— Image selection
+        async function ensurePool(){
+          if (!Array.isArray(window.__IMG_POOL__)) await getImageListOnce();
+          const base = (window.__IMG_POOL__ || []).slice();
+          pool = SSV.RANDOMIZE_ORDER ? shuffle(base) : base;
+          idx = 0;
+        }
+        function pickNext(){
+          if (!pool.length) return null;
+          if (idx >= pool.length) { idx = 0; if (SSV.RANDOMIZE_ORDER) shuffle(pool); }
+          return pool[idx++];
+        }
+      
+        // ——— Idle detection (IGNORE mousemove)
+        const resetIdle = () => {
+          if (running) return; // while screensaver is on, we exit via input listeners below
+          clearTimeout(idleTimer);
+          idleTimer = setTimeout(startScreensaver, SSV.INACTIVITY_MS);
+        };
+      
+        // Inputs that DO reset:
+        ['mousedown','mouseup','click','keydown','keyup','wheel','touchstart','touchend','pointerdown','pointerup','scroll']
+          .forEach(ev => window.addEventListener(ev, resetIdle, { passive: true }));
+      
+        // DO NOT reset on mousemove
+      
+        // When screensaver is ON, any input exits immediately:
+        function bindExitWhileRunning(){
+          const exit = () => stopScreensaver();
+          ['mousemove','mousedown','mouseup','click','keydown','keyup','wheel','touchstart','touchend','pointerdown','pointerup','scroll']
+            .forEach(ev => window.addEventListener(ev, exit, { passive: true, once: true }));
+        }
+      
+        // ——— Start/Stop
+        async function startScreensaver(){
+          if (running) return;
+          await ensurePool();
+          if (!pool.length) { resetIdle(); return; }
+      
+          running = true; stopNow = false;
+      
+          // show overlay with black fade-in
+          overlay.hidden = false;
+          overlay.classList.add('active');
+          overlay.style.opacity = '0';
+          // give it a tick so CSS can transition
+          requestAnimationFrame(()=>{ overlay.style.opacity = '1'; });
+      
+          bindExitWhileRunning();
+          await sleep(SSV.START_FADE_MS);
+          if (stopNow) return stopScreensaver();
+      
+          // slideshow loop
+          while (!stopNow) {
+            const url = pickNext();
+            if (!url) break;
+      
+            // ensure black is visible first
+            imgBox.style.opacity = '0';
+            imgBox.style.animation = 'none';
+      
+            // small wait on black
+            await sleep(SSV.BETWEEN_FADE_MS);
+            if (stopNow) break;
+      
+            // set image and animate
+            imgBox.style.backgroundImage = `url("${url}")`;
+            const animName = idx === 1 ? (Math.random() < 0.5 ? SSV.PAN_ANIM[0] : SSV.PAN_ANIM[1]) : nextDirection();
+            imgBox.style.animation = `${animName} ${SSV.SLIDE_MS}ms linear forwards`;
+            imgBox.style.opacity = '1';
+      
+            // wait slide duration
+            await sleep(SSV.SLIDE_MS);
+            if (stopNow) break;
+      
+            // fade to black between slides
+            imgBox.style.opacity = '0';
+            await sleep(SSV.BETWEEN_FADE_MS);
+          }
+      
+          stopScreensaver();
+        }
+      
+        async function stopScreensaver(){
+          if (!running) return;
+          stopNow = true;
+          running = false;
+      
+          // fade overlay out
+          overlay.style.opacity = '0';
+          await sleep(SSV.END_FADE_MS);
+          overlay.classList.remove('active');
+          overlay.hidden = true;
+      
+          // cleanup current image
+          imgBox.style.animation = 'none';
+          imgBox.style.opacity = '0';
+          imgBox.style.backgroundImage = '';
+      
+          // restart idle timer
+          resetIdle();
+        }
+      
+        // Expose minimal API (optional)
+        window.__SSV__ = {
+          start: startScreensaver,
+          stop:  stopScreensaver,
+          config: SSV
+        };
+      
+        // arm initial timer after load
+        window.addEventListener('load', resetIdle);
+      })();
+    </script>
   </body>
 </html>
+
 
 
 
