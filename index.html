@@ -346,13 +346,13 @@
                 touch-action="pan-y"
                 disable-pan
                 exposure="0.9"
-                shadow-intensity="0.6"
+                shadow-intensity="3"
                 environment-image="neutral"
 
                 field-of-view="45deg"
               
-                min-camera-orbit="auto auto 10m"
-                max-camera-orbit="auto auto 4000m"
+                min-camera-orbit="auto 75deg 10m"
+                max-camera-orbit="auto 75deg 4000m"
               
                 interpolation-decay="200">
               
@@ -401,8 +401,8 @@
                 // Per-point zoom (radius)
                 const ORBIT_RADIUS = {
                   LINAC4:   20,
-                  PSBooster:30,
-                  PS:      60,
+                  PSBooster:25,
+                  PS:      100,
                   SPS:     300,
                   LHC:     600,
                   ATLAS:   200,
@@ -1086,6 +1086,7 @@
     </script>
   </body>
 </html>
+
 
 
 
