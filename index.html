@@ -358,18 +358,21 @@
             <div class="flow-viewport">
 
               <model-viewer
-                id="flow-model"
-                src="LHC.glb"
-                alt="3D-Modell: LHC.glb"
-                camera-controls
-                auto-rotate
-                disable-pan
-                touch-action="pan-y"
-                ar
-                ar-modes="webxr scene-viewer quick-look"
-                exposure="0.9"
-                shadow-intensity="0.6"
-                environment-image="neutral">
+              id="mv"
+              src="LHC.glb"
+              alt="LHC"
+              camera-controls
+              auto-rotate
+              touch-action="pan-y"
+              disable-pan
+              exposure="0.9"
+              shadow-intensity="0.6"
+              environment-image="neutral"
+
+              min-camera-orbit="auto auto 0.00005m"
+              max-camera-orbit="auto auto 5000000m"
+
+              interpolation-decay="200">
 
                 <!-- 9 Hotspots (ohne Labels) -->
                 <!-- LINAC4 -->
@@ -460,9 +463,9 @@
                 const ORBIT_RADIUS = {
                   LINAC4:    10,
                   PSBooster: 1000,
-                  PS:        1,
-                  SPS:       1000000,
-                  LHC:       0.001,
+                  PS:        10000000,
+                  SPS:       0.0001,
+                  LHC:       900,
                   ATLAS:     260,
                   CMS:       340,
                   ALICE:     420,
@@ -1182,6 +1185,10 @@
 
   </body>
 </html>
+
+
+
+
 
 
 
