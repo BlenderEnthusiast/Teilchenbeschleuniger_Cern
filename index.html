@@ -346,34 +346,34 @@
                 touch-action="pan-y"
                 disable-pan
                 exposure="0.9"
-                shadow-intensity="2"
+                shadow-intensity="0.6"
                 environment-image="neutral"
-
-                mv.setAttribute('min-camera-orbit', `auto auto 10m`);
-                mv.setAttribute('max-camera-orbit', `auto auto 4000m`);
-
-
+              
+                <!-- user zoom bounds -->
+                min-camera-orbit="auto auto 10m"
+                max-camera-orbit="auto auto 4000m"
+              
                 interpolation-decay="200">
-
+              
                 <!-- 9 Hotspots (ohne Labels) -->
-                <button class="mv-dot" slot="hotspot-LINAC4"   data-name="LINAC4"   data-position="20.6911m -1.184515m -112.797m"  data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-PSBooster"data-name="PSBooster"data-position="36.691m 0.25m -77.884m" data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-PS"       data-name="PS"       data-position="-0.06m 0.25m -80.025m" data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-SPS"      data-name="SPS"      data-position="0m 0.25m 253.5m"    data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-LHC"      data-name="LHC"      data-position="0m 0.25m 877.53m"   data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-ATLAS"    data-name="ATLAS"    data-position="0m 0.25m -4.5m"     data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-ALICE"    data-name="ALICE"    data-position="473m 0.25m 144.7m"  data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-LHCb"     data-name="LHCb"     data-position="-518.19m 0.25m 178.78m" data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-CMS"      data-name="CMS"      data-position="-16.125m 0.25m 1762m" data-normal="0m 1m 0m"></button>
-
+                <button class="mv-dot" slot="hotspot-LINAC4"    data-name="LINAC4"    data-position="20.6911m -1.184515m -112.797m"  data-normal="0m 1m 0m"></button>
+                <button class="mv-dot" slot="hotspot-PSBooster" data-name="PSBooster" data-position="36.691m 0.25m -77.884m"         data-normal="0m 1m 0m"></button>
+                <button class="mv-dot" slot="hotspot-PS"        data-name="PS"        data-position="-0.06m 0.25m -80.025m"           data-normal="0m 1m 0m"></button>
+                <button class="mv-dot" slot="hotspot-SPS"       data-name="SPS"       data-position="0m 0.25m 253.5m"                 data-normal="0m 1m 0m"></button>
+                <button class="mv-dot" slot="hotspot-LHC"       data-name="LHC"       data-position="0m 0.25m 877.53m"                data-normal="0m 1m 0m"></button>
+                <button class="mv-dot" slot="hotspot-ATLAS"     data-name="ATLAS"     data-position="0m 0.25m -4.5m"                  data-normal="0m 1m 0m"></button>
+                <button class="mv-dot" slot="hotspot-ALICE"     data-name="ALICE"     data-position="473m 0.25m 144.7m"               data-normal="0m 1m 0m"></button>
+                <button class="mv-dot" slot="hotspot-LHCb"      data-name="LHCb"      data-position="-518.19m 0.25m 178.78m"          data-normal="0m 1m 0m"></button>
+                <button class="mv-dot" slot="hotspot-CMS"       data-name="CMS"       data-position="-16.125m 0.25m 1762m"            data-normal="0m 1m 0m"></button>
+              
               </model-viewer>
-
+              
               <!-- Smooth focus/zoom controller -->
               <script>
               (function(){
                 const mv = document.getElementById('mv');
                 if(!mv) return;
-
+              
                 // Utils
                 const parsePos = (s) => (s||'0m 0m 0m').split(' ').map(p => parseFloat(String(p).replace('m',''))||0);
                 const fmtPos   = (v) => `${v[0].toFixed(3)}m ${v[1].toFixed(3)}m ${v[2].toFixed(3)}m`;
@@ -384,7 +384,7 @@
                 };
                 const fmtOrbit = ({theta=null,phi=null,r=200}) => `${theta==null?'auto':theta+'deg'} ${phi==null?'auto':phi+'deg'} ${(+r).toFixed(3)}m`;
                 const easeInOutCubic=(t)=> t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
-
+              
                 // Read hotspot positions
                 function readPositions(){
                   const map={};
@@ -396,63 +396,68 @@
                 let POS = readPositions();
                 const mo = new MutationObserver(()=>{ POS = readPositions(); });
                 mo.observe(mv,{subtree:true, attributes:true, attributeFilter:['data-position']});
-
-                // Per point zoom (radius)
+              
+                // Per-point zoom (radius)
                 const ORBIT_RADIUS = {
-                  LINAC4:  20,
-                  PSBooster: 80,
-                  PS: 140,
-                  SPS: 300,
-                  LHC: 600,
-                  ATLAS: 200,
-                  CMS: 280,
-                  ALICE: 320,
-                  LHCb: 260
+                  LINAC4:   20,
+                  PSBooster:80,
+                  PS:      140,
+                  SPS:     300,
+                  LHC:     600,
+                  ATLAS:   200,
+                  CMS:     280,
+                  ALICE:   320,
+                  LHCb:    260
                 };
-
+              
                 let currTarget=null; // [x,y,z]
                 let currOrbit=null;  // {theta,phi,r}
                 let animId=null;
-
+              
                 mv.addEventListener('load', ()=>{
                   const attrTarget = mv.getAttribute('camera-target');
                   currTarget = (attrTarget && !/auto/i.test(attrTarget)) ? parsePos(attrTarget)
                               : POS.LINAC4 ? parsePos(POS.LINAC4) : [0,0,0];
                   currOrbit = parseOrbit(mv.getAttribute('camera-orbit'));
+                  if(!currOrbit || isNaN(currOrbit.r)) currOrbit = {theta:null, phi:null, r: ORBIT_RADIUS.LINAC4};
                   mv.setAttribute('camera-target', fmtPos(currTarget));
                   mv.setAttribute('camera-orbit',  fmtOrbit(currOrbit));
                 }, {once:true});
-
+              
                 function stopAnim(){ if(animId){ cancelAnimationFrame(animId); animId=null; } }
-
+              
                 async function focusTo(name, duration=900){
                   const targetStr = POS[name];
                   if(!targetStr) return;
                   if(mv.updateComplete) await mv.updateComplete;
-
+              
                   const startPos   = currTarget || (mv.getAttribute('camera-target') ? parsePos(mv.getAttribute('camera-target')) : [0,0,0]);
                   const endPos     = parsePos(targetStr);
                   const startOrbit = currOrbit || parseOrbit(mv.getAttribute('camera-orbit'));
                   const desiredR   = ORBIT_RADIUS[name] ?? startOrbit.r ?? 200;
                   const endOrbit   = { theta:startOrbit.theta, phi:startOrbit.phi, r:desiredR };
-
+              
+                  // OPTIONAL: lock user zoom while focused (uncomment to prevent wheel/pinch zoom)
+                  // mv.setAttribute('min-camera-orbit', `auto auto ${desiredR}m`);
+                  // mv.setAttribute('max-camera-orbit', `auto auto ${desiredR}m`);
+              
                   const t0 = performance.now();
                   stopAnim();
-
+              
                   const step = (now)=>{
                     const t = Math.min(1,(now - t0)/duration);
                     const k = easeInOutCubic(t);
-
+              
                     const pos = [
                       startPos[0] + (endPos[0]-startPos[0]) * k,
                       startPos[1] + (endPos[1]-startPos[1]) * k,
                       startPos[2] + (endPos[2]-startPos[2]) * k,
                     ];
                     const r = (startOrbit.r ?? 200) + ((endOrbit.r)-(startOrbit.r ?? 200)) * k;
-
+              
                     mv.setAttribute('camera-target', fmtPos(pos));
                     mv.setAttribute('camera-orbit',  fmtOrbit({theta:startOrbit.theta, phi:startOrbit.phi, r}));
-
+              
                     if(t<1){
                       animId = requestAnimationFrame(step);
                     }else{
@@ -463,7 +468,7 @@
                   };
                   animId = requestAnimationFrame(step);
                 }
-
+              
                 // Click-to-focus on blue dots
                 mv.addEventListener('click', (e)=>{
                   const btn = e.composedPath().find(n=> n?.classList?.contains?.('mv-dot'));
@@ -471,12 +476,12 @@
                     focusTo(btn.dataset.name, 800);
                   }
                 });
-
+              
                 window.__MV_FOCUS__ = { focusTo, get POS(){ return POS; } };
               })();
               </script>
-
-              <!-- Control Panel (XY edit only) -->
+              
+              <!-- Control Panel (XY editor) -->
               <div id="mv-hotspot-controls" class="card" style="margin-top:12px">
                 <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:end">
                   <label>
@@ -507,7 +512,7 @@
                   Hinweis: Z bleibt hier 0 m (kannst du im Script erweitern).
                 </div>
               </div>
-
+              
               <script>
               // Simple XY editor wired to #mv
               (function(){
@@ -532,6 +537,11 @@
                 load(sel.value);
               })();
               </script>
+
+
+
+
+              
 
             </div>
           </div>
@@ -1075,6 +1085,7 @@
     </script>
   </body>
 </html>
+
 
 
 
