@@ -864,8 +864,8 @@
         const { isOpen, ctx, canvas, scoreEl, bestEl, LS_KEY, resizeCanvas } = window.__PONG__;
         const WORLD  = { w: 900, h: 600, pad: 18 };
         const PADDLE = { w: 14, h: 110, x: 28, y: 300, speed: 8 };
-        const BALL   = { x: 450, y: 300, r: 8, vx: 5, vy: 3.2, base: 6.0 };
-        const RAMP_PER_SEC = 0.02;
+        const BALL   = { x: 450, y: 300, r: 8, vx: 5, vy: 3.2, base: 10.0 };
+        const RAMP_PER_SEC = 0.2;
         let raf = null, paused = false, running = false;
         let score = 0, best = +bestEl.textContent || 0;
         const keys = new Set();
@@ -1098,6 +1098,7 @@
 
   </body>
 </html>
+
 
 
 
