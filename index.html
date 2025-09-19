@@ -255,8 +255,7 @@
         user-select:none; pointer-events:none;
       }
       
-      /* optional: blur whole site while overlay runs */
-      body.dvd-blur #site-root{ filter: blur(8px); transition:filter .25s ease; }
+
 
     </style>
   </head>
@@ -700,6 +699,9 @@
       </div>
     </div>
 
+    <!-- === DVD Screensaver Overlay === -->
+    <div id="dvd-ssv" hidden aria-hidden="true"></div>
+
     <footer class="footer"><div class="container">© 2025 Schulprojekt</div></footer>
 
     <!-- ================= SCRIPTS ================= -->
@@ -1115,9 +1117,9 @@
           alphaThresh: 10,         // alpha > 10 counts as visible
           images: [
             // add/remove entries as you like (CORS-friendly URLs recommended)
-            'dvd-logo-1.png',
-            'dvd-logo-2.png',
-            'dvd-logo-3.png'
+            'f569482a-41d8-4b36-9395-bed23b0b5805.jpeg',
+            'IMG_1046.jpeg',
+            'IMG_1051.jpeg'
           ]
         };
       
@@ -1306,6 +1308,7 @@
     </script>
   </body>
 </html>
+
 
 
 
