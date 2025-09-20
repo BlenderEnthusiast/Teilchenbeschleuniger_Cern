@@ -338,12 +338,8 @@
     <section class="section" id="chain-switch">
       <div class="container">
         <h2>Beschleunigerkette</h2>
-        <p class="sub">Wähle zwischen Protonen und Schwerionen und erkunde die einzelnen Stufen.</p>
+        <p class="sub">Erkunde die Elemente der LHC Beschleunigerkette für Protonen</p>
 
-        <div class="chain-toggle" role="tablist" aria-label="Modus wählen">
-          <button class="mode-btn active" id="mode-protons" type="button" role="tab" aria-selected="true">Protonen</button>
-          <button class="mode-btn" id="mode-ions" type="button" role="tab" aria-selected="false">Schwere Ionen</button>
-        </div>
 
         <div class="flow-card" aria-live="polite">
           <h3 class="flow-step-title" id="flow-title">Linear Accelerator 4 (LINAC4)</h3>
@@ -1015,17 +1011,10 @@
 
         const protons = [
           { key:'Linear Accelerator 4 (LINAC4)', text:'Der Linear Accelerator 4 (LINAC4) wurde 2020 offiziell in Betrieb genommen und ist der erste Schritt in der LHC-Beschleunigerkette. Er beschleunigt negativ geladene Wasserstoffionen (H⁻) auf eine Energie von 160 MeV, was etwa 0,43 % der Lichtgeschwindigkeit entspricht. Anschließend werden die Elektronen abgestreift, sodass reine Protonen entstehen. Der LINAC4 ersetzt den älteren LINAC2 und liefert einen dichteren und stärkeren Strahl. Er arbeitet als linearer Beschleuniger mit Radiofrequenz-Kavitäten. Die erzeugten Protonen werden anschließend in den Proton Synchrotron Booster eingespeist. LINAC4 bildet damit die Einspeisung für den gesamten weiteren Beschleunigerkomplex.' },
-          { key:'PS Booster', text:'Der Proton Synchrotron Booster (PSB) wurde 1972 in Betrieb genommen und ist die zweite Stufe nach dem LINAC4. Er übernimmt Protonen, die aus LINAC4 mit 160 MeV kommen, und beschleunigt sie auf 2 GeV. Der PSB besteht aus vier übereinanderliegenden Ringen, die gleichzeitig genutzt werden, um mehrere Strahlenpakete aufzubauen. Er arbeitet als Synchrotron mit Magnetfeldern zur Führung und Radiofrequenz-Kavitäten zur Beschleunigung. Der Booster erhöht nicht nur die Energie, sondern auch die Intensität und Qualität des Strahls. Die Protonen aus dem PSB werden anschließend an das Proton Synchrotron (PS) weitergegeben. ' },
-          { key:'PS',         text:'Das Proton Synchrotron (PS) ging 1959 in Betrieb und war damals der größte Beschleuniger der Welt. Es übernimmt Protonen mit 2 GeV vom PS Booster und beschleunigt sie auf 26 GeV. Mit einem Umfang von 628 m ist es ein Synchrotron, das Magnetfelder und Radiofrequenz-Felder nutzt. Neben Protonen können auch schwere Ionen beschleunigt werden, die aus speziellen Ionenquellen kommen. Das PS bereitet die Strahlen für verschiedene Zwecke vor: ein Teil geht direkt an Experimente am CERN (z. B. Neutrino-, Antiproton- oder Festkörperphysik), ein anderer Teil wird an das Super Proton Synchrotron (SPS) weitergeleitet. Damit ist das PS eine Art Verteilstation im CERN-Komplex. ' },
-          { key:'SPS',        text:'Das Super Proton Synchrotron (SPS) wurde 1976 in Betrieb genommen und übernimmt Protonen oder Ionen vom PS mit 26 GeV. Es beschleunigt sie auf bis zu 450 GeV. Mit einem Umfang von 6,9 km ist es einer der größten Synchrotrons am CERN. Neben Protonen werden hier auch schwere Ionen wie Bleiionen beschleunigt, die in den PS eingespeist wurden. Der SPS lieferte früher auch Strahlen für Eigenexperimente (z. B. Neutrinos nach Gran Sasso oder WA-Experimente). Heute ist er vor allem dafür zuständig, die Strahlenpakete für den Large Hadron Collider (LHC) vorzubereiten und dort einzuspeisen. Er ist damit die letzte Stufe vor dem eigentlichen Hochenergie-Collider.' },
-          { key:'LHC',        text:'Kollisionen bei sehr hoher Schwerpunktsenergie.' }
-        ];
-        const ions = [
-          { key:'LINAC3', text:'LINAC3 erzeugt & beschleunigt Schwerionen (z. B. Pb).' },
-          { key:'LEIR',   text:'LEIR kühlt & formt Ionen-Bündel.' },
-          { key:'PS',     text:'Weitere Beschleunigung & Verteilung.' },
-          { key:'SPS',    text:'Vorbereitung auf die LHC-Injektion.' },
-          { key:'LHC',    text:'Schwerionen-Kollisionen (z. B. Pb–Pb).' }
+          { key:'Proton Synchrotron Booster (PSB)', text:'Der Proton Synchrotron Booster (PSB) wurde 1972 in Betrieb genommen und ist die zweite Stufe nach dem LINAC4. Er übernimmt Protonen, die aus LINAC4 mit 160 MeV kommen, und beschleunigt sie auf 2 GeV. Der PSB besteht aus vier übereinanderliegenden Ringen, die gleichzeitig genutzt werden, um mehrere Strahlenpakete aufzubauen. Er arbeitet als Synchrotron mit Magnetfeldern zur Führung und Radiofrequenz-Kavitäten zur Beschleunigung. Der Booster erhöht nicht nur die Energie, sondern auch die Intensität und Qualität des Strahls. Die Protonen aus dem PSB werden anschließend an das Proton Synchrotron (PS) weitergegeben. ' },
+          { key:'Proton Synchrotron (PS)',         text:'Das Proton Synchrotron (PS) ging 1959 in Betrieb und war damals der größte Beschleuniger der Welt. Es übernimmt Protonen mit 2 GeV vom PS Booster und beschleunigt sie auf 26 GeV. Mit einem Umfang von 628 m ist es ein Synchrotron, das Magnetfelder und Radiofrequenz-Felder nutzt. Neben Protonen können auch schwere Ionen beschleunigt werden, die aus speziellen Ionenquellen kommen. Das PS bereitet die Strahlen für verschiedene Zwecke vor: ein Teil geht direkt an Experimente am CERN (z. B. Neutrino-, Antiproton- oder Festkörperphysik), ein anderer Teil wird an das Super Proton Synchrotron (SPS) weitergeleitet. Damit ist das PS eine Art Verteilstation im CERN-Komplex. ' },
+          { key:'Super Proton Synchrotron (SPS)',        text:'Das Super Proton Synchrotron (SPS) wurde 1976 in Betrieb genommen und übernimmt Protonen oder Ionen vom PS mit 26 GeV. Es beschleunigt sie auf bis zu 450 GeV. Mit einem Umfang von 6,9 km ist es einer der größten Synchrotrons am CERN. Neben Protonen werden hier auch schwere Ionen wie Bleiionen beschleunigt, die in den PS eingespeist wurden. Der SPS lieferte früher auch Strahlen für Eigenexperimente (z. B. Neutrinos nach Gran Sasso oder WA-Experimente). Heute ist er vor allem dafür zuständig, die Strahlenpakete für den Large Hadron Collider (LHC) vorzubereiten und dort einzuspeisen. Er ist damit die letzte Stufe vor dem eigentlichen Hochenergie-Collider.' },
+          { key:'Large Hadron Collider (LHC)',        text:'Kollisionen bei sehr hoher Schwerpunktsenergie.' }
         ];
 
         let mode = 'protons';
@@ -1082,6 +1071,18 @@
 
   </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
