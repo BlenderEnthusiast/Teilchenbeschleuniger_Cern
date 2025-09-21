@@ -230,7 +230,24 @@
         cursor: pointer;
       }
       .mv-dot:focus{ outline: 2px solid #fff; outline-offset: 2px; }
-      
+
+
+      /* DVD Screensaver */
+      #dvd-saver {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.8);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      #dvd-canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
       
 
 
@@ -675,6 +692,13 @@
     </div>
 
 
+    <!-- DVD Screensaver -->
+    <div id="dvd-saver" hidden>
+      <canvas id="dvd-canvas" width="800" height="600"></canvas>
+    </div>
+
+
+
     <!-- ================= SCRIPTS ================= -->
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 
@@ -1082,8 +1106,109 @@
       })();
     </script>
 
+    
+
+
+    <script>
+      (function(){
+        const saver   = document.getElementById('dvd-saver');
+        const canvas  = document.getElementById('dvd-canvas');
+        const ctx     = canvas.getContext('2d');
+      
+        const IMAGES = [
+          'img/dvd1.png',   // put your DVD logo/image paths here
+          'img/dvd2.png',
+          'img/dvd3.png'
+        ];
+      
+        const logos = [];
+        const speed = 3;          // base speed
+        let rafId = null;
+        let timeoutId = null;
+      
+        // preload images
+        const loaded = IMAGES.map(src=>{
+          const img = new Image();
+          img.src = src;
+          return img;
+        });
+      
+        function resize(){
+          canvas.width  = window.innerWidth;
+          canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+      
+        function resetLogos(){
+          logos.length = 0;
+          for(let i=0;i<loaded.length;i++){
+            logos.push({
+              img: loaded[i],
+              x: Math.random() * (canvas.width-150),
+              y: Math.random() * (canvas.height-100),
+              dx: (Math.random()<0.5?-1:1) * (speed + Math.random()*2),
+              dy: (Math.random()<0.5?-1:1) * (speed + Math.random()*2)
+            });
+          }
+        }
+      
+        function draw(){
+          ctx.clearRect(0,0,canvas.width,canvas.height);
+          for(const l of logos){
+            const w = l.img.width/2;
+            const h = l.img.height/2;
+            ctx.drawImage(l.img,l.x,l.y,w,h);
+          }
+        }
+      
+        function update(){
+          for(const l of logos){
+            const w = l.img.width/2;
+            const h = l.img.height/2;
+            l.x += l.dx;
+            l.y += l.dy;
+            if(l.x <= 0 || l.x + w >= canvas.width){ l.dx *= -1; }
+            if(l.y <= 0 || l.y + h >= canvas.height){ l.dy *= -1; }
+          }
+        }
+      
+        function loop(){
+          update();
+          draw();
+          rafId = requestAnimationFrame(loop);
+        }
+      
+        function startSaver(){
+          saver.hidden = false;
+          resetLogos();
+          loop();
+        }
+        function stopSaver(){
+          saver.hidden = true;
+          cancelAnimationFrame(rafId);
+        }
+      
+        function resetTimer(){
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(()=>{ startSaver(); },10000); // 10 s inactivity
+          if(!saver.hidden) stopSaver();
+        }
+      
+        // user activity resets timer
+        ['keydown','mousedown','touchstart','wheel'].forEach(ev=>{
+          window.addEventListener(ev, resetTimer, {passive:true});
+        });
+      
+        resetTimer();
+      })();
+      </script>
+
+    
+
   </body>
 </html>
+
 
 
 
