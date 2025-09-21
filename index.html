@@ -231,21 +231,25 @@
       }
       .mv-dot:focus{ outline: 2px solid #fff; outline-offset: 2px; }
       
-      /* Overlay styling (same as before) */
-      #dvd-wrap{
-        position: fixed; inset: 0; z-index: 9999;
-        display: none;
-        background: rgba(0,0,0,.94);
-        overflow: hidden;
+      #dvd-wrap {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;     /* Klicks gehen an die Seite */
+        z-index: 9999;
+        display: none;            /* Hidden until idle */
       }
       
-      /* the bouncing box (set the visual size here) */
-      #dvd-box{
-        position: absolute; left: 0; top: 0;
-        width: 320px;      /* iframe width */
-        height: 180px;     /* iframe height (16:9) */
+      #content-wrap.blur {
+        filter: blur(12px);       /* Stärke des Blurs */
+        transition: filter 0.6s ease;  /* Smooth Fade-In/Out */
+      }
+      
+      #dvd-box {
+        position: absolute;
+        top: 0; left: 0;
         will-change: transform;
       }
+
     </style>
   </head>
   <body>
@@ -265,429 +269,431 @@
       </div>
     </header>
 
-    <!-- ================= HERO ================= -->
-    <section class="hero" id="hero" aria-labelledby="hero-title">
-      <div class="bg" aria-hidden="true"></div>
-      <div class="content container">
-        <h1 class="title" id="hero-title">Teilchen auf nahezu Lichtgeschwindigkeit</h1>
-        <p class="subtitle">Eine Einführung in CERN, seine Geschichte und seine Beschleuniger (Fokus: LHC-Komplex) – plus ein Blick auf die Physik dahinter.</p>
-      </div>
-    </section>
-
-    <!-- ================= EINLEITUNG ================= -->
-    <section class="section" id="cern-teile">
-      <div class="container">
-        <div class="accordion card reveal" id="cern-accordion">
-          <button class="accordion-header" type="button" aria-expanded="false" aria-controls="cern-accordion-content">
-            <span>Was ist CERN?</span>
-            <span class="chev" aria-hidden="true">▸</span>
-          </button>
-          <div class="accordion-content" id="cern-accordion-content">
-            <div class="accordion-inner">
-              Das CERN (Europäische Organisation für Kernforschung) ist eines der größten Forschungszentren
-              der Welt. Es liegt an der Grenze zwischen der Schweiz und Frankreich bei Genf. Am bekanntesten
-              ist das CERN für den Large Hadron Collider (LHC), mit dem die kleinsten Bausteine des Universums erforscht werden.
+      
+    <div id="content-wrap">  
+      <!-- ================= HERO ================= -->
+      <section class="hero" id="hero" aria-labelledby="hero-title">
+        <div class="bg" aria-hidden="true"></div>
+        <div class="content container">
+          <h1 class="title" id="hero-title">Teilchen auf nahezu Lichtgeschwindigkeit</h1>
+          <p class="subtitle">Eine Einführung in CERN, seine Geschichte und seine Beschleuniger (Fokus: LHC-Komplex) – plus ein Blick auf die Physik dahinter.</p>
+        </div>
+      </section>
+  
+      <!-- ================= EINLEITUNG ================= -->
+      <section class="section" id="cern-teile">
+        <div class="container">
+          <div class="accordion card reveal" id="cern-accordion">
+            <button class="accordion-header" type="button" aria-expanded="false" aria-controls="cern-accordion-content">
+              <span>Was ist CERN?</span>
+              <span class="chev" aria-hidden="true">▸</span>
+            </button>
+            <div class="accordion-content" id="cern-accordion-content">
+              <div class="accordion-inner">
+                Das CERN (Europäische Organisation für Kernforschung) ist eines der größten Forschungszentren
+                der Welt. Es liegt an der Grenze zwischen der Schweiz und Frankreich bei Genf. Am bekanntesten
+                ist das CERN für den Large Hadron Collider (LHC), mit dem die kleinsten Bausteine des Universums erforscht werden.
+              </div>
             </div>
           </div>
-        </div>
-
-        <!-- Links -->
-        <div class="topic-grid" aria-label="Themen">
-          <a class="topic-card" href="#timeline">
-            <h3>Zeitleiste</h3>
-            <p>Wichtige Geschehnisse im Laufe der Zeit</p>
-          </a>
-          <a class="topic-card" href="#chain-switch">
-            <h3>Beschleunigerkette</h3>
-            <p>Stufen & Detektoren im LHC-Komplex</p>
-          </a>
-          <a class="topic-card" href="#ring-hotspots">
-            <h3>Teilchenbeschleuniger</h3>
-            <p>Funktionsweise und Arten am CERN</p>
-          </a>
-          <a class="topic-card" href="#acceleration-chain">
-            <h3>Physik</h3>
-            <p>Die Grundlagen hinter den Beschleunigern</p>
-          </a>
-          <a class="topic-card" href="#collision-detector">
-            <h3>Kollisionen</h3>
-            <p>Was in den Detektoren passiert</p>
-          </a>
-          <a class="topic-card" href="#sources">
-            <h3>Quellen</h3>
-            <p>Quellen & Arbeitsnachweise</p>
-          </a>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================= TIMELINE ================= -->
-    <section class="section" id="timeline">
-      <div class="container">
-        <h2 class="reveal">Geschichte</h2>
-
-        <div class="timeline-slider reveal">
-          <button class="nav-btn prev" type="button" aria-label="Zurück" title="Zurück">◀</button>
-
-          <div class="event-card" aria-live="polite">
-            <div class="anim-wrap"><!-- dynamic slide injected here --></div>
+  
+          <!-- Links -->
+          <div class="topic-grid" aria-label="Themen">
+            <a class="topic-card" href="#timeline">
+              <h3>Zeitleiste</h3>
+              <p>Wichtige Geschehnisse im Laufe der Zeit</p>
+            </a>
+            <a class="topic-card" href="#chain-switch">
+              <h3>Beschleunigerkette</h3>
+              <p>Stufen & Detektoren im LHC-Komplex</p>
+            </a>
+            <a class="topic-card" href="#ring-hotspots">
+              <h3>Teilchenbeschleuniger</h3>
+              <p>Funktionsweise und Arten am CERN</p>
+            </a>
+            <a class="topic-card" href="#acceleration-chain">
+              <h3>Physik</h3>
+              <p>Die Grundlagen hinter den Beschleunigern</p>
+            </a>
+            <a class="topic-card" href="#collision-detector">
+              <h3>Kollisionen</h3>
+              <p>Was in den Detektoren passiert</p>
+            </a>
+            <a class="topic-card" href="#sources">
+              <h3>Quellen</h3>
+              <p>Quellen & Arbeitsnachweise</p>
+            </a>
           </div>
-
-          <button class="nav-btn next" type="button" aria-label="Weiter" title="Weiter">▶</button>
         </div>
-
-        <div class="progress" aria-label="Zeitstrahl">
-          <div class="bar" id="tl-bar">
-            <div class="marker" id="tl-marker" aria-hidden="true"></div>
-            <div class="pips" id="tl-pips"></div>
+      </section>
+  
+      <!-- ================= TIMELINE ================= -->
+      <section class="section" id="timeline">
+        <div class="container">
+          <h2 class="reveal">Geschichte</h2>
+  
+          <div class="timeline-slider reveal">
+            <button class="nav-btn prev" type="button" aria-label="Zurück" title="Zurück">◀</button>
+  
+            <div class="event-card" aria-live="polite">
+              <div class="anim-wrap"><!-- dynamic slide injected here --></div>
+            </div>
+  
+            <button class="nav-btn next" type="button" aria-label="Weiter" title="Weiter">▶</button>
           </div>
-          <div class="labels" id="tl-labels"></div>
+  
+          <div class="progress" aria-label="Zeitstrahl">
+            <div class="bar" id="tl-bar">
+              <div class="marker" id="tl-marker" aria-hidden="true"></div>
+              <div class="pips" id="tl-pips"></div>
+            </div>
+            <div class="labels" id="tl-labels"></div>
+          </div>
         </div>
-      </div>
-    </section>
-
-    <!-- ================= BESCHLEUNIGERKETTE (Model Viewer) ================= -->
-    <section class="section" id="chain-switch">
-      <div class="container">
-        <h2>Beschleunigerkette</h2>
-        <p class="sub">Erkunde die Elemente der LHC Beschleunigerkette für Protonen</p>
-
-
-        <div class="flow-card" aria-live="polite">
-          <h3 class="flow-step-title" id="flow-title">Linear Accelerator 4 (LINAC4)</h3>
-
-          <div class="flow-right">
-            <div class="flow-viewport">
-
-              <model-viewer
-                id="mv"
-                src="LHC.glb"
-                alt="LHC"
-                camera-controls
-                auto-rotate
-                touch-action="pan-y"
-                disable-pan
-                exposure="0.9"
-                shadow-intensity="3"
-                environment-image="neutral"
-                interaction-prompt="none"
-
-                field-of-view="45deg"
-              
-                min-camera-orbit="auto 60deg 10m"
-                max-camera-orbit="auto 60deg 4000m"
-              
-                interpolation-decay="200">
-              
-                <!-- 9 Hotspots (ohne Labels) -->
-                <button class="mv-dot" slot="hotspot-LINAC4"    data-name="LINAC4"    data-position="20.6911m -0.684515m -112.797m"  data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-PSBooster" data-name="PSBooster" data-position="36.691m 0.25m -77.884m"         data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-PS"        data-name="PS"        data-position="-0.06m 0.25m -80.025m"          data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-SPS"       data-name="SPS"       data-position="0m 0.25m 253.5m"                data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-LHC"       data-name="LHC"       data-position="0m 0.25m 877.53m"               data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-ATLAS"     data-name="ATLAS"     data-position="0m 0.25m -4.5m"                 data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-ALICE"     data-name="ALICE"     data-position="473m 0.25m 144.7m"              data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-LHCb"      data-name="LHCb"      data-position="-518.19m 0.25m 178.78m"         data-normal="0m 1m 0m"></button>
-                <button class="mv-dot" slot="hotspot-CMS"       data-name="CMS"       data-position="-16.125m 0.25m 1762m"           data-normal="0m 1m 0m"></button>
-              
-              </model-viewer>
-              
-              <!-- Smooth focus/zoom controller -->
-              <script>
-              (function(){
-                const mv = document.getElementById('mv');
-                if(!mv) return;
-              
-                // Utils
-                const parsePos = (s) => (s||'0m 0m 0m').split(' ').map(p => parseFloat(String(p).replace('m',''))||0);
-                const fmtPos   = (v) => `${v[0].toFixed(3)}m ${v[1].toFixed(3)}m ${v[2].toFixed(3)}m`;
-                const parseOrbit = (s) => {
-                  const parts = (s||'auto auto 200m').split(' ');
-                  const num = (p)=> (p==null||p==='auto')?null:parseFloat(p);
-                  return { theta: parts[0]==='auto'?null:num(parts[0]), phi: parts[1]==='auto'?null:num(parts[1]), r: num(parts[2])??200 };
-                };
-                const fmtOrbit = ({theta=null,phi=null,r=200}) => `${theta==null?'auto':theta+'deg'} ${phi==null?'auto':phi+'deg'} ${(+r).toFixed(3)}m`;
-                const easeInOutCubic=(t)=> t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
-              
-                function readPositions(){
-                  const map={};
-                  mv.querySelectorAll('button.mv-dot[data-name]').forEach(btn=>{
-                    map[btn.dataset.name]=btn.dataset.position||'0m 0m 0m';
-                  });
-                  return map;
-                }
-                let POS = readPositions();
-                const mo = new MutationObserver(()=>{ POS = readPositions(); });
-                mo.observe(mv,{subtree:true, attributes:true, attributeFilter:['data-position']});
-              
-                const ORBIT_RADIUS = {
-                  LINAC4:   20,
-                  PSBooster:25,
-                  PS:      200,
-                  SPS:     1000,
-                  LHC:     4000,
-                  ATLAS:   20,
-                  CMS:     20,
-                  ALICE:   20,
-                  LHCb:    20
-                };
-
-
-              
-                let currTarget=null;
-                let currOrbit=null;
-                let animId=null;
-              
-                mv.addEventListener('load', ()=>{
-                  const attrTarget = mv.getAttribute('camera-target');
-                  currTarget = (attrTarget && !/auto/i.test(attrTarget)) ? parsePos(attrTarget)
-                              : POS.LINAC4 ? parsePos(POS.LINAC4) : [0,0,0];
-                  currOrbit = parseOrbit(mv.getAttribute('camera-orbit'));
-                  if(!currOrbit || isNaN(currOrbit.r)) currOrbit = {theta:null, phi:null, r: ORBIT_RADIUS.LINAC4};
-                  mv.setAttribute('camera-target', fmtPos(currTarget));
-                  mv.setAttribute('camera-orbit',  fmtOrbit(currOrbit));
-                }, {once:true});
-              
-                function stopAnim(){ if(animId){ cancelAnimationFrame(animId); animId=null; } }
-              
-                async function focusTo(name, duration=900){
-                  const targetStr = POS[name];
-                  if(!targetStr) return;
-                  if(mv.updateComplete) await mv.updateComplete;
-              
-                  const startPos   = currTarget || (mv.getAttribute('camera-target') ? parsePos(mv.getAttribute('camera-target')) : [0,0,0]);
-                  const endPos     = parsePos(targetStr);
-                  const startOrbit = currOrbit || parseOrbit(mv.getAttribute('camera-orbit'));
-                  const desiredR   = ORBIT_RADIUS[name] ?? startOrbit.r ?? 200;
-                  const endOrbit   = { theta:startOrbit.theta, phi:startOrbit.phi, r:desiredR };
-              
-                  const t0 = performance.now();
-                  stopAnim();
-              
-                  const step = (now)=>{
-                    const t = Math.min(1,(now - t0)/duration);
-                    const k = easeInOutCubic(t);
-              
-                    const pos = [
-                      startPos[0] + (endPos[0]-startPos[0]) * k,
-                      startPos[1] + (endPos[1]-startPos[1]) * k,
-                      startPos[2] + (endPos[2]-startPos[2]) * k,
-                    ];
-                    const r = (startOrbit.r ?? 200) + ((endOrbit.r)-(startOrbit.r ?? 200)) * k;
-              
-                    mv.setAttribute('camera-target', fmtPos(pos));
-                    mv.setAttribute('camera-orbit',  fmtOrbit({theta:startOrbit.theta, phi:startOrbit.phi, r}));
-              
-                    if(t<1){
-                      animId = requestAnimationFrame(step);
-                    }else{
-                      currTarget = endPos;
-                      currOrbit  = {theta:startOrbit.theta, phi:startOrbit.phi, r:endOrbit.r};
-                      animId = null;
-                    }
+      </section>
+  
+      <!-- ================= BESCHLEUNIGERKETTE (Model Viewer) ================= -->
+      <section class="section" id="chain-switch">
+        <div class="container">
+          <h2>Beschleunigerkette</h2>
+          <p class="sub">Erkunde die Elemente der LHC Beschleunigerkette für Protonen</p>
+  
+  
+          <div class="flow-card" aria-live="polite">
+            <h3 class="flow-step-title" id="flow-title">Linear Accelerator 4 (LINAC4)</h3>
+  
+            <div class="flow-right">
+              <div class="flow-viewport">
+  
+                <model-viewer
+                  id="mv"
+                  src="LHC.glb"
+                  alt="LHC"
+                  camera-controls
+                  auto-rotate
+                  touch-action="pan-y"
+                  disable-pan
+                  exposure="0.9"
+                  shadow-intensity="3"
+                  environment-image="neutral"
+                  interaction-prompt="none"
+  
+                  field-of-view="45deg"
+                
+                  min-camera-orbit="auto 60deg 10m"
+                  max-camera-orbit="auto 60deg 4000m"
+                
+                  interpolation-decay="200">
+                
+                  <!-- 9 Hotspots (ohne Labels) -->
+                  <button class="mv-dot" slot="hotspot-LINAC4"    data-name="LINAC4"    data-position="20.6911m -0.684515m -112.797m"  data-normal="0m 1m 0m"></button>
+                  <button class="mv-dot" slot="hotspot-PSBooster" data-name="PSBooster" data-position="36.691m 0.25m -77.884m"         data-normal="0m 1m 0m"></button>
+                  <button class="mv-dot" slot="hotspot-PS"        data-name="PS"        data-position="-0.06m 0.25m -80.025m"          data-normal="0m 1m 0m"></button>
+                  <button class="mv-dot" slot="hotspot-SPS"       data-name="SPS"       data-position="0m 0.25m 253.5m"                data-normal="0m 1m 0m"></button>
+                  <button class="mv-dot" slot="hotspot-LHC"       data-name="LHC"       data-position="0m 0.25m 877.53m"               data-normal="0m 1m 0m"></button>
+                  <button class="mv-dot" slot="hotspot-ATLAS"     data-name="ATLAS"     data-position="0m 0.25m -4.5m"                 data-normal="0m 1m 0m"></button>
+                  <button class="mv-dot" slot="hotspot-ALICE"     data-name="ALICE"     data-position="473m 0.25m 144.7m"              data-normal="0m 1m 0m"></button>
+                  <button class="mv-dot" slot="hotspot-LHCb"      data-name="LHCb"      data-position="-518.19m 0.25m 178.78m"         data-normal="0m 1m 0m"></button>
+                  <button class="mv-dot" slot="hotspot-CMS"       data-name="CMS"       data-position="-16.125m 0.25m 1762m"           data-normal="0m 1m 0m"></button>
+                
+                </model-viewer>
+                
+                <!-- Smooth focus/zoom controller -->
+                <script>
+                (function(){
+                  const mv = document.getElementById('mv');
+                  if(!mv) return;
+                
+                  // Utils
+                  const parsePos = (s) => (s||'0m 0m 0m').split(' ').map(p => parseFloat(String(p).replace('m',''))||0);
+                  const fmtPos   = (v) => `${v[0].toFixed(3)}m ${v[1].toFixed(3)}m ${v[2].toFixed(3)}m`;
+                  const parseOrbit = (s) => {
+                    const parts = (s||'auto auto 200m').split(' ');
+                    const num = (p)=> (p==null||p==='auto')?null:parseFloat(p);
+                    return { theta: parts[0]==='auto'?null:num(parts[0]), phi: parts[1]==='auto'?null:num(parts[1]), r: num(parts[2])??200 };
                   };
-                  animId = requestAnimationFrame(step);
-                }
-              
-                mv.addEventListener('click', (e)=>{
-                  const btn = e.composedPath().find(n=> n?.classList?.contains?.('mv-dot'));
-                  if(btn && btn.dataset?.name){
-                    focusTo(btn.dataset.name, 800);
+                  const fmtOrbit = ({theta=null,phi=null,r=200}) => `${theta==null?'auto':theta+'deg'} ${phi==null?'auto':phi+'deg'} ${(+r).toFixed(3)}m`;
+                  const easeInOutCubic=(t)=> t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+                
+                  function readPositions(){
+                    const map={};
+                    mv.querySelectorAll('button.mv-dot[data-name]').forEach(btn=>{
+                      map[btn.dataset.name]=btn.dataset.position||'0m 0m 0m';
+                    });
+                    return map;
                   }
-                });
-              
-                window.__MV_FOCUS__ = { focusTo, get POS(){ return POS; } };
-              })();
-              </script>
-              
-              <!-- Control Panel (XY editor) -->
-              <div id="mv-hotspot-controls" class="card" style="margin-top:12px">
-                <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:end">
-                  <label>
-                    <div style="font-size:12px;color:var(--muted)">Hotspot</div>
-                    <select id="mv-hotspot-select">
-                      <option>LINAC4</option>
-                      <option>PSBooster</option>
-                      <option>PS</option>
-                      <option>SPS</option>
-                      <option>LHC</option>
-                      <option>ATLAS</option>
-                      <option>CMS</option>
-                      <option>ALICE</option>
-                      <option>LHCb</option>
-                    </select>
-                  </label>
-                  <label>
-                    <div style="font-size:12px;color:var(--muted)">x (m)</div>
-                    <input id="mv-x" type="number" step="0.1" value="0" style="width:110px">
-                  </label>
-                  <label>
-                    <div style="font-size:12px;color:var(--muted)">y (m)</div>
-                    <input id="mv-y" type="number" step="0.1" value="0" style="width:110px">
-                  </label>
-                  <button id="mv-apply" class="step-btn" type="button">Setzen</button>
+                  let POS = readPositions();
+                  const mo = new MutationObserver(()=>{ POS = readPositions(); });
+                  mo.observe(mv,{subtree:true, attributes:true, attributeFilter:['data-position']});
+                
+                  const ORBIT_RADIUS = {
+                    LINAC4:   20,
+                    PSBooster:25,
+                    PS:      200,
+                    SPS:     1000,
+                    LHC:     4000,
+                    ATLAS:   20,
+                    CMS:     20,
+                    ALICE:   20,
+                    LHCb:    20
+                  };
+  
+  
+                
+                  let currTarget=null;
+                  let currOrbit=null;
+                  let animId=null;
+                
+                  mv.addEventListener('load', ()=>{
+                    const attrTarget = mv.getAttribute('camera-target');
+                    currTarget = (attrTarget && !/auto/i.test(attrTarget)) ? parsePos(attrTarget)
+                                : POS.LINAC4 ? parsePos(POS.LINAC4) : [0,0,0];
+                    currOrbit = parseOrbit(mv.getAttribute('camera-orbit'));
+                    if(!currOrbit || isNaN(currOrbit.r)) currOrbit = {theta:null, phi:null, r: ORBIT_RADIUS.LINAC4};
+                    mv.setAttribute('camera-target', fmtPos(currTarget));
+                    mv.setAttribute('camera-orbit',  fmtOrbit(currOrbit));
+                  }, {once:true});
+                
+                  function stopAnim(){ if(animId){ cancelAnimationFrame(animId); animId=null; } }
+                
+                  async function focusTo(name, duration=900){
+                    const targetStr = POS[name];
+                    if(!targetStr) return;
+                    if(mv.updateComplete) await mv.updateComplete;
+                
+                    const startPos   = currTarget || (mv.getAttribute('camera-target') ? parsePos(mv.getAttribute('camera-target')) : [0,0,0]);
+                    const endPos     = parsePos(targetStr);
+                    const startOrbit = currOrbit || parseOrbit(mv.getAttribute('camera-orbit'));
+                    const desiredR   = ORBIT_RADIUS[name] ?? startOrbit.r ?? 200;
+                    const endOrbit   = { theta:startOrbit.theta, phi:startOrbit.phi, r:desiredR };
+                
+                    const t0 = performance.now();
+                    stopAnim();
+                
+                    const step = (now)=>{
+                      const t = Math.min(1,(now - t0)/duration);
+                      const k = easeInOutCubic(t);
+                
+                      const pos = [
+                        startPos[0] + (endPos[0]-startPos[0]) * k,
+                        startPos[1] + (endPos[1]-startPos[1]) * k,
+                        startPos[2] + (endPos[2]-startPos[2]) * k,
+                      ];
+                      const r = (startOrbit.r ?? 200) + ((endOrbit.r)-(startOrbit.r ?? 200)) * k;
+                
+                      mv.setAttribute('camera-target', fmtPos(pos));
+                      mv.setAttribute('camera-orbit',  fmtOrbit({theta:startOrbit.theta, phi:startOrbit.phi, r}));
+                
+                      if(t<1){
+                        animId = requestAnimationFrame(step);
+                      }else{
+                        currTarget = endPos;
+                        currOrbit  = {theta:startOrbit.theta, phi:startOrbit.phi, r:endOrbit.r};
+                        animId = null;
+                      }
+                    };
+                    animId = requestAnimationFrame(step);
+                  }
+                
+                  mv.addEventListener('click', (e)=>{
+                    const btn = e.composedPath().find(n=> n?.classList?.contains?.('mv-dot'));
+                    if(btn && btn.dataset?.name){
+                      focusTo(btn.dataset.name, 800);
+                    }
+                  });
+                
+                  window.__MV_FOCUS__ = { focusTo, get POS(){ return POS; } };
+                })();
+                </script>
+                
+                <!-- Control Panel (XY editor) -->
+                <div id="mv-hotspot-controls" class="card" style="margin-top:12px">
+                  <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:end">
+                    <label>
+                      <div style="font-size:12px;color:var(--muted)">Hotspot</div>
+                      <select id="mv-hotspot-select">
+                        <option>LINAC4</option>
+                        <option>PSBooster</option>
+                        <option>PS</option>
+                        <option>SPS</option>
+                        <option>LHC</option>
+                        <option>ATLAS</option>
+                        <option>CMS</option>
+                        <option>ALICE</option>
+                        <option>LHCb</option>
+                      </select>
+                    </label>
+                    <label>
+                      <div style="font-size:12px;color:var(--muted)">x (m)</div>
+                      <input id="mv-x" type="number" step="0.1" value="0" style="width:110px">
+                    </label>
+                    <label>
+                      <div style="font-size:12px;color:var(--muted)">y (m)</div>
+                      <input id="mv-y" type="number" step="0.1" value="0" style="width:110px">
+                    </label>
+                    <button id="mv-apply" class="step-btn" type="button">Setzen</button>
+                  </div>
+                  <div style="margin-top:8px; font-size:12px; color:var(--muted)">
+                    Hinweis: Z bleibt hier 0 m (kannst du im Script erweitern).
+                  </div>
                 </div>
-                <div style="margin-top:8px; font-size:12px; color:var(--muted)">
-                  Hinweis: Z bleibt hier 0 m (kannst du im Script erweitern).
+                
+                <script>
+                (function(){
+                  const mv = document.getElementById('mv');
+                  const sel = document.getElementById('mv-hotspot-select');
+                  const xIn = document.getElementById('mv-x');
+                  const yIn = document.getElementById('mv-y');
+                  const btn = document.getElementById('mv-apply');
+                  const getBtn = (name)=> mv.querySelector(`button.mv-dot[data-name="${name}"]`);
+                  function load(name){
+                    const b=getBtn(name); if(!b) return;
+                    const [xm,ym] = (b.dataset.position||'0m 0m 0m').split(' ');
+                    xIn.value=parseFloat(xm)||0; yIn.value=parseFloat(ym)||0;
+                  }
+                  function apply(){
+                    const b=getBtn(sel.value); if(!b) return;
+                    const x=parseFloat(xIn.value)||0; const y=parseFloat(yIn.value)||0; const z=0;
+                    b.dataset.position = `${x}m ${y}m ${z}m`;
+                  }
+                  sel.addEventListener('change',()=>load(sel.value));
+                  btn.addEventListener('click',apply);
+                  load(sel.value);
+                })();
+                </script>
+  
+              </div>
+            </div>
+  
+            <div class="flow-left">
+              <p id="flow-text" class="flow-mini-text">
+                Der Linear Accelerator 4 (LINAC4) wurde 2020 offiziell in Betrieb genommen und ist der erste Schritt in der LHC-Beschleunigerkette. Er beschleunigt negativ geladene Wasserstoffionen (H⁻) auf eine Energie von 160 MeV, was etwa 0,43 % der Lichtgeschwindigkeit entspricht. Anschließend werden die Elektronen abgestreift, sodass reine Protonen entstehen. Der LINAC4 ersetzt den älteren LINAC2 und liefert einen dichteren und stärkeren Strahl. Er arbeitet als linearer Beschleuniger mit Radiofrequenz-Kavitäten. Die erzeugten Protonen werden anschließend in den Proton Synchrotron Booster eingespeist. LINAC4 bildet damit die Einspeisung für den gesamten weiteren Beschleunigerkomplex.
+              </p>
+              <div class="step-nav-fixed">
+                <button class="step-btn" id="step-prev" type="button">◀ Zurück</button>
+                <button class="step-btn" id="step-next" type="button">Weiter ▶</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+  
+      <!-- ================= TEILCHENBESCHLEUNIGER (Bild-Hotspots) ================= -->
+      <section class="section" id="ring-hotspots">
+        <div class="container">
+          <h2 class="reveal">Teilchenbeschleuniger allgemein</h2>
+          <p class="reveal">Kurzer Überblick über die großen Experimente und ihre Positionen am Ring.</p>
+          <div class="stage reveal" aria-label="LHC Übersicht">
+            <img src="lhc-overview.jpg" alt="Ring-Übersicht des LHC" loading="lazy">
+            <button class="hotspot" style="left:22%;top:60%" data-title="ATLAS" data-text="Allzweckdetektor." aria-label="Hotspot ATLAS"></button>
+            <div class="fact" style="left:22%;top:60%"></div>
+            <button class="hotspot" style="left:48%;top:25%" data-title="CMS" data-text="Allzweckdetektor." aria-label="Hotspot CMS"></button>
+            <div class="fact" style="left:48%;top:25%"></div>
+            <button class="hotspot" style="left:72%;top:63%" data-title="ALICE" data-text="Schwerionen-Fokus." aria-label="Hotspot ALICE"></button>
+            <div class="fact" style="left:72%;top:63%"></div>
+            <button class="hotspot" style="left:35%;top:78%" data-title="LHCb" data-text="Physik der b-Quarks." aria-label="Hotspot LHCb"></button>
+            <div class="fact" style="left:35%;top:78%"></div>
+          </div>
+        </div>
+      </section>
+  
+      <!-- ================= PHYSIK ================= -->
+      <section class="section" id="acceleration-chain">
+        <div class="container">
+          <h2 class="reveal">physik</h2>
+          <p class="reveal">Interaktive Mini-Demonstrationen (rein relativ skaliert – Platzhalterwerte).</p>
+          <div class="chain">
+            <div class="timeline-box reveal">
+              <ul id="phys-steps">
+                <li data-step="0" class="active"><span class="dot"></span><span class="label">Quelle</span></li>
+                <li data-step="1"><span class="dot"></span><span class="label">LINAC4</span></li>
+                <li data-step="2"><span class="dot"></span><span class="label">PS Booster</span></li>
+                <li data-step="3"><span class="dot"></span><span class="label">PS</span></li>
+                <li data-step="4"><span class="dot"></span><span class="label">SPS</span></li>
+                <li data-step="5"><span class="dot"></span><span class="label">LHC</span></li>
+              </ul>
+            </div>
+            <div class="grid">
+              <div class="metric"><div class="v" id="energy">1</div><div>Energie (relativ)</div></div>
+              <div class="metric"><div class="v" id="speed">1</div><div>Geschwindigkeit (relativ)</div></div>
+              <div class="metric"><div class="v" id="turns">1</div><div>Umläufe (relativ)</div></div>
+              <div class="card">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px"><div>Magnetfeld</div><div id="bval">50%</div></div>
+                <input id="bfield" type="range" min="0" max="100" value="50" aria-label="Magnetfeld einstellen">
+                <div class="svgbox" style="margin-top:12px">
+                  <svg viewBox="0 0 320 200" style="width:100%;height:220px" aria-label="Strahlkrümmung">
+                    <defs><marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0 0, 6 3, 0 6" fill="#fff"/></marker></defs>
+                    <path id="beam" d="M 20 160 A 200 200 0 0 1 260 60" stroke="#fff" stroke-width="3" fill="none" marker-end="url(#arr)"/>
+                    <text x="24" y="150" fill="#bdbdc2" font-size="10">Strahl</text>
+                    <text x="180" y="30" fill="#bdbdc2" font-size="10">B↑ ⇒ Radius↓</text>
+                  </svg>
                 </div>
               </div>
-              
-              <script>
-              (function(){
-                const mv = document.getElementById('mv');
-                const sel = document.getElementById('mv-hotspot-select');
-                const xIn = document.getElementById('mv-x');
-                const yIn = document.getElementById('mv-y');
-                const btn = document.getElementById('mv-apply');
-                const getBtn = (name)=> mv.querySelector(`button.mv-dot[data-name="${name}"]`);
-                function load(name){
-                  const b=getBtn(name); if(!b) return;
-                  const [xm,ym] = (b.dataset.position||'0m 0m 0m').split(' ');
-                  xIn.value=parseFloat(xm)||0; yIn.value=parseFloat(ym)||0;
-                }
-                function apply(){
-                  const b=getBtn(sel.value); if(!b) return;
-                  const x=parseFloat(xIn.value)||0; const y=parseFloat(yIn.value)||0; const z=0;
-                  b.dataset.position = `${x}m ${y}m ${z}m`;
-                }
-                sel.addEventListener('change',()=>load(sel.value));
-                btn.addEventListener('click',apply);
-                load(sel.value);
-              })();
-              </script>
-
-            </div>
-          </div>
-
-          <div class="flow-left">
-            <p id="flow-text" class="flow-mini-text">
-              Der Linear Accelerator 4 (LINAC4) wurde 2020 offiziell in Betrieb genommen und ist der erste Schritt in der LHC-Beschleunigerkette. Er beschleunigt negativ geladene Wasserstoffionen (H⁻) auf eine Energie von 160 MeV, was etwa 0,43 % der Lichtgeschwindigkeit entspricht. Anschließend werden die Elektronen abgestreift, sodass reine Protonen entstehen. Der LINAC4 ersetzt den älteren LINAC2 und liefert einen dichteren und stärkeren Strahl. Er arbeitet als linearer Beschleuniger mit Radiofrequenz-Kavitäten. Die erzeugten Protonen werden anschließend in den Proton Synchrotron Booster eingespeist. LINAC4 bildet damit die Einspeisung für den gesamten weiteren Beschleunigerkomplex.
-            </p>
-            <div class="step-nav-fixed">
-              <button class="step-btn" id="step-prev" type="button">◀ Zurück</button>
-              <button class="step-btn" id="step-next" type="button">Weiter ▶</button>
             </div>
           </div>
         </div>
-      </div>
-    </section>
-
-    <!-- ================= TEILCHENBESCHLEUNIGER (Bild-Hotspots) ================= -->
-    <section class="section" id="ring-hotspots">
-      <div class="container">
-        <h2 class="reveal">Teilchenbeschleuniger allgemein</h2>
-        <p class="reveal">Kurzer Überblick über die großen Experimente und ihre Positionen am Ring.</p>
-        <div class="stage reveal" aria-label="LHC Übersicht">
-          <img src="lhc-overview.jpg" alt="Ring-Übersicht des LHC" loading="lazy">
-          <button class="hotspot" style="left:22%;top:60%" data-title="ATLAS" data-text="Allzweckdetektor." aria-label="Hotspot ATLAS"></button>
-          <div class="fact" style="left:22%;top:60%"></div>
-          <button class="hotspot" style="left:48%;top:25%" data-title="CMS" data-text="Allzweckdetektor." aria-label="Hotspot CMS"></button>
-          <div class="fact" style="left:48%;top:25%"></div>
-          <button class="hotspot" style="left:72%;top:63%" data-title="ALICE" data-text="Schwerionen-Fokus." aria-label="Hotspot ALICE"></button>
-          <div class="fact" style="left:72%;top:63%"></div>
-          <button class="hotspot" style="left:35%;top:78%" data-title="LHCb" data-text="Physik der b-Quarks." aria-label="Hotspot LHCb"></button>
-          <div class="fact" style="left:35%;top:78%"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================= PHYSIK ================= -->
-    <section class="section" id="acceleration-chain">
-      <div class="container">
-        <h2 class="reveal">physik</h2>
-        <p class="reveal">Interaktive Mini-Demonstrationen (rein relativ skaliert – Platzhalterwerte).</p>
-        <div class="chain">
-          <div class="timeline-box reveal">
-            <ul id="phys-steps">
-              <li data-step="0" class="active"><span class="dot"></span><span class="label">Quelle</span></li>
-              <li data-step="1"><span class="dot"></span><span class="label">LINAC4</span></li>
-              <li data-step="2"><span class="dot"></span><span class="label">PS Booster</span></li>
-              <li data-step="3"><span class="dot"></span><span class="label">PS</span></li>
-              <li data-step="4"><span class="dot"></span><span class="label">SPS</span></li>
-              <li data-step="5"><span class="dot"></span><span class="label">LHC</span></li>
-            </ul>
-          </div>
-          <div class="grid">
-            <div class="metric"><div class="v" id="energy">1</div><div>Energie (relativ)</div></div>
-            <div class="metric"><div class="v" id="speed">1</div><div>Geschwindigkeit (relativ)</div></div>
-            <div class="metric"><div class="v" id="turns">1</div><div>Umläufe (relativ)</div></div>
-            <div class="card">
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px"><div>Magnetfeld</div><div id="bval">50%</div></div>
-              <input id="bfield" type="range" min="0" max="100" value="50" aria-label="Magnetfeld einstellen">
-              <div class="svgbox" style="margin-top:12px">
-                <svg viewBox="0 0 320 200" style="width:100%;height:220px" aria-label="Strahlkrümmung">
-                  <defs><marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0 0, 6 3, 0 6" fill="#fff"/></marker></defs>
-                  <path id="beam" d="M 20 160 A 200 200 0 0 1 260 60" stroke="#fff" stroke-width="3" fill="none" marker-end="url(#arr)"/>
-                  <text x="24" y="150" fill="#bdbdc2" font-size="10">Strahl</text>
-                  <text x="180" y="30" fill="#bdbdc2" font-size="10">B↑ ⇒ Radius↓</text>
-                </svg>
-              </div>
+      </section>
+  
+      <!-- ================= KOLLISIONEN ================= -->
+      <section class="section" id="collision-detector">
+        <div class="container">
+          <h2 class="reveal">Kollisionen</h2>
+          <p class="reveal">Visualisierung der Ringskalen (nur schematisch).</p>
+          <div class="rings">
+            <div class="detector" id="detector">
+              <div class="layer" style="inset:auto; width:14%; height:14%; left:10%; top:94%; border-color:rgba(255,143,163,.9)" data-key="psb" title="PS Booster"></div>
+              <div class="layer" style="inset:auto; width:26%; height:26%; left:48%; top:73.5%; border-color:rgba(167,139,250,.9)" data-key="ps" title="PS"></div>
+              <div class="layer" style="inset:auto; width:58%; height:58%; left:38%; top:42%; border-color:rgba(255,209,102,.9)" data-key="sps" title="SPS"></div>
+              <div class="layer" style="inset:auto; width:90%; height:90%; left:5%; top:5%; border-color:rgba(80,227,194,.95)" data-key="lhc" title="LHC"></div>
+            </div>
+            <div class="layers-legend" aria-label="Ringe einblenden">
+              <div class="row"><div class="name">PS Booster</div><button type="button" data-target="psb">zeigen</button></div>
+              <div class="row"><div class="name">PS</div><button type="button" data-target="ps">zeigen</button></div>
+              <div class="row"><div class="name">SPS</div><button type="button" data-target="sps">zeigen</button></div>
+              <div class="row"><div class="name">LHC</div><button type="button" data-target="lhc">zeigen</button></div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
-
-    <!-- ================= KOLLISIONEN ================= -->
-    <section class="section" id="collision-detector">
-      <div class="container">
-        <h2 class="reveal">Kollisionen</h2>
-        <p class="reveal">Visualisierung der Ringskalen (nur schematisch).</p>
-        <div class="rings">
-          <div class="detector" id="detector">
-            <div class="layer" style="inset:auto; width:14%; height:14%; left:10%; top:94%; border-color:rgba(255,143,163,.9)" data-key="psb" title="PS Booster"></div>
-            <div class="layer" style="inset:auto; width:26%; height:26%; left:48%; top:73.5%; border-color:rgba(167,139,250,.9)" data-key="ps" title="PS"></div>
-            <div class="layer" style="inset:auto; width:58%; height:58%; left:38%; top:42%; border-color:rgba(255,209,102,.9)" data-key="sps" title="SPS"></div>
-            <div class="layer" style="inset:auto; width:90%; height:90%; left:5%; top:5%; border-color:rgba(80,227,194,.95)" data-key="lhc" title="LHC"></div>
-          </div>
-          <div class="layers-legend" aria-label="Ringe einblenden">
-            <div class="row"><div class="name">PS Booster</div><button type="button" data-target="psb">zeigen</button></div>
-            <div class="row"><div class="name">PS</div><button type="button" data-target="ps">zeigen</button></div>
-            <div class="row"><div class="name">SPS</div><button type="button" data-target="sps">zeigen</button></div>
-            <div class="row"><div class="name">LHC</div><button type="button" data-target="lhc">zeigen</button></div>
+      </section>
+  
+      <!-- ================= SICHERHEIT ================= -->
+      <section class="section" id="safety">
+        <div class="container">
+          <h2 class="reveal">Sicherheit und Realität</h2>
+          <div class="safety">
+            <div class="card reveal"><h3>Abschirmung</h3><p>Kurzinfo zu Strahlenschutz & Infrastruktur.</p></div>
+            <div class="card reveal"><h3>Betrieb</h3><p>Kontrollierte Strahlzeiten & Wartungsphasen.</p></div>
+            <div class="card reveal"><h3>Mythen</h3><p>Schwarze Löcher? Nope. Physikalisch nicht relevant.</p></div>
           </div>
         </div>
-      </div>
-    </section>
-
-    <!-- ================= SICHERHEIT ================= -->
-    <section class="section" id="safety">
-      <div class="container">
-        <h2 class="reveal">Sicherheit und Realität</h2>
-        <div class="safety">
-          <div class="card reveal"><h3>Abschirmung</h3><p>Kurzinfo zu Strahlenschutz & Infrastruktur.</p></div>
-          <div class="card reveal"><h3>Betrieb</h3><p>Kontrollierte Strahlzeiten & Wartungsphasen.</p></div>
-          <div class="card reveal"><h3>Mythen</h3><p>Schwarze Löcher? Nope. Physikalisch nicht relevant.</p></div>
+      </section>
+  
+      <!-- ================= QUELLEN ================= -->
+      <section class="section" id="sources">
+        <div class="container">
+          <h2 class="reveal">Quellen</h2>
+          <ul>
+            <li><a href="#" style="color:#9ecbff">Beispielquelle 1</a></li>
+            <li><a href="#" style="color:#9ecbff">Beispielquelle 2</a></li>
+          </ul>
         </div>
-      </div>
-    </section>
-
-    <!-- ================= QUELLEN ================= -->
-    <section class="section" id="sources">
-      <div class="container">
-        <h2 class="reveal">Quellen</h2>
-        <ul>
-          <li><a href="#" style="color:#9ecbff">Beispielquelle 1</a></li>
-          <li><a href="#" style="color:#9ecbff">Beispielquelle 2</a></li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- === PONG OVERLAY =================================== -->
-    <div id="pong-overlay" role="dialog" aria-modal="true" aria-label="Pong" hidden>
-      <div id="pong-stage">
-        <canvas id="pong-canvas" aria-label="Pong Spielfeld"></canvas>
-      </div>
-      <div id="pong-hud" class="container">
-        <div class="pong-pill">Score: <span id="pong-score">0</span></div>
-        <div class="pong-pill">Highscore: <span id="pong-best">0</span></div>
-        <div class="pong-pill pong-muted">Toggle: Alt+P · Pause/Resume: P · Steuerung: Pfeile/W-S</div>
-        <button id="pong-close" type="button" title="Schließen (Alt+P)">Schließen</button>
+      </section>
+  
+      <!-- === PONG OVERLAY =================================== -->
+      <div id="pong-overlay" role="dialog" aria-modal="true" aria-label="Pong" hidden>
+        <div id="pong-stage">
+          <canvas id="pong-canvas" aria-label="Pong Spielfeld"></canvas>
+        </div>
+        <div id="pong-hud" class="container">
+          <div class="pong-pill">Score: <span id="pong-score">0</span></div>
+          <div class="pong-pill">Highscore: <span id="pong-best">0</span></div>
+          <div class="pong-pill pong-muted">Toggle: Alt+P · Pause/Resume: P · Steuerung: Pfeile/W-S</div>
+          <button id="pong-close" type="button" title="Schließen (Alt+P)">Schließen</button>
+        </div>
       </div>
     </div>
-
     
-    <!-- DVD Screensaver Overlay (YouTube) -->
+    <!-- DVD-Bounce-Box -->
     <div id="dvd-wrap" aria-hidden="true">
       <div id="dvd-box">
         <iframe
@@ -696,11 +702,11 @@
           title="screensaver"
           frameborder="0"
           allow="autoplay; encrypted-media"
-          allowfullscreen
-          style="width:100%;height:100%;pointer-events:none"
-        ></iframe>
+          style="width:320px;height:180px;pointer-events:none;">
+        </iframe>
       </div>
     </div>
+
     
 
 
@@ -1114,24 +1120,19 @@
 
     <script>
       (() => {
-        const wrap = document.getElementById('dvd-wrap');
-        const box  = document.getElementById('dvd-box'); // we move this (with the iframe inside)
+        const wrap  = document.getElementById('dvd-wrap');
+        const box   = document.getElementById('dvd-box');
+        const content = document.getElementById('content-wrap');
       
-        // Wait time before overlay appears (ms)
-        const IDLE_MS = 5000; // 5s
-      
-        // Start position & velocity
+        const IDLE_MS = 5000; // 5 Sekunden
         let x = 40, y = 40;
         let vx = 2.2, vy = 1.7;
-        let bw = 320, bh = 180; // must match CSS width/height above
-        let raf = null;
-        let idleTimer = null;
-        let saverOn = false;
+        let bw = 320, bh = 180;
+        let raf = null, idleTimer = null, saverOn = false;
       
         function step(){
-          const W = wrap.clientWidth;
-          const H = wrap.clientHeight;
-      
+          const W = window.innerWidth;
+          const H = window.innerHeight;
           x += vx; y += vy;
       
           if (x <= 0 || x + bw >= W) { vx *= -1; x = Math.max(0, Math.min(W - bw, x)); }
@@ -1144,7 +1145,8 @@
         function startSaver(){
           if (saverOn) return;
           saverOn = true;
-          wrap.style.display = 'block';
+          content.classList.add('blur');  // Blur nur auf Content
+          wrap.style.display = 'block';   // Zeigt das DVD-Logo
           step();
         }
       
@@ -1153,6 +1155,7 @@
           saverOn = false;
           cancelAnimationFrame(raf);
           wrap.style.display = 'none';
+          content.classList.remove('blur'); // Entfernt Blur
         }
       
         function resetIdleTimer(){
@@ -1161,34 +1164,24 @@
           idleTimer = setTimeout(startSaver, IDLE_MS);
         }
       
-        // Any user activity counts as “not idle”
-        const resetEvents = ['mousedown','keydown','touchstart','pointerdown','wheel'];
+        // Events, die den Screensaver stoppen (Mausbewegung ignoriert)
+        const resetEvents = ['mousedown','keydown','touchstart','scroll','pointerdown','wheel'];
         resetEvents.forEach(ev => window.addEventListener(ev, resetIdleTimer, { passive:true }));
       
-        // Clicking / keypress while overlay is visible closes it
         wrap.addEventListener('click', stopSaver);
         window.addEventListener('keydown', stopSaver);
       
-        // Keep bounce accurate on resize
-        window.addEventListener('resize', () => {
-          // no need to recompute bw/bh unless you change CSS
-        });
-      
-        // Pause when tab hidden
         document.addEventListener('visibilitychange', () => {
-          if (document.hidden) {
-            stopSaver();
-          } else {
-            resetIdleTimer();
-          }
+          if (document.hidden) stopSaver();
+          else resetIdleTimer();
         });
       
-        // Kick off the idle timer
         resetIdleTimer();
       })();
     </script>
   </body>
 </html>
+
 
 
 
