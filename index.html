@@ -234,21 +234,23 @@
       #dvd-wrap {
         position: fixed;
         inset: 0;
-        pointer-events: none;     /* Klicks gehen an die Seite */
+        pointer-events: none;    
         z-index: 9999;
-        display: none;            /* Hidden until idle */
+        display: none;           
       }
       
       #content-wrap.blur {
-        filter: blur(12px);       /* Stärke des Blurs */
-        transition: filter 0.6s ease;  /* Smooth Fade-In/Out */
+        filter: blur(12px);      
+        transition: filter 2s cubic-bezier(.4, 0, .2, 1);
       }
       
-      #dvd-box {
-        position: absolute;
-        top: 0; left: 0;
-        will-change: transform;
+      #dvd-box iframe,
+      #dvd-box video {
+        width: 640px;   
+        height: auto;  
+        max-width: 90vw; 
       }
+
 
     </style>
   </head>
@@ -1181,6 +1183,7 @@
     </script>
   </body>
 </html>
+
 
 
 
