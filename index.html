@@ -1024,13 +1024,21 @@
         const seq = () => (mode==='protons' ? protons : ions);
        
         function stepToHotspotName(stepKey){
-          const s = String(stepKey).toLowerCase();
+          const s = String(stepKey).toLowerCase().trim();
+        
           if (s.includes('linac4')) return 'LINAC4';
-          // check booster BEFORE generic PS
-          if (s.includes('booster') || s.includes('(psb')) return 'PSBooster';
-          if (s.includes(' proton synchrotron') || /\bps\b/.test(s)) return 'PS';
-          if (s.includes('sps'))     return 'SPS';
-          if (s.includes('lhc'))     return 'LHC';
+        
+          // Booster BEFORE generic PS
+          if (s.includes('(psb') || s.includes('booster')) return 'PSBooster';
+        
+          // SPS BEFORE generic PS (catch both token and full name)
+          if (/\bsps\b/.test(s) || s.includes('super proton synchrotron')) return 'SPS';
+        
+          // Generic PS last
+          if (/\bps\b/.test(s) || s.includes(' proton synchrotron')) return 'PS';
+        
+          if (/\blhc\b/.test(s)) return 'LHC';
+        
           return null;
         }
 
@@ -1076,6 +1084,7 @@
 
   </body>
 </html>
+
 
 
 
