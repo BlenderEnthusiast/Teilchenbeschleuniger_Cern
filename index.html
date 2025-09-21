@@ -230,27 +230,7 @@
         cursor: pointer;
       }
       .mv-dot:focus{ outline: 2px solid #fff; outline-offset: 2px; }
-
-
-      /* DVD Screensaver */
-      #dvd-wrap{
-        position: fixed; /* statt relative */
-        inset: 0;
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-        background:#000;
-        z-index: 50;      /* ggf. anpassen: über/unter Header etc. */
-        pointer-events: none; /* lässt die Seite darunter klickbar */
-      }
-      #dvd-video{
-        position:absolute; left:0; top:0;
-        width:240px; height:auto;
-        object-fit:contain;
-        will-change: transform; /* glatteres Animieren */
-      }
-
-
+      
       
 
 
@@ -695,20 +675,6 @@
     </div>
 
 
-    <div id="dvd-wrap">
-      <video id="dvd-video"
-             src="https://drive.google.com/uc?export=download&id=1BN3JvczAgea6w4zq9jpNFCvX-MIy2WrQ"
-             autoplay
-             loop
-             muted
-             playsinline
-             preload="metadata"
-             poster=""   <!-- optional -->
-      ></video>
-    </div>
-
-
-
     <!-- ================= SCRIPTS ================= -->
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 
@@ -1116,69 +1082,9 @@
       })();
     </script>
 
-    
-
-
-      <script>
-      (() => {
-        const wrap  = document.getElementById('dvd-wrap');
-        const video = document.getElementById('dvd-video');
-      
-        let x = 40, y = 40;
-        let vx = 2.2, vy = 1.7;
-        let vw = 240, vh = 135; // Fallback; wird nach Metadata berechnet
-        let raf;
-      
-        function sizeFromLayout(){
-          // Wenn du CSS-Breite fix setzt, nimm offsetWidth/Height:
-          vw = video.offsetWidth;
-          vh = video.offsetHeight;
-        }
-      
-        function step(){
-          const W = wrap.clientWidth;
-          const H = wrap.clientHeight;
-      
-          x += vx; y += vy;
-      
-          if (x <= 0 || x + vw >= W) { vx *= -1; x = Math.max(0, Math.min(W - vw, x)); }
-          if (y <= 0 || y + vh >= H) { vy *= -1; y = Math.max(0, Math.min(H - vh, y)); }
-      
-          video.style.transform = `translate(${x}px, ${y}px)`;
-      
-          raf = requestAnimationFrame(step);
-        }
-      
-        function start(){
-          cancelAnimationFrame(raf);
-          sizeFromLayout();
-          step();
-        }
-      
-        // 1) Maße da, dann Layout messen & Animation starten
-        video.addEventListener('loadedmetadata', () => {
-          // Falls du dynamisch skalieren willst: CSS width setzen anhand Aspect
-          // Hier reicht messen:
-          start();
-          // 2) Autoplay sicher starten (Promise abfangen)
-          const p = video.play();
-          if (p && typeof p.then === 'function') { p.catch(()=>{/* ignorieren */}); }
-        });
-      
-        // 3) Resize-Handhabung
-        window.addEventListener('resize', () => {
-          sizeFromLayout();
-        });
-      
-        // 4) Optional: pausieren, wenn Tab versteckt (Akkuschonend)
-        document.addEventListener('visibilitychange', () => {
-          if (document.hidden) { cancelAnimationFrame(raf); video.pause(); }
-          else { sizeFromLayout(); video.play().catch(()=>{}); step(); }
-        });
-      })();
-     </script>
   </body>
 </html>
+
 
 
 
