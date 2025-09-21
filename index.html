@@ -419,6 +419,8 @@
                   ALICE:   20,
                   LHCb:    20
                 };
+
+
               
                 let currTarget=null;
                 let currOrbit=null;
@@ -1020,15 +1022,18 @@
         let mode = 'protons';
         let i = 0;
         const seq = () => (mode==='protons' ? protons : ions);
-
+       
         function stepToHotspotName(stepKey){
-          if(/LINAC4/i.test(stepKey)) return 'LINAC4';
-          if(/PSBooster/i.test(stepKey)) return 'PSBooster';
-          if(/PS/i.test(stepKey)) return 'PS';
-          if(/SPS/i.test(stepKey)) return 'SPS';
-          if(/LHC/i.test(stepKey)) return 'LHC';
+          const s = String(stepKey).toLowerCase();
+          if (s.includes('linac4')) return 'LINAC4';
+          // check booster BEFORE generic PS
+          if (s.includes('booster') || s.includes('(psb')) return 'PSBooster';
+          if (s.includes(' proton synchrotron') || /\bps\b/.test(s)) return 'PS';
+          if (s.includes('sps'))     return 'SPS';
+          if (s.includes('lhc'))     return 'LHC';
           return null;
         }
+
 
         function fade(el, text, dur=180){
           const RDM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1071,6 +1076,7 @@
 
   </body>
 </html>
+
 
 
 
