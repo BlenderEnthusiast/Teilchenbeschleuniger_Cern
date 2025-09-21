@@ -233,19 +233,13 @@
 
 
       /* DVD Screensaver */
-      #dvd-saver {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.8);
-        z-index: 9999;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-      #dvd-canvas {
-        width: 100%;
-        height: 100%;
-        display: block;
+      #dvd-wrap{ position:relative; inset:0; width:100vw; height:100vh; overflow:hidden; background:#000; }
+      #dvd-video{
+        position:absolute; left:0; top:0;
+        width:240px;       /* fixe Breite (oder was du willst) */
+        height:auto;       /* hält Seitenverhältnis */
+        object-fit:contain;
+        pointer-events:none; /* optional, falls keine Klicks nötig */
       }
 
       
@@ -692,9 +686,16 @@
     </div>
 
 
-    <!-- DVD Screensaver -->
-    <div id="dvd-saver" hidden>
-      <canvas id="dvd-canvas" width="800" height="600"></canvas>
+    <div id="dvd-wrap">
+      <video id="dvd-video"
+             src="https://drive.google.com/uc?export=download&id=1BN3JvczAgea6w4zq9jpNFCvX-MIy2WrQ"
+             autoplay
+             loop
+             muted
+             playsinline
+             preload="metadata"
+             poster=""   <!-- optional -->
+      ></video>
     </div>
 
 
@@ -1109,105 +1110,67 @@
     
 
 
-    <script>
-      (function(){
-        const saver   = document.getElementById('dvd-saver');
-        const canvas  = document.getElementById('dvd-canvas');
-        const ctx     = canvas.getContext('2d');
+      <script>
+      (() => {
+        const wrap  = document.getElementById('dvd-wrap');
+        const video = document.getElementById('dvd-video');
       
-        const IMAGES = [
-          'img/dvd1.png',   // put your DVD logo/image paths here
-          'img/dvd2.png',
-          'img/dvd3.png'
-        ];
+        let x = 40, y = 40;
+        let vx = 2.2, vy = 1.7;
+        let vw = 240, vh = 135; // Fallback; wird nach Metadata berechnet
+        let raf;
       
-        const logos = [];
-        const speed = 3;          // base speed
-        let rafId = null;
-        let timeoutId = null;
+        function sizeFromLayout(){
+          // Wenn du CSS-Breite fix setzt, nimm offsetWidth/Height:
+          vw = video.offsetWidth;
+          vh = video.offsetHeight;
+        }
       
-        // preload images
-        const loaded = IMAGES.map(src=>{
-          const img = new Image();
-          img.src = src;
-          return img;
+        function step(){
+          const W = wrap.clientWidth;
+          const H = wrap.clientHeight;
+      
+          x += vx; y += vy;
+      
+          if (x <= 0 || x + vw >= W) { vx *= -1; x = Math.max(0, Math.min(W - vw, x)); }
+          if (y <= 0 || y + vh >= H) { vy *= -1; y = Math.max(0, Math.min(H - vh, y)); }
+      
+          video.style.transform = `translate(${x}px, ${y}px)`;
+      
+          raf = requestAnimationFrame(step);
+        }
+      
+        function start(){
+          cancelAnimationFrame(raf);
+          sizeFromLayout();
+          step();
+        }
+      
+        // 1) Maße da, dann Layout messen & Animation starten
+        video.addEventListener('loadedmetadata', () => {
+          // Falls du dynamisch skalieren willst: CSS width setzen anhand Aspect
+          // Hier reicht messen:
+          start();
+          // 2) Autoplay sicher starten (Promise abfangen)
+          const p = video.play();
+          if (p && typeof p.then === 'function') { p.catch(()=>{/* ignorieren */}); }
         });
       
-        function resize(){
-          canvas.width  = window.innerWidth;
-          canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resize);
-        resize();
-      
-        function resetLogos(){
-          logos.length = 0;
-          for(let i=0;i<loaded.length;i++){
-            logos.push({
-              img: loaded[i],
-              x: Math.random() * (canvas.width-150),
-              y: Math.random() * (canvas.height-100),
-              dx: (Math.random()<0.5?-1:1) * (speed + Math.random()*2),
-              dy: (Math.random()<0.5?-1:1) * (speed + Math.random()*2)
-            });
-          }
-        }
-      
-        function draw(){
-          ctx.clearRect(0,0,canvas.width,canvas.height);
-          for(const l of logos){
-            const w = l.img.width/2;
-            const h = l.img.height/2;
-            ctx.drawImage(l.img,l.x,l.y,w,h);
-          }
-        }
-      
-        function update(){
-          for(const l of logos){
-            const w = l.img.width/2;
-            const h = l.img.height/2;
-            l.x += l.dx;
-            l.y += l.dy;
-            if(l.x <= 0 || l.x + w >= canvas.width){ l.dx *= -1; }
-            if(l.y <= 0 || l.y + h >= canvas.height){ l.dy *= -1; }
-          }
-        }
-      
-        function loop(){
-          update();
-          draw();
-          rafId = requestAnimationFrame(loop);
-        }
-      
-        function startSaver(){
-          saver.hidden = false;
-          resetLogos();
-          loop();
-        }
-        function stopSaver(){
-          saver.hidden = true;
-          cancelAnimationFrame(rafId);
-        }
-      
-        function resetTimer(){
-          clearTimeout(timeoutId);
-          timeoutId = setTimeout(()=>{ startSaver(); },10000); // 10 s inactivity
-          if(!saver.hidden) stopSaver();
-        }
-      
-        // user activity resets timer
-        ['keydown','mousedown','touchstart','wheel'].forEach(ev=>{
-          window.addEventListener(ev, resetTimer, {passive:true});
+        // 3) Resize-Handhabung
+        window.addEventListener('resize', () => {
+          sizeFromLayout();
         });
       
-        resetTimer();
+        // 4) Optional: pausieren, wenn Tab versteckt (Akkuschonend)
+        document.addEventListener('visibilitychange', () => {
+          if (document.hidden) { cancelAnimationFrame(raf); video.pause(); }
+          else { sizeFromLayout(); video.play().catch(()=>{}); step(); }
+        });
       })();
-      </script>
-
-    
-
+     </script>
   </body>
 </html>
+
 
 
 
