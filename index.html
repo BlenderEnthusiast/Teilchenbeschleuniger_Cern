@@ -234,10 +234,19 @@
       #dvd-wrap {
         position: fixed;
         inset: 0;
-        pointer-events: none;    
         z-index: 9999;
-        display: none;           
+        background: transparent;    
+        opacity: 0;             
+        pointer-events: none;       
+        transition: opacity 2s ease;
       }
+      
+
+      #dvd-wrap.active {
+        opacity: 1;
+        pointer-events: auto;       
+      }
+
       
       #content-wrap.blur {
         filter: blur(12px);      
@@ -1147,18 +1156,20 @@
         function startSaver(){
           if (saverOn) return;
           saverOn = true;
-          content.classList.add('blur');  // Blur nur auf Content
-          wrap.style.display = 'block';   // Zeigt das DVD-Logo
+          wrap.classList.add('active');   // fade in
           step();
+          const p = video.play();
+          if (p && p.catch) p.catch(()=>{});
         }
-      
+        
         function stopSaver(){
           if (!saverOn) return;
           saverOn = false;
+          wrap.classList.remove('active'); // fade out
           cancelAnimationFrame(raf);
-          wrap.style.display = 'none';
-          content.classList.remove('blur'); // Entfernt Blur
+          video.pause();
         }
+
       
         function resetIdleTimer(){
           stopSaver();
@@ -1183,6 +1194,7 @@
     </script>
   </body>
 </html>
+
 
 
 
