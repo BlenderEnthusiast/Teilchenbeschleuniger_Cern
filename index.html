@@ -233,14 +233,23 @@
 
 
       /* DVD Screensaver */
-      #dvd-wrap{ position:relative; inset:0; width:100vw; height:100vh; overflow:hidden; background:#000; }
+      #dvd-wrap{
+        position: fixed; /* statt relative */
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        background:#000;
+        z-index: 50;      /* ggf. anpassen: über/unter Header etc. */
+        pointer-events: none; /* lässt die Seite darunter klickbar */
+      }
       #dvd-video{
         position:absolute; left:0; top:0;
-        width:240px;       /* fixe Breite (oder was du willst) */
-        height:auto;       /* hält Seitenverhältnis */
+        width:240px; height:auto;
         object-fit:contain;
-        pointer-events:none; /* optional, falls keine Klicks nötig */
+        will-change: transform; /* glatteres Animieren */
       }
+
 
       
 
@@ -1170,6 +1179,7 @@
      </script>
   </body>
 </html>
+
 
 
 
