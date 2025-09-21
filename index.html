@@ -231,7 +231,21 @@
       }
       .mv-dot:focus{ outline: 2px solid #fff; outline-offset: 2px; }
       
-      
+      /* === DVD Screensaver Overlay === */
+      #dvd-wrap{
+        position: fixed; inset: 0; z-index: 9999;
+        display: none;                  /* stays hidden until idle */
+        background: rgba(0,0,0,.94);
+        overflow: hidden;
+      }
+      #dvd-video{
+        position: absolute; left: 0; top: 0;
+        width: 240px;          /* set your logo/video width */
+        height: auto;          /* keeps aspect ratio */
+        object-fit: contain;
+        will-change: transform; /* smoother bounces */
+      }
+
 
 
     </style>
@@ -675,6 +689,20 @@
     </div>
 
 
+    <!-- DVD Screensaver Overlay -->
+    <div id="dvd-wrap" aria-hidden="true">
+      <video id="dvd-video"
+             src="https://drive.google.com/uc?export=download&id=YOUR_FILE_ID"
+             autoplay
+             loop
+             muted
+             playsinline
+             preload="metadata">
+      </video>
+    </div>
+
+
+
     <!-- ================= SCRIPTS ================= -->
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 
@@ -1082,8 +1110,96 @@
       })();
     </script>
 
+    <script>
+      (() => {
+        const wrap  = document.getElementById('dvd-wrap');
+        const video = document.getElementById('dvd-video');
+      
+        // Wait time before overlay appears (ms)
+        const IDLE_MS = 5_000; // 5 seconds
+      
+        // Start position & velocity
+        let x = 40, y = 40;
+        let vx = 2.2, vy = 1.7;
+        let vw = 240, vh = 135;      // measured from layout later
+        let raf = null;
+        let idleTimer = null;
+        let saverOn = false;
+      
+        function measureVideoSize(){
+          // Uses the CSS-rendered size (so you can control via CSS)
+          vw = video.offsetWidth || 240;
+          vh = video.offsetHeight || 135;
+        }
+      
+        function step(){
+          const W = wrap.clientWidth;
+          const H = wrap.clientHeight;
+      
+          x += vx; y += vy;
+      
+          if (x <= 0 || x + vw >= W) { vx *= -1; x = Math.max(0, Math.min(W - vw, x)); }
+          if (y <= 0 || y + vh >= H) { vy *= -1; y = Math.max(0, Math.min(H - vh, y)); }
+      
+          video.style.transform = `translate(${x}px, ${y}px)`;
+          raf = requestAnimationFrame(step);
+        }
+      
+        function startSaver(){
+          if (saverOn) return;
+          saverOn = true;
+          wrap.style.display = 'block';
+          measureVideoSize();
+          step();
+          // try to play (muted + inline should allow autoplay)
+          const p = video.play();
+          if (p && p.catch) p.catch(()=>{});
+        }
+      
+        function stopSaver(){
+          if (!saverOn) return;
+          saverOn = false;
+          cancelAnimationFrame(raf);
+          video.pause();
+          wrap.style.display = 'none';
+        }
+      
+        function resetIdleTimer(){
+          stopSaver();
+          if (idleTimer) clearTimeout(idleTimer);
+          idleTimer = setTimeout(startSaver, IDLE_MS);
+        }
+      
+        // Any user activity counts as “not idle”
+        const resetEvents = ['mousemove','mousedown','keydown','touchstart','scroll','pointerdown','wheel'];
+        resetEvents.forEach(ev => window.addEventListener(ev, resetIdleTimer, { passive:true }));
+      
+        // Clicking / pressing anything while overlay is visible closes it
+        wrap.addEventListener('click', stopSaver);
+        window.addEventListener('keydown', stopSaver);
+      
+        // Keep bounce accurate on resize
+        window.addEventListener('resize', () => { if (saverOn) measureVideoSize(); });
+      
+        // Pause when tab hidden (saves battery)
+        document.addEventListener('visibilitychange', () => {
+          if (document.hidden) {
+            stopSaver();
+          } else {
+            resetIdleTimer();
+          }
+        });
+      
+        // Kick off the idle timer once metadata is ready
+        // (so browsers are okay with play() later)
+        const startWhenReady = () => resetIdleTimer();
+        if (video.readyState >= 1) startWhenReady();
+        else video.addEventListener('loadedmetadata', startWhenReady, { once:true });
+      })();
+    </script>
   </body>
 </html>
+
 
 
 
