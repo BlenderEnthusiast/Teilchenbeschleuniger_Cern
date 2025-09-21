@@ -255,11 +255,15 @@
       
       #dvd-box iframe,
       #dvd-box video {
-        width: 640px;   
+        width: 1000px;   
         height: auto;  
         max-width: 90vw; 
       }
-
+    
+      #content-wrap {
+        transition: filter 2s cubic-bezier(.4, 0, .2, 1);
+      }
+      
 
     </style>
   </head>
@@ -1130,12 +1134,12 @@
     </script>
 
     <script>
-      (() => {
-        const wrap  = document.getElementById('dvd-wrap');
-        const box   = document.getElementById('dvd-box');
-        const content = document.getElementById('content-wrap');
+     (function(){
+        const wrap    = document.getElementById('dvd-wrap');
+        const box     = document.getElementById('dvd-box');
+        const content = document.getElementById('content-wrap'); // we'll blur this
       
-        const IDLE_MS = 5000; // 5 Sekunden
+        const IDLE_MS = 5000;
         let x = 40, y = 40;
         let vx = 2.2, vy = 1.7;
         let bw = 320, bh = 180;
@@ -1156,20 +1160,18 @@
         function startSaver(){
           if (saverOn) return;
           saverOn = true;
-          wrap.classList.add('active');   // fade in
+          wrap.classList.add('active');    
+          content.classList.add('blur');   
           step();
-          const p = video.play();
-          if (p && p.catch) p.catch(()=>{});
         }
-        
+      
         function stopSaver(){
           if (!saverOn) return;
           saverOn = false;
-          wrap.classList.remove('active'); // fade out
+          wrap.classList.remove('active'); // fade out overlay
+          content.classList.remove('blur');// unblur background
           cancelAnimationFrame(raf);
-          video.pause();
         }
-
       
         function resetIdleTimer(){
           stopSaver();
@@ -1177,7 +1179,7 @@
           idleTimer = setTimeout(startSaver, IDLE_MS);
         }
       
-        // Events, die den Screensaver stoppen (Mausbewegung ignoriert)
+        // mousemove intentionally NOT included
         const resetEvents = ['mousedown','keydown','touchstart','scroll','pointerdown','wheel'];
         resetEvents.forEach(ev => window.addEventListener(ev, resetIdleTimer, { passive:true }));
       
@@ -1191,9 +1193,11 @@
       
         resetIdleTimer();
       })();
+
     </script>
   </body>
 </html>
+
 
 
 
