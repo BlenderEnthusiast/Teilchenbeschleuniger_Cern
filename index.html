@@ -1180,7 +1180,7 @@
         }
       
         // mousemove intentionally NOT included
-        const resetEvents = ['mousedown','keydown','touchstart','scroll','pointerdown','wheel'];
+        const resetEvents = ['mousemove','mousedown','keydown','touchstart','scroll','pointerdown','wheel'];
         resetEvents.forEach(ev => window.addEventListener(ev, resetIdleTimer, { passive:true }));
       
         wrap.addEventListener('click', stopSaver);
@@ -1197,6 +1197,7 @@
     </script>
   </body>
 </html>
+
 
 
 
