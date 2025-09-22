@@ -277,7 +277,7 @@
           <a href="#timeline">Timeline</a>
           <a href="#chain-switch">Beschleunigerkette</a>
           <a href="#ring-hotspots">Teilchenbeschleuniger</a>
-          <a href="#acceleration-chain">Physik</a>
+          <a href="#acceleration-chain">Detektoren</a>
           <a href="#collision-detector">Kollision</a>
           <a href="#sources">Quellen</a>
         </nav>
@@ -612,40 +612,11 @@
         </div>
       </section>
   
-      <!-- ================= PHYSIK ================= -->
+      <!-- ================= Detektoren des LHC ================= -->
       <section class="section" id="acceleration-chain">
         <div class="container">
-          <h2 class="reveal">physik</h2>
+          <h2 class="reveal">Detektoren des LHC</h2>
           <p class="reveal">Interaktive Mini-Demonstrationen (rein relativ skaliert – Platzhalterwerte).</p>
-          <div class="chain">
-            <div class="timeline-box reveal">
-              <ul id="phys-steps">
-                <li data-step="0" class="active"><span class="dot"></span><span class="label">Quelle</span></li>
-                <li data-step="1"><span class="dot"></span><span class="label">LINAC4</span></li>
-                <li data-step="2"><span class="dot"></span><span class="label">PS Booster</span></li>
-                <li data-step="3"><span class="dot"></span><span class="label">PS</span></li>
-                <li data-step="4"><span class="dot"></span><span class="label">SPS</span></li>
-                <li data-step="5"><span class="dot"></span><span class="label">LHC</span></li>
-              </ul>
-            </div>
-            <div class="grid">
-              <div class="metric"><div class="v" id="energy">1</div><div>Energie (relativ)</div></div>
-              <div class="metric"><div class="v" id="speed">1</div><div>Geschwindigkeit (relativ)</div></div>
-              <div class="metric"><div class="v" id="turns">1</div><div>Umläufe (relativ)</div></div>
-              <div class="card">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px"><div>Magnetfeld</div><div id="bval">50%</div></div>
-                <input id="bfield" type="range" min="0" max="100" value="50" aria-label="Magnetfeld einstellen">
-                <div class="svgbox" style="margin-top:12px">
-                  <svg viewBox="0 0 320 200" style="width:100%;height:220px" aria-label="Strahlkrümmung">
-                    <defs><marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0 0, 6 3, 0 6" fill="#fff"/></marker></defs>
-                    <path id="beam" d="M 20 160 A 200 200 0 0 1 260 60" stroke="#fff" stroke-width="3" fill="none" marker-end="url(#arr)"/>
-                    <text x="24" y="150" fill="#bdbdc2" font-size="10">Strahl</text>
-                    <text x="180" y="30" fill="#bdbdc2" font-size="10">B↑ ⇒ Radius↓</text>
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
   
@@ -1197,6 +1168,7 @@
     </script>
   </body>
 </html>
+
 
 
 
