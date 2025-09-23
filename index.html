@@ -263,6 +263,31 @@
       #content-wrap {
         transition: filter 2s cubic-bezier(.4, 0, .2, 1);
       }
+
+      /* Sequencer layout */
+      .seq{display:grid;grid-template-columns:1.1fr 1fr;gap:24px;align-items:start}
+      @media (max-width:900px){ .seq{grid-template-columns:1fr} }
+      
+      .seq-left h2{margin:0 0 8px;font-size:clamp(22px,3.2vw,32px)}
+      .seq-left .muted{color:var(--muted);margin:0 0 18px}
+      
+      .seq-controls{display:flex;gap:12px;margin-top:8px}
+      .seq-btn{
+        padding:10px 20px;border-radius:12px;border:1px solid var(--line);
+        background:#121215;color:var(--fg);cursor:pointer;transition:.2s ease;
+      }
+      .seq-btn:hover{background:#1b1b20;border-color:var(--accent)}
+      .seq-btn:disabled{opacity:.5;cursor:not-allowed}
+      .seq-btn.primary{border-color:var(--accent);box-shadow:0 6px 16px rgba(134,225,255,.18)}
+      
+      /* Square player on the right */
+      .seq-right{width:100%}
+      .seq-player{
+        width:100%; aspect-ratio:1/1; position:relative; border:1px solid var(--line);
+        border-radius:14px; overflow:hidden; background:#0f1014;
+      }
+      .seq-player video{position:absolute; inset:0; width:100%; height:100%;}
+
       
 
     </style>
@@ -614,11 +639,164 @@
   
       <!-- ================= ATLAS ================= -->
       <section class="section" id="acceleration-chain">
+
+        <div class="container">
+          <div class="seq">
+            <div class="seq-left">
+              <h2 id="seq-title">Titel</h2>
+              <p id="seq-text" class="muted">Beschreibung …</p>
+              <div class="seq-controls">
+                <button class="seq-btn" id="seq-prev" type="button">◀ Zurück</button>
+                <button class="seq-btn primary" id="seq-next" type="button">Weiter ▶</button>
+              </div>
+            </div>
+      
+            <div class="seq-right">
+              <div class="seq-player">
+                <video id="seq-video"
+                       playsinline
+                       preload="metadata"
+                       crossorigin="anonymous"
+                       style="display:block;width:100%;height:100%;object-fit:cover">
+                </video>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="container">
           <h2 class="reveal">ATLAS</h2>
           <p class="reveal">Interaktive Mini-Demonstrationen (rein relativ skaliert – Platzhalterwerte).</p>
         </div>
       </section>
+
+
+      <script>
+
+        const CLIPS = [
+          { src: "clips/1.mp4",  title: "Clip 1",  text: "Beschreibung für Clip 1" },
+          { src: "clips/2.mp4",  title: "Clip 2",  text: "Beschreibung für Clip 2" },
+          { src: "clips/3.mp4",  title: "Clip 3",  text: "Beschreibung für Clip 3" },
+          { src: "clips/4.mp4",  title: "Clip 4",  text: "Beschreibung für Clip 4" },
+          { src: "clips/5.mp4",  title: "Clip 5",  text: "Beschreibung für Clip 5" },
+          { src: "clips/6.mp4",  title: "Clip 6",  text: "Beschreibung für Clip 6" },
+          { src: "clips/7.mp4",  title: "Clip 7",  text: "Beschreibung für Clip 7" },
+          { src: "clips/8.mp4",  title: "Clip 8",  text: "Beschreibung für Clip 8" },
+          { src: "clips/9.mp4",  title: "Clip 9",  text: "Beschreibung für Clip 9" },
+          { src: "clips/10.mp4", title: "Clip 10", text: "Beschreibung für Clip 10" },
+          { src: "clips/11.mp4", title: "Clip 11", text: "Beschreibung für Clip 11" },
+          { src: "clips/12.mp4", title: "Clip 12", text: "Beschreibung für Clip 12" },
+          { src: "clips/13.mp4", title: "Clip 13", text: "Beschreibung für Clip 13" }
+        ];
+
+        
+        /* --------- State & element refs --------- */
+        const video = document.getElementById('seq-video');
+        const prevBtn = document.getElementById('seq-prev');
+        const nextBtn = document.getElementById('seq-next');
+        const titleEl = document.getElementById('seq-title');
+        const textEl  = document.getElementById('seq-text');
+        
+        let idx = 0;
+        let isPlayingToAdvance = false;
+        
+        /* --------- Helpers --------- */
+        function updateMeta(i){
+          const last = (i === CLIPS.length - 1);
+          titleEl.textContent = CLIPS[i].title || `Clip ${i+1}`;
+          textEl.textContent  = CLIPS[i].text  || "";
+          prevBtn.disabled = isPlayingToAdvance || (i === 0);
+          nextBtn.disabled = isPlayingToAdvance || false;
+          if(last) {
+            // optional: change next label to “Fertig” or disable later
+            // nextBtn.textContent = "Fertig";
+          } else {
+            nextBtn.textContent = "Weiter ▶";
+          }
+        }
+        
+        function loadAndFreeze(i){
+          const { src } = CLIPS[i];
+          isPlayingToAdvance = false;
+          prevBtn.disabled = (i === 0);
+          nextBtn.disabled = false;
+        
+          // Set source and load first frame
+          video.src = src;
+          video.load();
+        
+          // When we have data for the first frame, pause there
+          const onData = () => {
+            // forcing a tiny seek helps Safari show the real first frame
+            try { video.currentTime = 0.01; } catch {}
+            video.pause();
+            video.removeEventListener('loadeddata', onData);
+          };
+          video.addEventListener('loadeddata', onData);
+        
+          updateMeta(i);
+        }
+        
+        function playThenAdvance(){
+          if (isPlayingToAdvance) return;
+          isPlayingToAdvance = true;
+          prevBtn.disabled = true; nextBtn.disabled = true;
+        
+          // Ensure we start from current (first) frame
+          // (no need to mute; user interacted by clicking)
+          const advance = () => {
+            // When ended, move to next (or stop if last)
+            const onEnded = () => {
+              video.removeEventListener('ended', onEnded);
+              if (idx < CLIPS.length - 1) {
+                idx += 1;
+                loadAndFreeze(idx);
+              } else {
+                // last clip: keep last frame; keep Weiter disabled
+                nextBtn.disabled = true;
+                prevBtn.disabled = false;
+              }
+              isPlayingToAdvance = false;
+              updateMeta(idx);
+            };
+            video.addEventListener('ended', onEnded);
+            video.play().catch(() => {
+              // If play fails (autoplay policy), just re-enable button
+              isPlayingToAdvance = false;
+              updateMeta(idx);
+            });
+          };
+        
+          // If metadata isn't loaded yet, wait briefly
+          if (video.readyState < 2) {
+            const onCanPlay = () => { video.removeEventListener('canplay', onCanPlay); advance(); };
+            video.addEventListener('canplay', onCanPlay);
+          } else {
+            advance();
+          }
+        }
+        
+        function goBack(){
+          if (isPlayingToAdvance) return;
+          if (idx === 0) return;
+          idx -= 1;
+          loadAndFreeze(idx);
+        }
+        
+        /* --------- Wire up --------- */
+        prevBtn.addEventListener('click', goBack);
+        nextBtn.addEventListener('click', playThenAdvance);
+        
+        // Optional keyboard: Left = Zurück, Enter/Right = Weiter
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowLeft') { e.preventDefault(); goBack(); }
+          if (e.key === 'Enter' || e.key === 'ArrowRight') { e.preventDefault(); playThenAdvance(); }
+        });
+        
+        // Init: show first frame of clip 1
+        loadAndFreeze(idx);
+      </script>
+
   
       <!-- ================= KOLLISIONEN ================= -->
       <section class="section" id="collision-detector">
@@ -1168,6 +1346,7 @@
     </script>
   </body>
 </html>
+
 
 
 
