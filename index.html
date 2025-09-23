@@ -1373,56 +1373,63 @@
           }
         }
       
-        // ------- Reverse (manual frame stepping, no awaiting in loop) -------
+  
+        // ------- Reverse (rAF-basiert + fastSeek) -------
         async function reversePrev(){
           if (busy || i === 0) return;
           busy = true; setButtons();
-          clearTimers();                 // <— sicherheitshalber
+          clearTimers();
         
           const prevIdx = i - 1;
           const startT = toT(FRAMES[prevIdx][0]) + EPS;
           const endT   = toT(FRAMES[prevIdx][1]) - EPS;
         
-          // an das Segmentende der vorherigen Sektion springen
           await seekTo(endT);
           v.pause();
         
-          // sanft abdunkeln während des Rückwärts-Schritts (optional)
-          // fadeOn();  // wenn du stärkere Abdeckung willst, aktivieren
+          let t = endT;
+          let running = true;
         
-          // 60 Hz Rückwärts-„Playback“, ohne auf 'seeked' zu warten
-          const STEP = FRAME;      // 1/FPS
-          const INTERVAL = 16;     // ~60Hz
-          const HARD_TIMEOUT = 5000; // failsafe, 5s
+          const BASE_STEP = FRAME * 0.85; // vorsichtig kleiner als 1/FPS
+          let step = BASE_STEP;
         
-          const t0 = performance.now();
-          reverseTimer = setInterval(() => {
-            // failsafe: falls irgendwas hängt
-            if (performance.now() - t0 > HARD_TIMEOUT) {
-              clearTimers();
-              v.currentTime = startT;
-              i = prevIdx; busy = false; setCopy(); setButtons();
-              // fadeOff();
-              return;
+          function stepBack() {
+            if (!running) return;
+        
+            // Adaptiv etwas größer/kleiner machen je nach readyState
+            // (wenn Decoder hinterherhinkt, kleinere Schritte)
+            if (v.readyState < 2 && step > FRAME * 0.5) step *= 0.9;
+            else if (v.readyState >= 3 && step < FRAME * 1.2) step *= 1.02;
+        
+            t -= step;
+            if (t <= startT + 0.0005) {
+              t = startT;
+              running = false;
             }
         
-            let t = v.currentTime - STEP;
-            if (t <= startT + 0.0005) {
-              // exakt am Start stoppen
-              clearTimers();
-              v.currentTime = startT;
-              // nächstes Frame rendern lassen
+            // Prefer fastSeek if supported
+            if (typeof v.fastSeek === 'function') {
+              try { v.fastSeek(t); } catch { v.currentTime = t; }
+            } else {
+              v.currentTime = t;
+            }
+        
+            if (running) {
+              requestAnimationFrame(stepBack);
+            } else {
+              // Am Start „einrasten“
               requestAnimationFrame(() => {
+                v.currentTime = startT;
                 i = prevIdx;
                 busy = false;
                 setCopy(); setButtons();
-                // fadeOff();
               });
-              return;
             }
-            v.currentTime = t;
-          }, INTERVAL);
+          }
+        
+          requestAnimationFrame(stepBack);
         }
+
 
       
         // Wire up
@@ -1441,6 +1448,7 @@
     </script>
   </body>
 </html>
+
 
 
 
