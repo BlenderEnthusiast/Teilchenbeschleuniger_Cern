@@ -1276,7 +1276,21 @@
         let i = 0;
         let busy = false;
         let forwardTimer = null;
-      
+        let reverseTimer = null;         // <— NEU
+        function clearTimers(){          // <— NEU
+          if (forwardTimer) { clearInterval(forwardTimer); forwardTimer = null; }
+          if (reverseTimer) { clearInterval(reverseTimer); reverseTimer = null; }
+        }
+
+        async function playThenFreezeNext(idx){
+        if (busy) return;
+        busy = true; setButtons();
+        clearTimers();                 // <— NEU
+        ...
+        // (Rest unverändert)
+        }
+
+
         // Helpers
         function fadeOn(){ fader.classList.add('fade'); }
         function fadeOff(){ fader.classList.remove('fade'); }
@@ -1364,42 +1378,53 @@
         async function reversePrev(){
           if (busy || i === 0) return;
           busy = true; setButtons();
-      
+          clearTimers();                 // <— sicherheitshalber
+        
           const prevIdx = i - 1;
           const startT = toT(FRAMES[prevIdx][0]) + EPS;
           const endT   = toT(FRAMES[prevIdx][1]) - EPS;
-      
-          // Jump to end of previous
+        
+          // an das Segmentende der vorherigen Sektion springen
           await seekTo(endT);
-      
-          // Step backwards smoothly without awaiting 'seeked' each time
-          const useVFC = 'requestVideoFrameCallback' in v;
-          const stepBack = () => {
-            const t = v.currentTime - FRAME;
+          v.pause();
+        
+          // sanft abdunkeln während des Rückwärts-Schritts (optional)
+          // fadeOn();  // wenn du stärkere Abdeckung willst, aktivieren
+        
+          // 60 Hz Rückwärts-„Playback“, ohne auf 'seeked' zu warten
+          const STEP = FRAME;      // 1/FPS
+          const INTERVAL = 16;     // ~60Hz
+          const HARD_TIMEOUT = 5000; // failsafe, 5s
+        
+          const t0 = performance.now();
+          reverseTimer = setInterval(() => {
+            // failsafe: falls irgendwas hängt
+            if (performance.now() - t0 > HARD_TIMEOUT) {
+              clearTimers();
+              v.currentTime = startT;
+              i = prevIdx; busy = false; setCopy(); setButtons();
+              // fadeOff();
+              return;
+            }
+        
+            let t = v.currentTime - STEP;
             if (t <= startT + 0.0005) {
-              v.currentTime = startT + EPS;
-              // one more tick to paint the frame
-              if (useVFC) {
-                v.requestVideoFrameCallback(() => { i = prevIdx; setCopy(); busy = false; setButtons(); });
-              } else {
-                requestAnimationFrame(() => { i = prevIdx; setCopy(); busy = false; setButtons(); });
-              }
+              // exakt am Start stoppen
+              clearTimers();
+              v.currentTime = startT;
+              // nächstes Frame rendern lassen
+              requestAnimationFrame(() => {
+                i = prevIdx;
+                busy = false;
+                setCopy(); setButtons();
+                // fadeOff();
+              });
               return;
             }
             v.currentTime = t;
-            if (useVFC) {
-              v.requestVideoFrameCallback(stepBack);
-            } else {
-              requestAnimationFrame(stepBack);
-            }
-          };
-      
-          if (useVFC) {
-            v.requestVideoFrameCallback(stepBack);
-          } else {
-            requestAnimationFrame(stepBack);
-          }
+          }, INTERVAL);
         }
+
       
         // Wire up
         nextBtn.addEventListener('click', () => playThenFreezeNext(i));
@@ -1417,6 +1442,7 @@
     </script>
   </body>
 </html>
+
 
 
 
