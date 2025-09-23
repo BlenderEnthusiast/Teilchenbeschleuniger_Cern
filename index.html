@@ -376,7 +376,6 @@
           width:100%;
         }
       
-        /* zwei Videos übereinander + Crossfade */
         .clip-right video {
           position:absolute;
           inset:0;
@@ -385,15 +384,15 @@
           object-fit:contain;
           background:#000;
           opacity:0;
-          transition: opacity .25s ease;
+          transition: opacity .22s ease; /* kurzer, knackiger Crossfade */
         }
         .clip-right video.active { opacity:1; }
       
-        /* optionaler dunkler Fader für harte Sprünge */
+        /* sanfter Overlay-Fader für harte Sprünge (meist unsichtbar dank Preload) */
         #vfader {
           position:absolute; inset:0; pointer-events:none;
           background:rgba(0,0,0,.35);
-          opacity:0; transition:opacity .25s ease;
+          opacity:0; transition:opacity .18s ease;
         }
         #vfader.fade { opacity:1; }
       </style>
@@ -758,13 +757,18 @@
             </div>
         
             <div class="clip-right">
-              <!-- zwei Layer für weiches Umschalten -->
+              <!-- sichtbare Layer -->
               <video id="vidA" playsinline muted preload="auto"></video>
               <video id="vidB" playsinline muted preload="auto"></video>
+        
+              <!-- unsichtbarer Preloader -->
+              <video id="vidPre" playsinline muted preload="auto" style="display:none"></video>
+        
               <div id="vfader"></div>
             </div>
           </div>
         </div>
+
 
         <div class="container">
           <h2 class="reveal">ATLAS</h2>
@@ -1518,36 +1522,37 @@
     </script>
     <script>
       (function(){
-        // ==== Konfiguration =======================================================
-        // 13 Segmente: forward: "1.mp4" … "13.mp4"
-        //              reverse: "1-1.mp4" … "13-13.mp4"
-        // Titel/Texts kannst du hier anpassen:
+        // ====== Pfad & Segmente ===================================================
+        const BASE = 'ATLAS/'; // <- dein Ordner
         const SEGMENTS = Array.from({length:13}, (_,k) => {
           const n = k+1;
           return {
             title: `Segment ${n}`,
             text:  `Beschreibung Segment ${n}`,
-            fwd:   `${n}.mp4`,
-            rev:   `${n}-${n}.mp4`
+            fwd:   `${BASE}${n}.mp4`,
+            rev:   `${BASE}${n}-${n}.mp4`
           };
         });
       
-        // ==== DOM ================================================================
+        // ====== DOM ===============================================================
         const titleEl = document.getElementById('clip-title');
         const textEl  = document.getElementById('clip-text');
         const btnPrev = document.getElementById('btn-prev');
         const btnNext = document.getElementById('btn-next');
-        const A = document.getElementById('vidA');
-        const B = document.getElementById('vidB');
+      
+        const A   = document.getElementById('vidA');   // sichtbarer Layer
+        const B   = document.getElementById('vidB');   // sichtbarer Layer
+        const PRE = document.getElementById('vidPre'); // unsichtbarer Preload-Buffer
         const fader = document.getElementById('vfader');
       
-        // aktive/back Video-Referenz (wir tauschen Rollen beim Crossfade)
-        let active = A;
-        let back   = B;
-        let i = 0;             // aktueller Segmentindex (0..12)
-        let busy = false;      // blockt doppelte Klicks während Umschalten
+        let active = A; // aktuell sichtbares Video
+        let back   = B; // zweiter Layer
+        let i = 0;      // aktueller Segmentindex
+        let busy = false;
       
-        // ==== Helpers ============================================================
+        // ====== Helpers ===========================================================
+        const once = (el, ev, opts={}) => new Promise(res => el.addEventListener(ev, res, { once:true, ...opts }));
+      
         function setCopy(idx){
           titleEl.textContent = SEGMENTS[idx].title;
           textEl.textContent  = SEGMENTS[idx].text;
@@ -1559,109 +1564,122 @@
         function fadeOn(){ fader.classList.add('fade'); }
         function fadeOff(){ fader.classList.remove('fade'); }
       
-        // Setzt SRC (fallback: falls du mehrere Formate brauchst, nutze <source>-Kinder)
         function setSrc(videoEl, url){
-          // leere alte <source>-Kinder, falls vorhanden
+          // vorhandene <source>-Kinder leeren
           while(videoEl.firstChild) videoEl.removeChild(videoEl.firstChild);
-          // einfache MP4-Quelle:
+          videoEl.removeAttribute('src'); // sichergehen
+          // einfache Quelle (MP4). Falls du WebM mitliefern willst: hier 2 <source> anhängen.
           videoEl.src = url;
-          // Hinweis: Wenn du zusätzlich WebM liefern willst:
-          // const s1 = document.createElement('source'); s1.src = url.replace('.mp4','.webm'); s1.type='video/webm'; videoEl.appendChild(s1);
-          // const s2 = document.createElement('source'); s2.src = url; s2.type='video/mp4'; videoEl.appendChild(s2);
-          // videoEl.load();
         }
       
-        // Crossfade zwischen active und back
-        function swapToBack(){
-          back.classList.add('active');
-          active.classList.remove('active');
-          const tmp = active; active = back; back = tmp;
-        }
-      
-        async function showFrame0(videoEl){
-          // an den Anfang springen und pausieren
+        async function primeAtStart(videoEl){
+          // an den Anfang -> kurz anspielen -> pausieren (Decoder warm)
           try { videoEl.pause(); } catch{}
+          videoEl.currentTime = 0;
+          // Warten bis wirklich seeked
+          await Promise.race([ once(videoEl,'seeked'), new Promise(r=>setTimeout(r,120)) ]);
+          try { await videoEl.play(); } catch {} // muted+inline sollte gehen
+          // ein Frame „ziehen“
+          await Promise.race([ once(videoEl,'timeupdate'), new Promise(r=>setTimeout(r,80)) ]);
+          try { videoEl.pause(); } catch {}
+          // zurück auf frame 0 „snappen“ (optisch identisch)
           try { videoEl.currentTime = 0; } catch{}
-          // manche Browser feuern 'seeked' nicht sofort, daher kleiner Guard:
-          await new Promise(r => {
-            const done = () => { videoEl.removeEventListener('seeked', done); r(); };
-            videoEl.addEventListener('seeked', done, { once:true });
-            // fallback timeout
-            setTimeout(done, 120);
-          });
         }
       
-        // ==== Aktionen ===========================================================
-        // vorwärts abspielen: aktuelles Segment forward bis Ende spielen,
-        // danach an Anfang des NÄCHSTEN Segments springen und dort stehen bleiben
+        function swapTo(el){ // Crossfade sichtbare Layer
+          el.classList.add('active');
+          active.classList.remove('active');
+          const tmp = active; active = el; el = tmp; // not used
+        }
+      
+        async function prepareFreezeOf(idx){
+          // PRE lädt den Forward-Clip des Zielsegments auf Frame 0
+          setSrc(PRE, SEGMENTS[idx].fwd);
+          // warten bis Daten da
+          await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
+          await primeAtStart(PRE); // Decoder warm
+        }
+      
+        function showPreOnActive(){
+          // PRE-Inhalt auf BACK kopieren (Quelle teilen) und sichtbar machen
+          // Direkt PRE sichtbar machen wäre auch ok, aber wir halten PRE unsichtbar.
+          setSrc(back, PRE.currentSrc || PRE.src);
+          // Wir sind sicher: PRE ist bei 0; kopiere state
+          try { back.currentTime = PRE.currentTime; } catch{}
+          back.pause();
+          swapTo(back);
+        }
+      
+        // ====== Aktionen ==========================================================
+        // Weiter: akt. Forward abspielen; währenddessen nächsten Forward auf PRE einfrieren.
         async function playForward(){
           if (busy || i >= SEGMENTS.length-1) return;
           busy = true; setButtons();
           fadeOn();
       
-          // Lade/Preloade: back = aktuelles Vorwärts-Video
+          // akt. Segment forward sichtbar machen & starten
           setSrc(back, SEGMENTS[i].fwd);
-          await back.play().catch(()=>{});
-          // sichtbarer Wechsel
-          swapToBack();
+          await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
+          // sofort losspielen (wir crossfaden in 1 Frame rüber)
+          try { await back.play(); } catch {}
+          swapTo(back);
+      
+          // parallel: PRE lädt den Freeze des nächsten Segments
+          const nextIdx = i+1;
+          prepareFreezeOf(nextIdx).catch(()=>{});
       
           active.onended = async () => {
-            // Ende des aktuellen Vorwärts-Clips
             try { active.pause(); } catch{}
-            // Index erhöhen und next Frame 0 zeigen
-            i += 1;
+            // am Ende direkt zum Freeze des nächsten Segments wechseln
+            showPreOnActive();
+            i = nextIdx;
             setCopy(i);
-            // nächsten forward Clip auf Frame 0 einfrieren:
-            setSrc(back, SEGMENTS[i].fwd);
-            await new Promise(r => {
-              back.addEventListener('loadeddata', r, { once:true });
-            });
-            await showFrame0(back);
-            // zurückfaden & Buttons frei
             fadeOff();
             busy = false; setButtons();
           };
         }
       
-        // rückwärts abspielen: rückwärts-Clip des VORHERIGEN Segments abspielen,
-        // danach auf dessen Frame 0 einfrieren
+        // Zurück: reverse-Clip des vorherigen Segments abspielen; parallel Freeze vorbereiten.
         async function playBackward(){
           if (busy || i === 0) return;
           busy = true; setButtons();
           fadeOn();
       
-          // Der zu spielende Clip ist der *reversed* des vorherigen Segments:
           const prevIdx = i - 1;
+      
+          // BACK: reverse Clip abspielen (sofort sichtbar)
           setSrc(back, SEGMENTS[prevIdx].rev);
-          await new Promise(r => {
-            back.addEventListener('loadeddata', r, { once:true });
-          });
-          await back.play().catch(()=>{});
-          swapToBack();
+          await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
+          try { await back.play(); } catch {}
+          swapTo(back);
+      
+          // parallel: PRE lädt den Freeze des (zukünftigen) aktiven Segments (prevIdx)
+          prepareFreezeOf(prevIdx).catch(()=>{});
       
           active.onended = async () => {
             try { active.pause(); } catch{}
-            // wir sind jetzt visuell „zurückgelaufen“
+            // nahtlos auf Freeze des prevIdx wechseln
+            showPreOnActive();
             i = prevIdx;
             setCopy(i);
-            // freeze auf Frame 0 des (jetzigen) forward-Clips
-            setSrc(back, SEGMENTS[i].fwd);
-            await new Promise(r => { back.addEventListener('loadeddata', r, { once:true }); });
-            await showFrame0(back);
             fadeOff();
             busy = false; setButtons();
           };
         }
       
-        // ==== Init ===============================================================
+        // ====== Init ==============================================================
         (async function init(){
-          // Start: Segment 0 auf Frame 0 anzeigen
           setCopy(0);
+      
+          // Startframe von Segment 0 auf active anzeigen (ohne Blinken)
           setSrc(active, SEGMENTS[0].fwd);
+          await Promise.race([ once(active,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
+          await primeAtStart(active);
           active.classList.add('active');
-          await new Promise(r => { active.addEventListener('loadeddata', r, { once:true }); });
-          await showFrame0(active);
           setButtons();
+      
+          // Preload direkt den Freeze für Segment 1 (falls vorhanden)
+          if (SEGMENTS.length > 1) prepareFreezeOf(1).catch(()=>{});
       
           // Events
           btnNext.addEventListener('click', playForward);
@@ -1675,6 +1693,7 @@
     </script>
   </body>
 </html>
+
 
 
 
