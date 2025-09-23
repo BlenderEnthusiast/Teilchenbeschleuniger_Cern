@@ -329,8 +329,75 @@
       }
 
 
-    </style>
-  </head>
+      </style>
+      <style>
+        .clip-card {
+          background: #141416;
+          border: 1px solid #242428;
+          border-radius: 18px;
+          padding: 18px;
+          max-width: 1000px;
+          margin: 40px auto;
+        }
+      
+        .clip-box {
+          display: grid;
+          grid-template-columns: 1.1fr 1.4fr;
+          gap: 24px;
+          align-items: stretch;
+        }
+        @media (max-width:900px){ .clip-box { grid-template-columns: 1fr; } }
+      
+        .clip-left { display:flex; flex-direction:column; gap:14px; }
+        .clip-controls { margin-top:auto; display:flex; gap:12px; }
+      
+        .step-btn {
+          padding:10px 32px;
+          min-width:160px;
+          border-radius:12px;
+          border:1px solid #242428;
+          background:#121215;
+          color:#fafafa;
+          font-weight:300;
+          font-size:12px;
+          cursor:pointer;
+          transition: background .25s ease, border-color .25s ease, opacity .25s ease;
+        }
+        .step-btn:hover { background:#1b1b20; border-color:#7dd3fc; }
+        .step-btn:disabled { opacity:.5; cursor:not-allowed; }
+      
+        .clip-right {
+          position:relative;
+          border:1px solid #242428;
+          border-radius:16px;
+          overflow:hidden;
+          background:#000;
+          aspect-ratio:1/1;
+          width:100%;
+        }
+      
+        /* zwei Videos übereinander + Crossfade */
+        .clip-right video {
+          position:absolute;
+          inset:0;
+          width:100%;
+          height:100%;
+          object-fit:contain;
+          background:#000;
+          opacity:0;
+          transition: opacity .25s ease;
+        }
+        .clip-right video.active { opacity:1; }
+      
+        /* optionaler dunkler Fader für harte Sprünge */
+        #vfader {
+          position:absolute; inset:0; pointer-events:none;
+          background:rgba(0,0,0,.35);
+          opacity:0; transition:opacity .25s ease;
+        }
+        #vfader.fade { opacity:1; }
+      </style>
+    </head>
   <body>
     <!-- ================= HEADER ================= -->
     <header class="header">
@@ -679,23 +746,26 @@
       <!-- ================= ATLAS ================= -->
       <section class="section" id="acceleration-chain">
         
-         <div class="clip-card">
+        <div class="clip-card">
           <div class="clip-box">
             <div class="clip-left">
-               <h2 id="clip-title">Segment 1</h2>
+              <h2 id="clip-title">Segment 1</h2>
               <p id="clip-text">Beschreibung Segment 1</p>
               <div class="clip-controls">
                 <button id="btn-prev" class="step-btn" type="button">◀ Zurück</button>
                 <button id="btn-next" class="step-btn" type="button">Weiter ▶</button>
               </div>
-             </div>
-          
-              <div class="clip-right">
-                <video id="clip-video" src="video.mp4" preload="auto" playsinline muted></video>
-                <div id="vfader"></div>
-              </div>
+            </div>
+        
+            <div class="clip-right">
+              <!-- zwei Layer für weiches Umschalten -->
+              <video id="vidA" playsinline muted preload="auto"></video>
+              <video id="vidB" playsinline muted preload="auto"></video>
+              <div id="vfader"></div>
             </div>
           </div>
+        </div>
+
         <div class="container">
           <h2 class="reveal">ATLAS</h2>
           <p class="reveal">Interaktive Mini-Demonstrationen (rein relativ skaliert – Platzhalterwerte).</p>
@@ -1444,6 +1514,163 @@
         v.addEventListener('loadedmetadata', () => freezeAtStart(i), { once:true });
         v.load();
         setCopy(); setButtons();
+      })();
+    </script>
+    <script>
+      (function(){
+        // ==== Konfiguration =======================================================
+        // 13 Segmente: forward: "1.mp4" … "13.mp4"
+        //              reverse: "1-1.mp4" … "13-13.mp4"
+        // Titel/Texts kannst du hier anpassen:
+        const SEGMENTS = Array.from({length:13}, (_,k) => {
+          const n = k+1;
+          return {
+            title: `Segment ${n}`,
+            text:  `Beschreibung Segment ${n}`,
+            fwd:   `${n}.mp4`,
+            rev:   `${n}-${n}.mp4`
+          };
+        });
+      
+        // ==== DOM ================================================================
+        const titleEl = document.getElementById('clip-title');
+        const textEl  = document.getElementById('clip-text');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+        const A = document.getElementById('vidA');
+        const B = document.getElementById('vidB');
+        const fader = document.getElementById('vfader');
+      
+        // aktive/back Video-Referenz (wir tauschen Rollen beim Crossfade)
+        let active = A;
+        let back   = B;
+        let i = 0;             // aktueller Segmentindex (0..12)
+        let busy = false;      // blockt doppelte Klicks während Umschalten
+      
+        // ==== Helpers ============================================================
+        function setCopy(idx){
+          titleEl.textContent = SEGMENTS[idx].title;
+          textEl.textContent  = SEGMENTS[idx].text;
+        }
+        function setButtons(){
+          btnPrev.disabled = busy || (i===0);
+          btnNext.disabled = busy || (i===SEGMENTS.length-1);
+        }
+        function fadeOn(){ fader.classList.add('fade'); }
+        function fadeOff(){ fader.classList.remove('fade'); }
+      
+        // Setzt SRC (fallback: falls du mehrere Formate brauchst, nutze <source>-Kinder)
+        function setSrc(videoEl, url){
+          // leere alte <source>-Kinder, falls vorhanden
+          while(videoEl.firstChild) videoEl.removeChild(videoEl.firstChild);
+          // einfache MP4-Quelle:
+          videoEl.src = url;
+          // Hinweis: Wenn du zusätzlich WebM liefern willst:
+          // const s1 = document.createElement('source'); s1.src = url.replace('.mp4','.webm'); s1.type='video/webm'; videoEl.appendChild(s1);
+          // const s2 = document.createElement('source'); s2.src = url; s2.type='video/mp4'; videoEl.appendChild(s2);
+          // videoEl.load();
+        }
+      
+        // Crossfade zwischen active und back
+        function swapToBack(){
+          back.classList.add('active');
+          active.classList.remove('active');
+          const tmp = active; active = back; back = tmp;
+        }
+      
+        async function showFrame0(videoEl){
+          // an den Anfang springen und pausieren
+          try { videoEl.pause(); } catch{}
+          try { videoEl.currentTime = 0; } catch{}
+          // manche Browser feuern 'seeked' nicht sofort, daher kleiner Guard:
+          await new Promise(r => {
+            const done = () => { videoEl.removeEventListener('seeked', done); r(); };
+            videoEl.addEventListener('seeked', done, { once:true });
+            // fallback timeout
+            setTimeout(done, 120);
+          });
+        }
+      
+        // ==== Aktionen ===========================================================
+        // vorwärts abspielen: aktuelles Segment forward bis Ende spielen,
+        // danach an Anfang des NÄCHSTEN Segments springen und dort stehen bleiben
+        async function playForward(){
+          if (busy || i >= SEGMENTS.length-1) return;
+          busy = true; setButtons();
+          fadeOn();
+      
+          // Lade/Preloade: back = aktuelles Vorwärts-Video
+          setSrc(back, SEGMENTS[i].fwd);
+          await back.play().catch(()=>{});
+          // sichtbarer Wechsel
+          swapToBack();
+      
+          active.onended = async () => {
+            // Ende des aktuellen Vorwärts-Clips
+            try { active.pause(); } catch{}
+            // Index erhöhen und next Frame 0 zeigen
+            i += 1;
+            setCopy(i);
+            // nächsten forward Clip auf Frame 0 einfrieren:
+            setSrc(back, SEGMENTS[i].fwd);
+            await new Promise(r => {
+              back.addEventListener('loadeddata', r, { once:true });
+            });
+            await showFrame0(back);
+            // zurückfaden & Buttons frei
+            fadeOff();
+            busy = false; setButtons();
+          };
+        }
+      
+        // rückwärts abspielen: rückwärts-Clip des VORHERIGEN Segments abspielen,
+        // danach auf dessen Frame 0 einfrieren
+        async function playBackward(){
+          if (busy || i === 0) return;
+          busy = true; setButtons();
+          fadeOn();
+      
+          // Der zu spielende Clip ist der *reversed* des vorherigen Segments:
+          const prevIdx = i - 1;
+          setSrc(back, SEGMENTS[prevIdx].rev);
+          await new Promise(r => {
+            back.addEventListener('loadeddata', r, { once:true });
+          });
+          await back.play().catch(()=>{});
+          swapToBack();
+      
+          active.onended = async () => {
+            try { active.pause(); } catch{}
+            // wir sind jetzt visuell „zurückgelaufen“
+            i = prevIdx;
+            setCopy(i);
+            // freeze auf Frame 0 des (jetzigen) forward-Clips
+            setSrc(back, SEGMENTS[i].fwd);
+            await new Promise(r => { back.addEventListener('loadeddata', r, { once:true }); });
+            await showFrame0(back);
+            fadeOff();
+            busy = false; setButtons();
+          };
+        }
+      
+        // ==== Init ===============================================================
+        (async function init(){
+          // Start: Segment 0 auf Frame 0 anzeigen
+          setCopy(0);
+          setSrc(active, SEGMENTS[0].fwd);
+          active.classList.add('active');
+          await new Promise(r => { active.addEventListener('loadeddata', r, { once:true }); });
+          await showFrame0(active);
+          setButtons();
+      
+          // Events
+          btnNext.addEventListener('click', playForward);
+          btnPrev.addEventListener('click', playBackward);
+          window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); playForward(); }
+            if (e.key === 'ArrowLeft') { e.preventDefault(); playBackward(); }
+          });
+        })();
       })();
     </script>
   </body>
