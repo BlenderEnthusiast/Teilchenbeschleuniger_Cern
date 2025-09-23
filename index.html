@@ -308,14 +308,7 @@
         aspect-ratio:1/1;   /* square player */
         width:100%;
       }
-      #clip-video {
-        position:absolute;
-        inset:0;
-        width:100%;
-        height:100%;
-        object-fit:contain;
-        background:#000;
-      }
+
       #vfader {
         position:absolute;
         inset:0;
@@ -1586,11 +1579,16 @@
           try { videoEl.currentTime = 0; } catch{}
         }
       
-        function swapTo(el){ // Crossfade sichtbare Layer
+        function swapTo(el){
+          // el = der Layer, der sichtbar werden soll
           el.classList.add('active');
           active.classList.remove('active');
-          const tmp = active; active = el; el = tmp; // not used
+        
+          const prev = active; // das war vorher sichtbar
+          active = el;         // jetzt ist el sichtbar
+          back   = prev;       // back ist nun der andere Layer (frei zum Vorladen)
         }
+
       
         async function prepareFreezeOf(idx){
           // PRE lädt den Forward-Clip des Zielsegments auf Frame 0
@@ -1693,6 +1691,7 @@
     </script>
   </body>
 </html>
+
 
 
 
