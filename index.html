@@ -1613,14 +1613,30 @@
         async function playForward(){
           if (busy || i >= SEGMENTS.length-1) return;
           busy = true; setButtons();
-          // fadeOn();  <-- ENTFERNEN
         
+          const nextIdx = i + 1;
+        
+          // === letzter Index? ===
+          if (nextIdx === SEGMENTS.length-1) {
+            // wir sind beim letzten Segment: einfach bis zum Ende spielen und stehenbleiben
+            try { await active.play(); } catch {}
+            active.onended = () => {
+              // am allerletzten Frame einfrieren
+              try { active.pause(); } catch {}
+              try { active.currentTime = active.duration; } catch {}
+              i = nextIdx;
+              setCopy(i);
+              busy = false; setButtons();
+            };
+            return;
+          }
+        
+          // --- normaler Übergang mit PRE ---
           setSrc(back, SEGMENTS[i].fwd);
           await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
           try { await back.play(); } catch {}
           swapTo(back);
         
-          const nextIdx = i+1;
           prepareFreezeOf(nextIdx).catch(()=>{});
         
           active.onended = async () => {
@@ -1628,10 +1644,10 @@
             showPreOnActive();
             i = nextIdx;
             setCopy(i);
-            // fadeOff(); <-- ENTFERNEN
             busy = false; setButtons();
           };
         }
+
         
         async function playBackward(){
           if (busy || i === 0) return;
@@ -1682,6 +1698,7 @@
     </script>
   </body>
 </html>
+
 
 
 
