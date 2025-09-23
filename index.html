@@ -1249,18 +1249,23 @@
 
     </script>
 
+
     <script>
       (function(){
-        // ==== Your stops (frames) ====
+        // ==== Stops (frames) ====
         const STOPS = [0,130,230,320,440,600,760,830,930,1020,1100,1210,1310,1420];
-        const FRAMES = STOPS.slice(0,-1).map((s,idx)=>[
-          s, STOPS[idx+1], `Segment ${idx+1}`, `Beschreibung Segment ${idx+1}`
+        // Segments are [startFrame, endFrame, title, text]
+        const FRAMES = STOPS.slice(0, -1).map((s, idx) => [
+          s, STOPS[idx + 1], `Segment ${idx + 1}`, `Beschreibung Segment ${idx + 1}`
         ]);
-        const FPS = 30, EPS = 0.02;
+      
+        const FPS = 30;
+        const FRAME = 1 / FPS;
+        const EPS = 0.002; // tiny guard to avoid frame 0 quirks
         const toT = f => f / FPS;
       
         // DOM
-        const v = document.getElementById('clip-video');
+        const v       = document.getElementById('clip-video');
         const prevBtn = document.getElementById('btn-prev');
         const nextBtn = document.getElementById('btn-next');
         const titleEl = document.getElementById('clip-title');
@@ -1269,102 +1274,150 @@
       
         // State
         let i = 0;
-        let reversing = false;
+        let busy = false;
+        let forwardTimer = null;
       
         // Helpers
-        const when = ev => new Promise(res=>v.addEventListener(ev,res,{once:true}));
         function fadeOn(){ fader.classList.add('fade'); }
         function fadeOff(){ fader.classList.remove('fade'); }
+        const once = (el, ev) => new Promise(res => el.addEventListener(ev, res, { once:true }));
+      
         async function seekTo(t){
           fadeOn();
+          v.pause();
           v.currentTime = Math.max(EPS, t);
-          await when('seeked');
-          requestAnimationFrame(()=>fadeOff());
+          // Wait just until browser says we're at that position
+          await once(v, 'seeked');
+          // Let a frame paint, then fade out
+          requestAnimationFrame(() => fadeOff());
         }
+      
         function setCopy(){ titleEl.textContent = FRAMES[i][2]; textEl.textContent = FRAMES[i][3]; }
-        function setButtons(){ prevBtn.disabled = (i===0); nextBtn.disabled = (i>=FRAMES.length-1); }
+        function setButtons(){
+          prevBtn.disabled = (i === 0) || busy;
+          nextBtn.disabled = (i >= FRAMES.length - 1) || busy;
+        }
       
         async function freezeAtStart(idx){
-          v.pause();
           await seekTo(toT(FRAMES[idx][0]) + EPS);
         }
       
+        // ------- Forward (play to endT precisely) -------
         async function playThenFreezeNext(idx){
+          if (busy) return;
+          busy = true; setButtons();
+      
           const startT = toT(FRAMES[idx][0]) + EPS;
           const endT   = toT(FRAMES[idx][1]) - EPS;
       
           await seekTo(startT);
-          const onTick = () => {
-            if (v.currentTime >= endT) {
-              v.pause();
-              v.removeEventListener('timeupdate', onTick);
-              if (idx < FRAMES.length - 1) {
-                i = idx + 1;
-                freezeAtStart(i).then(()=>{ setCopy(); setButtons(); });
-              } else {
-                setButtons();
+      
+          // Use requestVideoFrameCallback if supported
+          if ('requestVideoFrameCallback' in v) {
+            let stop = false;
+            const onFrame = () => {
+              if (stop) return;
+              // Stop exactly at endT
+              if (v.currentTime >= endT) {
+                v.pause();
+                // snap to exact boundary to avoid “half frame”
+                v.currentTime = endT;
+                stop = true;
+                v.requestVideoFrameCallback(() => {
+                  // advance to next segment and freeze at its start
+                  if (idx < FRAMES.length - 1) {
+                    i = idx + 1;
+                    freezeAtStart(i).then(()=>{ setCopy(); busy = false; setButtons(); });
+                  } else {
+                    busy = false; setButtons();
+                  }
+                });
+                return;
               }
-            }
-          };
-          v.addEventListener('timeupdate', onTick);
-          try{ await v.play(); }catch{}
+              v.requestVideoFrameCallback(onFrame);
+            };
+            // start playback then frame-watch
+            try { await v.play(); } catch {}
+            v.requestVideoFrameCallback(onFrame);
+          } else {
+            // Fallback: high-rate interval watcher
+            try { await v.play(); } catch {}
+            forwardTimer && clearInterval(forwardTimer);
+            forwardTimer = setInterval(() => {
+              if (v.currentTime >= endT) {
+                clearInterval(forwardTimer);
+                v.pause();
+                v.currentTime = endT;
+                // advance to next
+                if (idx < FRAMES.length - 1) {
+                  i = idx + 1;
+                  freezeAtStart(i).then(()=>{ setCopy(); busy = false; setButtons(); });
+                } else {
+                  busy = false; setButtons();
+                }
+              }
+            }, 16); // ~60Hz
+          }
         }
       
+        // ------- Reverse (manual frame stepping, no awaiting in loop) -------
         async function reversePrev(){
-          if (i===0 || reversing) return;
+          if (busy || i === 0) return;
+          busy = true; setButtons();
+      
           const prevIdx = i - 1;
           const startT = toT(FRAMES[prevIdx][0]) + EPS;
           const endT   = toT(FRAMES[prevIdx][1]) - EPS;
       
+          // Jump to end of previous
           await seekTo(endT);
       
-          reversing = true;
-          const step = 1 / FPS;
+          // Step backwards smoothly without awaiting 'seeked' each time
           const useVFC = 'requestVideoFrameCallback' in v;
+          const stepBack = () => {
+            const t = v.currentTime - FRAME;
+            if (t <= startT + 0.0005) {
+              v.currentTime = startT + EPS;
+              // one more tick to paint the frame
+              if (useVFC) {
+                v.requestVideoFrameCallback(() => { i = prevIdx; setCopy(); busy = false; setButtons(); });
+              } else {
+                requestAnimationFrame(() => { i = prevIdx; setCopy(); busy = false; setButtons(); });
+              }
+              return;
+            }
+            v.currentTime = t;
+            if (useVFC) {
+              v.requestVideoFrameCallback(stepBack);
+            } else {
+              requestAnimationFrame(stepBack);
+            }
+          };
       
           if (useVFC) {
-            const tick = async () => {
-              if (!reversing) return;
-              const t = v.currentTime - step;
-              if (t <= startT) {
-                await seekTo(startT);
-                reversing = false; i = prevIdx; setCopy(); setButtons(); return;
-              }
-              v.currentTime = t; await when('seeked');
-              v.requestVideoFrameCallback(tick);
-            };
-            v.requestVideoFrameCallback(tick);
+            v.requestVideoFrameCallback(stepBack);
           } else {
-            const loop = async () => {
-              if (!reversing) return;
-              const t = v.currentTime - step;
-              if (t <= startT) {
-                await seekTo(startT);
-                reversing = false; i = prevIdx; setCopy(); setButtons(); return;
-              }
-              v.currentTime = t; await when('seeked');
-              requestAnimationFrame(loop);
-            };
-            loop();
+            requestAnimationFrame(stepBack);
           }
         }
       
         // Wire up
-        nextBtn.addEventListener('click', ()=>playThenFreezeNext(i));
+        nextBtn.addEventListener('click', () => playThenFreezeNext(i));
         prevBtn.addEventListener('click', reversePrev);
-        window.addEventListener('keydown', e=>{
-          if (e.key==='ArrowLeft') { e.preventDefault(); reversePrev(); }
-          if (e.key==='Enter' || e.key==='ArrowRight') { e.preventDefault(); playThenFreezeNext(i); }
+        window.addEventListener('keydown', e => {
+          if (e.key === 'ArrowLeft')  { e.preventDefault(); reversePrev(); }
+          if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); playThenFreezeNext(i); }
         });
       
         // Init
-        v.addEventListener('loadedmetadata', ()=>freezeAtStart(i), {once:true});
+        v.addEventListener('loadedmetadata', () => freezeAtStart(i), { once:true });
         v.load();
         setCopy(); setButtons();
       })();
-     </script>
+    </script>
   </body>
 </html>
+
 
 
 
