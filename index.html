@@ -1613,58 +1613,49 @@
         async function playForward(){
           if (busy || i >= SEGMENTS.length-1) return;
           busy = true; setButtons();
-          fadeOn();
-      
-          // akt. Segment forward sichtbar machen & starten
+          // fadeOn();  <-- ENTFERNEN
+        
           setSrc(back, SEGMENTS[i].fwd);
           await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
-          // sofort losspielen (wir crossfaden in 1 Frame rüber)
           try { await back.play(); } catch {}
           swapTo(back);
-      
-          // parallel: PRE lädt den Freeze des nächsten Segments
+        
           const nextIdx = i+1;
           prepareFreezeOf(nextIdx).catch(()=>{});
-      
+        
           active.onended = async () => {
             try { active.pause(); } catch{}
-            // am Ende direkt zum Freeze des nächsten Segments wechseln
             showPreOnActive();
             i = nextIdx;
             setCopy(i);
-            fadeOff();
+            // fadeOff(); <-- ENTFERNEN
             busy = false; setButtons();
           };
         }
-      
-        // Zurück: reverse-Clip des vorherigen Segments abspielen; parallel Freeze vorbereiten.
+        
         async function playBackward(){
           if (busy || i === 0) return;
           busy = true; setButtons();
-          fadeOn();
-      
+          // fadeOn();  <-- ENTFERNEN
+        
           const prevIdx = i - 1;
-      
-          // BACK: reverse Clip abspielen (sofort sichtbar)
           setSrc(back, SEGMENTS[prevIdx].rev);
           await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
           try { await back.play(); } catch {}
           swapTo(back);
-      
-          // parallel: PRE lädt den Freeze des (zukünftigen) aktiven Segments (prevIdx)
+        
           prepareFreezeOf(prevIdx).catch(()=>{});
-      
+        
           active.onended = async () => {
             try { active.pause(); } catch{}
-            // nahtlos auf Freeze des prevIdx wechseln
             showPreOnActive();
             i = prevIdx;
             setCopy(i);
-            fadeOff();
+            // fadeOff(); <-- ENTFERNEN
             busy = false; setButtons();
           };
         }
-      
+
         // ====== Init ==============================================================
         (async function init(){
           setCopy(0);
@@ -1691,6 +1682,7 @@
     </script>
   </body>
 </html>
+
 
 
 
