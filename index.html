@@ -288,7 +288,31 @@
       }
       .seq-player video{position:absolute; inset:0; width:100%; height:100%;}
 
+      /* === Clip box layout === */
+      .clip-box{
+        display:grid;
+        grid-template-columns: 1.1fr 1.4fr; /* left text / right video */
+        gap:24px;
+        align-items:stretch;
+      }
+      .clip-left{ display:flex; flex-direction:column; gap:14px; }
+      .clip-controls{ margin-top:auto; display:flex; gap:12px; }
       
+      .clip-right{ position:relative; border:1px solid var(--line); border-radius:16px; overflow:hidden; background:#000; }
+      .clip-video{
+        position:absolute; inset:0;
+        width:100%; height:100%;
+        object-fit:contain;
+        opacity:0; transition:opacity .2s ease;
+        background:#000; /* hides brief decode gaps */
+      }
+      .clip-video.active{ opacity:1; }
+      
+      /* Smaller screens */
+      @media (max-width: 900px){
+        .clip-box{ grid-template-columns: 1fr; }
+      }
+
 
     </style>
   </head>
@@ -640,29 +664,25 @@
       <!-- ================= ATLAS ================= -->
       <section class="section" id="acceleration-chain">
 
-        <div class="container">
-          <div class="seq">
-            <div class="seq-left">
-              <h2 id="seq-title">Titel</h2>
-              <p id="seq-text" class="muted">Beschreibung …</p>
-              <div class="seq-controls">
-                <button class="seq-btn" id="seq-prev" type="button">◀ Zurück</button>
-                <button class="seq-btn primary" id="seq-next" type="button">Weiter ▶</button>
-              </div>
-            </div>
+
+        <div class="clip-box container">
+          <div class="clip-left">
+            <h2 id="clip-title">Clip 1</h2>
+            <p id="clip-text">Beschreibung für Clip 1</p>
       
-            <div class="seq-right">
-              <div class="seq-player">
-                <video id="seq-video"
-                       playsinline
-                       preload="metadata"
-                       crossorigin="anonymous"
-                       style="display:block;width:100%;height:100%;object-fit:cover">
-                </video>
-              </div>
+            <div class="clip-controls">
+              <button id="btn-prev" class="step-btn" type="button">◀ Zurück</button>
+              <button id="btn-next" class="step-btn" type="button">Weiter ▶</button>
             </div>
           </div>
+      
+          <div class="clip-right">
+            <!-- Two videos stacked for seamless swap -->
+            <video id="vidA" class="clip-video" preload="auto" playsinline muted></video>
+            <video id="vidB" class="clip-video" preload="auto" playsinline muted></video>
+          </div>
         </div>
+
 
         <div class="container">
           <h2 class="reveal">ATLAS</h2>
@@ -1344,8 +1364,206 @@
       })();
 
     </script>
+    <script>
+      (function(){
+        // ------------- DATA: your 13 clips -----------------
+        const CLIPS = Array.from({length:13}, (_,i) => ({
+          src: `${i+1}.mp4`,           // <-- statt "clips/${i+1}.mp4"
+          title: `Clip ${i+1}`,
+          text:  `Beschreibung für Clip ${i+1}`
+        }));
+
+      
+        // ------------- DOM refs ----------------------------
+        const titleEl = document.getElementById('clip-title');
+        const textEl  = document.getElementById('clip-text');
+        const prevBtn = document.getElementById('btn-prev');
+        const nextBtn = document.getElementById('btn-next');
+      
+        const vidA = document.getElementById('vidA');
+        const vidB = document.getElementById('vidB');
+        const videos = { A: vidA, B: vidB };
+        let activeKey = 'A'; // which one is on top
+        vidA.classList.add('active'); // start with A visible
+      
+        // State
+        let index = 0;          // current clip index
+        let reversing = false;  // flag to cancel reverse loop if needed
+      
+        // ------------- helpers -----------------------------
+        const activeVid = () => videos[activeKey];
+        const backVid   = () => videos[activeKey === 'A' ? 'B' : 'A'];
+      
+        const wait = (ms)=> new Promise(r=>setTimeout(r,ms));
+        function once(el, ev){ return new Promise(res => el.addEventListener(ev, res, {once:true})); }
+        function whenCanShowFirstFrame(v) {
+          // 'loadeddata' -> first frame is available
+          return new Promise(res => {
+            if (v.readyState >= 2) res();
+            else v.addEventListener('loadeddata', res, {once:true});
+          });
+        }
+        function whenMetadata(v){
+          return new Promise(res => {
+            if (!isNaN(v.duration) && v.duration > 0) res();
+            else v.addEventListener('loadedmetadata', res, {once:true});
+          });
+        }
+        function whenSeeked(v){
+          return new Promise(res => {
+            v.addEventListener('seeked', res, {once:true});
+          });
+        }
+        function setSrc(v, src){
+          if (v.getAttribute('src') !== src) {
+            v.src = src;
+          }
+        }
+        function updateCopy(i){
+          titleEl.textContent = CLIPS[i].title;
+          textEl.textContent  = CLIPS[i].text;
+        }
+        function setButtons(){
+          prevBtn.disabled = (index === 0);
+          nextBtn.disabled = (index >= CLIPS.length - 1);
+        }
+        function crossfadeToBack(){
+          // bring backVid to front via class swap
+          const a = activeVid(), b = backVid();
+          b.classList.add('active');
+          a.classList.remove('active');
+          activeKey = (activeKey === 'A' ? 'B' : 'A');
+        }
+      
+        async function showFirstFrameOnBack(i){
+          const v = backVid();
+          setSrc(v, CLIPS[i].src);
+          v.pause();
+          await whenMetadata(v);
+          // Some browsers need a tiny >0 time to show first frame reliably
+          v.currentTime = 0.001;
+          await whenSeeked(v);
+          await whenCanShowFirstFrame(v);
+        }
+      
+        async function showLastFrameOnBack(i){
+          // Load and seek to very end for reverse start
+          const v = backVid();
+          setSrc(v, CLIPS[i].src);
+          v.pause();
+          await whenMetadata(v);
+          const endT = Math.max(0, v.duration - 0.04); // a tad before exact end
+          v.currentTime = endT;
+          await whenSeeked(v);
+          await whenCanShowFirstFrame(v);
+        }
+      
+        async function reversePlayToStart(v){
+          // Smooth reverse by stepping currentTime backwards
+          reversing = true;
+          const frame = 1/30; // assume ~30fps; tweak if needed
+          // Prefer requestVideoFrameCallback for smoothness
+          if ('requestVideoFrameCallback' in v) {
+            const step = async ()=> {
+              if (!reversing) return;
+              let t = v.currentTime - frame;
+              if (t <= 0.001) {
+                v.currentTime = 0.001;
+                await whenSeeked(v);
+                reversing = false;
+                return;
+              }
+              v.currentTime = t;
+              await whenSeeked(v);
+              v.requestVideoFrameCallback(step);
+            };
+            v.requestVideoFrameCallback(step);
+          } else {
+            // Fallback: timer-based stepping
+            const iv = setInterval(async ()=>{
+              if (!reversing) { clearInterval(iv); return; }
+              let t = v.currentTime - frame;
+              if (t <= 0.001) {
+                clearInterval(iv);
+                v.currentTime = 0.001;
+                await whenSeeked(v);
+                reversing = false;
+                return;
+              }
+              v.currentTime = t;
+            }, 33);
+          }
+          // Wait until reversing clears
+          while (reversing) { await wait(20); }
+        }
+      
+        async function init(){
+          updateCopy(index);
+          setButtons();
+      
+          // Prepare visible video (active) to first frame of clip 1
+          const v = activeVid();
+          setSrc(v, CLIPS[index].src);
+          v.pause();
+          await whenMetadata(v);
+          v.currentTime = 0.001; // show first frame
+          await whenSeeked(v);
+        }
+      
+        // ------------- Controls -----------------------------
+        nextBtn.addEventListener('click', async ()=>{
+          if (index >= CLIPS.length - 1) return;
+      
+          // Disable while acting
+          nextBtn.disabled = true; prevBtn.disabled = true;
+      
+          // 1) Play current to end
+          const cur = activeVid();
+          try { await cur.play(); } catch {}
+          await once(cur, 'ended');
+      
+          // 2) Prepare next on back, at first frame (paused)
+          const nextIndex = index + 1;
+          await showFirstFrameOnBack(nextIndex);
+      
+          // 3) Swap without black (crossfade)
+          crossfadeToBack();
+      
+          // 4) Update state
+          index = nextIndex;
+          updateCopy(index);
+          setButtons();
+        });
+      
+        prevBtn.addEventListener('click', async ()=>{
+          if (index <= 0) return;
+      
+          nextBtn.disabled = true; prevBtn.disabled = true;
+      
+          // 1) Prepare previous on back, seek to end
+          const prevIndex = index - 1;
+          await showLastFrameOnBack(prevIndex);
+      
+          // 2) Crossfade to previous (we are now showing the end of previous)
+          crossfadeToBack();
+      
+          // 3) Reverse-play to start
+          const v = activeVid();
+          await reversePlayToStart(v);
+      
+          // 4) Arrived at first frame; update state
+          index = prevIndex;
+          updateCopy(index);
+          setButtons();
+        });
+      
+        // Kick off
+        init();
+      })();
+    </script>
   </body>
 </html>
+
 
 
 
