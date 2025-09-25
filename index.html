@@ -388,6 +388,89 @@
           opacity:0; transition:opacity .18s ease;
         }
         #vfader.fade { opacity:1; }
+        /* === ATLAS: Freeflow Layout ===================================== */
+        .atlas-wrap{
+          display:grid;
+          grid-template-columns: minmax(320px, 520px) 1fr;
+          gap:28px;
+          align-items:start;
+        }
+        @media (max-width: 980px){
+          .atlas-wrap{ grid-template-columns: 1fr; }
+        }
+        
+        .atlas-left{
+          position: sticky;
+          top: 96px; /* unterhalb deiner Sticky-Headerhöhe */
+        }
+        
+        .atlas-video{
+          position:relative;
+          border:1px solid var(--line);
+          border-radius:16px;
+          overflow:hidden;
+          background:#000;
+          width:100%;
+          aspect-ratio: 16 / 9;
+        }
+        .atlas-video video{
+          position:absolute; inset:0;
+          width:100%; height:100%;
+          object-fit:contain;
+          opacity:0; transition: opacity .22s ease;
+          background:#000;
+        }
+        .atlas-video video.active{ opacity:1; }
+        
+        #vfader{
+          position:absolute; inset:0; pointer-events:none;
+          background:rgba(0,0,0,.28); opacity:0; transition:opacity .18s ease;
+        }
+        #vfader.fade{ opacity:1; }
+        
+        .atlas-hint{
+          margin-top:10px;
+          color:var(--muted);
+          font-size:12px;
+          border:1px dashed var(--line);
+          border-radius:10px;
+          padding:8px 10px;
+        }
+        
+        /* Screenreader-only helper */
+        .sr-only{
+          position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+          overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+        }
+        
+        /* === Cards im Feed (rechts) ===================================== */
+        .atlas-feed{ display:flex; flex-direction:column; gap:14px; }
+        
+        .seg-card{
+          background:var(--card);
+          border:1px solid var(--line);
+          border-radius:14px;
+          padding:16px;
+        }
+        .seg-title{
+          margin:0 0 6px 0;
+          font-size:16px; font-weight:700; letter-spacing:-.01em;
+        }
+        .seg-text{
+          margin:0; color:var(--muted); font-size:14px; line-height:1.6;
+        }
+        
+        /* Optional: leichter “Anheften”-Effekt für die neu hinzugefügte Karte */
+        .seg-card.new{
+          outline: 2px solid rgba(125,211,252,.35);
+          box-shadow: 0 8px 22px rgba(134,225,255,.12);
+          animation: segPop .5s ease-out forwards;
+        }
+        @keyframes segPop{
+          0%{ transform: translateY(4px); opacity:.7; }
+          100%{ transform:none; opacity:1; }
+        }
+
       </style>
     </head>
   <body>
@@ -739,35 +822,37 @@
       <section class="section" id="acceleration-chain">
         <div class="container">
           <h2 class="reveal">A Toroidal LHC Apparatus</h2>
-          <p class="reveal">Eine Einführung in einen der 4 Detektoren des LHCs, Atlas</p>
+          <p class="reveal">Eine Einführung in einen der 4 Detektoren des LHCs, ATLAS</p>
         </div>
-        <div class="clip-card">
-          <div class="clip-box">
-            <div class="clip-left">
-              <h2 id="clip-title">Segment 1</h2>
-              <p id="clip-text">Beschreibung Segment 1</p>
-              <div class="clip-controls">
-                <button id="btn-prev" class="step-btn" type="button">◀ Zurück</button>
-                <button id="btn-next" class="step-btn" type="button">Weiter ▶</button>
-              </div>
-            </div>
-        
-            <div class="clip-right">
+      
+        <div class="atlas-wrap container">
+          <!-- Sticky Video (links) -->
+          <aside class="atlas-left">
+            <div class="atlas-video">
               <!-- sichtbare Layer -->
               <video id="vidA" playsinline muted preload="auto"></video>
               <video id="vidB" playsinline muted preload="auto"></video>
-        
               <!-- unsichtbarer Preloader -->
               <video id="vidPre" playsinline muted preload="auto" style="display:none"></video>
-        
+              <!-- dezenter Overlay-Fader (bei Sprüngen fast unsichtbar) -->
               <div id="vfader"></div>
             </div>
-          </div>
+      
+            <div class="atlas-hint" aria-hidden="true">
+              🖱️ Zum Fortfahren <strong>scrollen</strong> · Zurück <strong>nach oben</strong> scrollen
+            </div>
+            <p class="sr-only" id="clip-instructions">
+              Scrolle nach unten, um das nächste Segment abzuspielen. Scrolle nach oben, um das vorherige Segment abzuspielen.
+            </p>
+          </aside>
+      
+          <!-- Feed (rechts): Segmente stapeln sich -->
+          <main id="atlas-feed" class="atlas-feed" aria-labelledby="clip-instructions">
+            <!-- Der erste Segment-Card wird per JS eingefügt -->
+          </main>
         </div>
-
-
-
       </section>
+
   
       <!-- ================= KOLLISIONEN ================= -->
       <section class="section" id="collision-detector">
@@ -1515,189 +1600,216 @@
     </script>
     <script>
       (function(){
-        // ====== Pfad & Segmente ===================================================
-        const BASE = 'ATLAS/'; // <- dein Ordner
+        // ====== Segmente definieren ================================================
+        const BASE = 'ATLAS/'; // Ordner mit deinen Clips
         const SEGMENTS = Array.from({length:14}, (_,k) => {
           const n = k+1;
           return {
             title: `Segment ${n}`,
             text:  `Beschreibung Segment ${n}`,
-            fwd:   `${BASE}${n}.mp4`,
-            rev:   `${BASE}${n}-${n}.mp4`
+            fwd:   `${BASE}${n}.mp4`,        // vorwärts
+            rev:   `${BASE}${n}-${n}.mp4`    // rückwärts (dein rückwärts gerenderter Clip)
           };
         });
       
-        // ====== DOM ===============================================================
-        const titleEl = document.getElementById('clip-title');
-        const textEl  = document.getElementById('clip-text');
-        const btnPrev = document.getElementById('btn-prev');
-        const btnNext = document.getElementById('btn-next');
+        // ====== DOM ================================================================
+        const feed   = document.getElementById('atlas-feed');
+        const A      = document.getElementById('vidA');
+        const B      = document.getElementById('vidB');
+        const PRE    = document.getElementById('vidPre');
+        const fader  = document.getElementById('vfader');
+        const section= document.getElementById('acceleration-chain');
       
-        const A   = document.getElementById('vidA');   // sichtbarer Layer
-        const B   = document.getElementById('vidB');   // sichtbarer Layer
-        const PRE = document.getElementById('vidPre'); // unsichtbarer Preload-Buffer
-        const fader = document.getElementById('vfader');
+        // ====== State ==============================================================
+        let active = A, back = B;
+        let i = 0;          // aktueller Segmentindex (0-basiert)
+        let busy = false;   // blockt während Übergängen
+        let wheelAccum = 0;
+        let lastStep = 0;
+        const THRESH = 80;       // Scroll-Pixel pro Schritt
+        const COOLDOWN_MS = 450; // Min. Zeit zwischen Schritten
       
-        let active = A; // aktuell sichtbares Video
-        let back   = B; // zweiter Layer
-        let i = 0;      // aktueller Segmentindex
-        let busy = false;
-      
-        // ====== Helpers ===========================================================
+        // ====== Utils ==============================================================
         const once = (el, ev, opts={}) => new Promise(res => el.addEventListener(ev, res, { once:true, ...opts }));
       
-        function setCopy(idx){
-          titleEl.textContent = SEGMENTS[idx].title;
-          textEl.textContent  = SEGMENTS[idx].text;
+        function setSrc(videoEl, url){
+          while(videoEl.firstChild) videoEl.removeChild(videoEl.firstChild);
+          videoEl.removeAttribute('src');
+          videoEl.src = url;
         }
-        function setButtons(){
-          btnPrev.disabled = busy || (i===0);
-          btnNext.disabled = busy || (i===SEGMENTS.length-1);
+        async function primeAtStart(videoEl){
+          try{ videoEl.pause(); }catch{}
+          videoEl.currentTime = 0;
+          await Promise.race([ once(videoEl,'seeked'), new Promise(r=>setTimeout(r,120)) ]);
+          try{ await videoEl.play(); }catch{}
+          await Promise.race([ once(videoEl,'timeupdate'), new Promise(r=>setTimeout(r,80)) ]);
+          try{ videoEl.pause(); }catch{}
+          try{ videoEl.currentTime = 0; }catch{}
+        }
+        function swapTo(el){
+          el.classList.add('active');
+          active.classList.remove('active');
+          const prev = active;
+          active = el; back = prev;
         }
         function fadeOn(){ fader.classList.add('fade'); }
         function fadeOff(){ fader.classList.remove('fade'); }
       
-        function setSrc(videoEl, url){
-          // vorhandene <source>-Kinder leeren
-          while(videoEl.firstChild) videoEl.removeChild(videoEl.firstChild);
-          videoEl.removeAttribute('src'); // sichergehen
-          // einfache Quelle (MP4). Falls du WebM mitliefern willst: hier 2 <source> anhängen.
-          videoEl.src = url;
+        function isAtlasInView(){
+          if (!section) return false;
+          const r = section.getBoundingClientRect();
+          const vh = window.innerHeight || document.documentElement.clientHeight;
+          const visible = Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0));
+          const ratio = visible / Math.min(vh, Math.max(1, r.height));
+          return ratio > 0.35;
         }
       
-        async function primeAtStart(videoEl){
-          // an den Anfang -> kurz anspielen -> pausieren (Decoder warm)
-          try { videoEl.pause(); } catch{}
-          videoEl.currentTime = 0;
-          // Warten bis wirklich seeked
-          await Promise.race([ once(videoEl,'seeked'), new Promise(r=>setTimeout(r,120)) ]);
-          try { await videoEl.play(); } catch {} // muted+inline sollte gehen
-          // ein Frame „ziehen“
-          await Promise.race([ once(videoEl,'timeupdate'), new Promise(r=>setTimeout(r,80)) ]);
-          try { videoEl.pause(); } catch {}
-          // zurück auf frame 0 „snappen“ (optisch identisch)
-          try { videoEl.currentTime = 0; } catch{}
+        // Karte in den Feed legen (ohne alten zu verändern)
+        function appendCard(idx, markNew=true){
+          const seg = SEGMENTS[idx];
+          const card = document.createElement('article');
+          card.className = 'seg-card' + (markNew ? ' new' : '');
+          card.innerHTML = `
+            <h3 class="seg-title">${seg.title}</h3>
+            <p class="seg-text">${seg.text}</p>
+          `;
+          feed.appendChild(card);
+          // Nach kurzer Zeit “new”-Highlight entfernen
+          setTimeout(()=>card.classList.remove('new'), 800);
+          return card;
         }
       
-        function swapTo(el){
-          // el = der Layer, der sichtbar werden soll
-          el.classList.add('active');
-          active.classList.remove('active');
-        
-          const prev = active; // das war vorher sichtbar
-          active = el;         // jetzt ist el sichtbar
-          back   = prev;       // back ist nun der andere Layer (frei zum Vorladen)
+        // Letzte Karte entfernen (für Rückwärts)
+        function removeLastCard(){
+          const last = feed.lastElementChild;
+          if(last) last.remove();
         }
-
       
         async function prepareFreezeOf(idx){
-          // PRE lädt den Forward-Clip des Zielsegments auf Frame 0
           setSrc(PRE, SEGMENTS[idx].fwd);
-          // warten bis Daten da
           await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
-          await primeAtStart(PRE); // Decoder warm
+          await primeAtStart(PRE);
         }
-      
         function showPreOnActive(){
-          // PRE-Inhalt auf BACK kopieren (Quelle teilen) und sichtbar machen
-          // Direkt PRE sichtbar machen wäre auch ok, aber wir halten PRE unsichtbar.
           setSrc(back, PRE.currentSrc || PRE.src);
-          // Wir sind sicher: PRE ist bei 0; kopiere state
-          try { back.currentTime = PRE.currentTime; } catch{}
+          try{ back.currentTime = PRE.currentTime; }catch{}
           back.pause();
           swapTo(back);
         }
       
-        // ====== Aktionen ==========================================================
-        // Weiter: akt. Forward abspielen; währenddessen nächsten Forward auf PRE einfrieren.
+        // ====== Vorwärts: spiele aktuelles Segment; am Ende friere nächstes ein & füge Card hinzu
         async function playForward(){
           if (busy || i >= SEGMENTS.length-1) return;
-          busy = true; setButtons();
-        
+          busy = true;
+      
           const nextIdx = i + 1;
-        
-          // === letzter Index? ===
-          if (nextIdx === SEGMENTS.length-1) {
-            // wir sind beim letzten Segment: einfach bis zum Ende spielen und stehenbleiben
-            try { await active.play(); } catch {}
-            active.onended = () => {
-              // am allerletzten Frame einfrieren
-              try { active.pause(); } catch {}
-              try { active.currentTime = active.duration; } catch {}
-              i = nextIdx;
-              setCopy(i);
-              busy = false; setButtons();
-            };
-            return;
-          }
-        
-          // --- normaler Übergang mit PRE ---
+      
+          // akt. Vorwärtsclip abspielen
           setSrc(back, SEGMENTS[i].fwd);
           await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
-          try { await back.play(); } catch {}
+          try{ await back.play(); }catch{}
           swapTo(back);
-        
+      
+          // währenddessen nächsten Startframe vorbereiten
           prepareFreezeOf(nextIdx).catch(()=>{});
-        
+      
+          // wenn Clip endet: neues Segment “anheften”
           active.onended = async () => {
-            try { active.pause(); } catch{}
-            showPreOnActive();
+            try{ active.pause(); }catch{}
+            showPreOnActive();       // friere auf Startframe von nextIdx ein
             i = nextIdx;
-            setCopy(i);
-            busy = false; setButtons();
+            appendCard(i, true);     // neue Card kommt dazu
+            busy = false;
           };
         }
-
-        
+      
+        // ====== Rückwärts: rückwärts Clip; danach eine Card entfernen und auf Startframe “rastern”
         async function playBackward(){
           if (busy || i === 0) return;
-          busy = true; setButtons();
-          // fadeOn();  <-- ENTFERNEN
-        
+          busy = true;
+      
           const prevIdx = i - 1;
           setSrc(back, SEGMENTS[prevIdx].rev);
           await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
-          try { await back.play(); } catch {}
+          try{ await back.play(); }catch{}
           swapTo(back);
-        
+      
           prepareFreezeOf(prevIdx).catch(()=>{});
-        
+      
           active.onended = async () => {
-            try { active.pause(); } catch{}
-            showPreOnActive();
+            try{ active.pause(); }catch{}
+            showPreOnActive(); // Startframe von prevIdx
+            removeLastCard();  // letzte Card wegnehmen
             i = prevIdx;
-            setCopy(i);
-            // fadeOff(); <-- ENTFERNEN
-            busy = false; setButtons();
+            busy = false;
           };
         }
-
-        // ====== Init ==============================================================
-        (async function init(){
-          setCopy(0);
       
-          // Startframe von Segment 0 auf active anzeigen (ohne Blinken)
+        // ====== Scroll-Steuerung ====================================================
+        function maybeStepBy(delta){
+          if (!isAtlasInView() || busy) return;
+          const now = performance.now();
+          if (now - lastStep < COOLDOWN_MS) return;
+      
+          wheelAccum += delta;
+          if (wheelAccum > THRESH){
+            lastStep = now; wheelAccum = 0; playForward();
+          } else if (wheelAccum < -THRESH){
+            lastStep = now; wheelAccum = 0; playBackward();
+          }
+        }
+      
+        // Wheel / Trackpad
+        window.addEventListener('wheel', (e)=>{
+          if (!isAtlasInView()) return;
+          const d = Math.max(-120, Math.min(120, e.deltaY));
+          maybeStepBy(d);
+        }, { passive:true });
+      
+        // Touch (vertikaler Swipe)
+        let touchY = null;
+        window.addEventListener('touchstart', (e)=>{
+          if(!isAtlasInView()) return;
+          touchY = e.touches?.[0]?.clientY ?? null;
+          wheelAccum = 0;
+        }, { passive:true });
+        window.addEventListener('touchmove', (e)=>{
+          if(touchY == null || !isAtlasInView()) return;
+          const y = e.touches?.[0]?.clientY ?? touchY;
+          const delta = touchY - y; // up => +
+          maybeStepBy(delta);
+        }, { passive:true });
+        window.addEventListener('touchend', ()=>{ touchY = null; wheelAccum = 0; }, { passive:true });
+      
+        // Tastatur-Fallback
+        window.addEventListener('keydown', (e)=>{
+          if (!isAtlasInView()) return;
+          if (e.key === 'ArrowRight' || e.key === 'Enter') playForward();
+          if (e.key === 'ArrowLeft') playBackward();
+        });
+      
+        // ====== Init ================================================================
+        (async function init(){
+          // Erste Card einfügen (ohne “new”-Markierung)
+          appendCard(0, false);
+      
+          // Video initialisieren
           setSrc(active, SEGMENTS[0].fwd);
           await Promise.race([ once(active,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
           await primeAtStart(active);
           active.classList.add('active');
-          setButtons();
       
-          // Preload direkt den Freeze für Segment 1 (falls vorhanden)
           if (SEGMENTS.length > 1) prepareFreezeOf(1).catch(()=>{});
       
-          // Events
-          btnNext.addEventListener('click', playForward);
-          btnPrev.addEventListener('click', playBackward);
-          window.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); playForward(); }
-            if (e.key === 'ArrowLeft') { e.preventDefault(); playBackward(); }
-          });
+          // Expose für Debug
+          window.__ATLAS__ = { next: playForward, prev: playBackward, get index(){ return i; } };
         })();
       })();
     </script>
+
   </body>
 </html>
+
 
 
 
