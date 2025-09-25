@@ -570,6 +570,94 @@
           }
         }
 
+        /* === ATLAS Freeform: sehr hohe Section + zentriertes sticky Video ======= */
+
+        /* Macht die ATLAS-Zone VIEL höher (zusätzlich dynamisch via JS, s.u.) */
+        .atlas-free{
+          position: relative;
+          padding-right: min(36vw, 520px); /* Platz für rechten Feed */
+          min-height: 800vh;               /* große Grundhöhe; JS erhöht das noch */
+        }
+        
+        /* Video-Wrapper: sticky + echte Vertikalmitte */
+        .atlas-video-stick{
+          position: sticky;
+          /* zentriert vertikal: wir setzen den Referenzpunkt in die Bildschirmmitte ... */
+          top: 50vh;
+          /* ... und ziehen das Element um die Hälfte seiner Höhe nach oben */
+          transform: translateY(-50%);
+          display: flex;
+          justify-content: center;   /* horizontal mittig */
+          align-items: center;
+          pointer-events: none;      /* nur das Video selbst soll Events kriegen */
+        }
+        
+        /* Cleanes Video (kein Rahmen), begrenzt auf sinnvolle Größe */
+        #atlasVideo{
+          pointer-events: auto;
+          width: min(82vw, 1000px);
+          aspect-ratio: 16 / 9;
+          display: block;
+          background: #000;
+          border-radius: 12px;
+          box-shadow: 0 20px 60px rgba(0,0,0,.35);
+        }
+        
+        /* Overlay-Fader (für harte Sprünge) – exakt über dem Video positioniert */
+        #vfader{
+          position: fixed;            /* fixiert, damit es immer über dem Video liegt */
+          left: 50%;
+          top: 50%;
+          width: min(82vw, 1000px);
+          aspect-ratio: 16 / 9;
+          transform: translate(-50%, -50%);
+          border-radius: 12px;
+          pointer-events: none;
+          background: rgba(0,0,0,.28);
+          opacity: 0;
+          transition: opacity .18s ease;
+        }
+        #vfader.fade{ opacity: 1; }
+        
+        /* Rechter Feed rechts angedockt, mit großen Abständen zwischen Absätzen */
+        .atlas-side{
+          position: relative;
+          width: min(34vw, 480px);
+          margin-left: auto;
+        }
+        .atlas-feed{
+          display: flex;
+          flex-direction: column;
+          gap: 96px;                 /* größere Abstände */
+          padding-top: 12px;
+        }
+        
+        /* Minimalistische Absätze */
+        .seg-block h3{
+          margin: 0 0 8px 0;
+          font-size: 18px; font-weight: 700; letter-spacing: -.01em;
+        }
+        .seg-block p{
+          margin: 0; color: var(--muted); font-size: 15px; line-height: 1.8;
+        }
+        .seg-block.new{ animation: segFocus .5s ease-out; }
+        @keyframes segFocus{ from{ transform: translateY(6px); opacity:.7 } to{ transform:none; opacity:1 } }
+        
+        /* A11y helper */
+        .sr-only{
+          position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+          overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+        }
+        
+        /* Responsive: Feed unter Video */
+        @media (max-width: 980px){
+          .atlas-free{ padding-right: 0; min-height: 600vh; }
+          .atlas-side{ width: 100%; margin-top: 24px; }
+          #atlasVideo{ width: 100%; }
+          #vfader{ width: 100%; }
+        }
+
+
 
       </style>
     </head>
@@ -925,25 +1013,25 @@
           <p class="reveal">Eine Einführung in einen der 4 Detektoren des LHCs, ATLAS</p>
         </div>
       
-        <!-- Freeform Layout: zentriertes, sticky Video + rechter Feed -->
+        <!-- Sehr hohe Section + zentriertes, sticky Video -->
         <div class="atlas-free container">
-          <!-- Sticky, zentriertes Video -->
+          <!-- Video bleibt horizontal UND vertikal zentriert -->
           <div class="atlas-video-stick" aria-describedby="atlas-instructions">
             <video id="atlasVideo" playsinline muted preload="auto"></video>
             <div id="vfader" aria-hidden="true"></div>
           </div>
       
-          <!-- Rechter Feed: gestapelte Segmente mit größeren Abständen -->
+          <!-- Rechter Feed mit großzügigen Abständen -->
           <aside class="atlas-side">
             <div id="atlas-feed" class="atlas-feed"></div>
             <p class="sr-only" id="atlas-instructions">
-              Scrolle nach unten, um vorwärts durch das Video zu scrubben (Frame für Frame).
-              Scrolle nach oben, um rückwärts zu scrubben. Beim Überschreiten eines Segmentendes
-              erscheint rechts ein neuer Textabsatz; beim Zurückgehen verschwindet der letzte Absatz.
+              Scrolle nach unten/oben, um framegenau zu scrubben. Beim Segmentwechsel
+              erscheint rechts ein neuer Absatz; rückwärts verschwindet der letzte wieder.
             </p>
           </aside>
         </div>
       </section>
+
 
 
   
@@ -1696,46 +1784,41 @@
     <script>
       /**
        * ATLAS Scroll-Scrub (Frame für Frame)
-       * - Video bleibt zentriert/sticky (#atlasVideo)
-       * - rechter Feed (#atlas-feed) stapelt Absätze (kein Übergang des alten Textes)
-       * - scrubbt sauber über Segmentgrenzen (vor/zurück)
+       * - Sehr hohe Section, Video ist klebend UND vertikal/horizontal zentriert
+       * - Rechter Feed stapelt Absätze; alter Text bleibt stehen
+       * - Scrub über Segmentgrenzen (vor/zurück)
        */
       (function(){
-        // ======= Konfiguration =====================================================
+        // ======= Config ============================================================
         const BASE = 'ATLAS/';     // Ordner mit deinen Clips
         const COUNT = 14;          // Anzahl Segmente
-        const FPS = 30;            // angenommenes FPS (anpassen falls 25/60)
+        const FPS = 30;            // setze auf 25/60 falls nötig
         const FRAME = 1 / FPS;
       
-        // Wheel/Touch-Sensitivität:
-        // ~120 deltaY ≈ 1 Frame (Chrome/Win). Bei Bedarf anpassen.
-        const SEC_PER_WHEEL_DELTA = FRAME / 120;
-        const SEC_PER_TOUCH_PX    = FRAME / 40;  // ~40px Fingerbewegung ≈ 1 Frame
+        // Scrub-Sensitivität
+        const SEC_PER_WHEEL_DELTA = FRAME / 120;  // ~1 Frame pro 120 deltaY
+        const SEC_PER_TOUCH_PX    = FRAME / 40;   // ~1 Frame pro 40px Fingerbewegung
+        const VISIBLE_RATIO       = 0.35;
       
-        const VISIBLE_RATIO = 0.35; // ab welcher Sichtbarkeit die Section reagiert
-      
-        // ======= Segment-Metadaten (Titel/Text kannst du später ersetzen) ==========
+        // ======= Segmente (Texte kannst du später aus JSON ziehen) =================
         const SEGMENTS = Array.from({length: COUNT}, (_,k) => {
           const n = k+1;
-          return {
-            title: `Segment ${n}`,
-            text:  `Beschreibung Segment ${n}`,
-            src:   `${BASE}${n}.mp4`
-          };
+          return { title: `Segment ${n}`, text: `Beschreibung Segment ${n}`, src: `${BASE}${n}.mp4` };
         });
       
         // ======= DOM ===============================================================
         const section = document.getElementById('acceleration-chain');
+        const atlasFree = section?.querySelector('.atlas-free');
         const feed    = document.getElementById('atlas-feed');
         const video   = document.getElementById('atlasVideo');
         const fader   = document.getElementById('vfader');
-        if(!section || !feed || !video) return;
+        if(!section || !atlasFree || !feed || !video) return;
       
         // ======= State =============================================================
-        let i = 0;                              // aktuelles Segment
+        let i = 0;
         let durations = Array(COUNT).fill(null);
-        let appendedCount = 0;                  // wie viele Absätze im Feed
-        let pendingSec = 0;                     // angesammelte Scrub-Zeit
+        let appendedCount = 0;
+        let pendingSec = 0;
         let seeking = false, raf = null;
         let touchY = null;
       
@@ -1773,33 +1856,24 @@
           requestAnimationFrame(()=>fadeOff());
         }
       
-        // Absatz hinzufügen (rechts), ohne den alten zu ändern
         function appendBlock(idx){
-          if(appendedCount > idx) return; // schon vorhanden
+          if(appendedCount > idx) return;
           const seg = SEGMENTS[idx];
           const wrap = document.createElement('section');
           wrap.className = 'seg-block new';
-          wrap.innerHTML = `
-            <h3>${seg.title}</h3>
-            <p>${seg.text}</p>
-          `;
-          // Klassen für typografische Styles setzen
-          wrap.firstElementChild.classList.add('seg-block__title','seg-title');
-          wrap.lastElementChild.classList.add('seg-block__text','seg-text');
+          wrap.innerHTML = `<h3>${seg.title}</h3><p>${seg.text}</p>`;
           feed.appendChild(wrap);
           appendedCount = idx + 1;
           setTimeout(()=>wrap.classList.remove('new'), 700);
         }
-      
-        // Letzten Absatz entfernen (beim Scrubben zurück)
         function removeLastBlock(){
-          if(appendedCount <= 1) return; // ersten behalten
+          if(appendedCount <= 1) return;
           const last = feed.lastElementChild;
           if(last) last.remove();
           appendedCount -= 1;
         }
       
-        // ======= Scrub-Apply (seek, über Grenzen springen) =========================
+        // ======= Scrubbing =========================================================
         async function applyScrub(){
           if(seeking) return;
           seeking = true;
@@ -1811,7 +1885,7 @@
           let dur = durations[i] ?? video.duration ?? 0;
           let t = (video.currentTime || 0) + delta;
       
-          // nach vorn über Segmentende
+          // vorwärts über Ende
           while(t >= dur - 1e-4 && i < SEGMENTS.length - 1){
             const overflow = t - (dur - 1e-4);
             i += 1;
@@ -1821,7 +1895,7 @@
             t = Math.min(overflow, Math.max(0, dur - 1e-4));
           }
       
-          // nach hinten vor Frame 0
+          // rückwärts vor 0
           while(t < 0 && i > 0){
             const under = -t;
             i -= 1;
@@ -1850,13 +1924,13 @@
           }
         }
       
-        // ======= Input: Wheel/Touch/Keys ==========================================
+        // ======= Input =============================================================
         window.addEventListener('wheel', (e)=>{
           if(!isAtlasInView()) return;
           let dy = e.deltaY;
-          if(e.deltaMode === 1) dy *= 16;           // line -> px grob
+          if(e.deltaMode === 1) dy *= 16;
           else if(e.deltaMode === 2) dy *= window.innerHeight;
-          dy = Math.max(-600, Math.min(600, dy));   // clamp spikes
+          dy = Math.max(-600, Math.min(600, dy));
           queueScrub(dy * SEC_PER_WHEEL_DELTA);
         }, { passive:true });
       
@@ -1864,7 +1938,6 @@
           if(!isAtlasInView()) return;
           touchY = e.touches?.[0]?.clientY ?? null;
         }, { passive:true });
-      
         window.addEventListener('touchmove', (e)=>{
           if(!isAtlasInView() || touchY == null) return;
           const y = e.touches?.[0]?.clientY ?? touchY;
@@ -1872,7 +1945,6 @@
           touchY = y;
           queueScrub(dy * SEC_PER_TOUCH_PX);
         }, { passive:true });
-      
         window.addEventListener('touchend', ()=>{ touchY = null; }, { passive:true });
       
         window.addEventListener('keydown', (e)=>{
@@ -1883,14 +1955,22 @@
           if(e.key === 'PageUp')    queueScrub(-FRAME * 10);
         });
       
+        // ======= Dynamische Section-Höhe ===========================================
+        function updateTallness(){
+          // genug Scroll-Strecke: pro Segment ca. 50vh extra
+          const extraVhPerSeg = 50;
+          const baseVh = 400; // Grundhöhe
+          const totalVh = baseVh + (COUNT - 1) * extraVhPerSeg;
+          atlasFree.style.minHeight = `${totalVh}vh`;
+        }
+        window.addEventListener('resize', updateTallness);
+      
         // ======= Init ==============================================================
         (async function init(){
-          // erster Absatz ohne Effekt
-          appendBlock(0);
-      
-          // erstes Segment laden & auf Frame 0 pausieren
-          await loadSegment(0, 0);
-          try{ video.pause(); }catch{}
+          updateTallness();
+          appendBlock(0);               // erster Absatz
+          await loadSegment(0, 0);      // erstes Segment laden
+          try{ video.pause(); }catch{}  // bereit zum Scrubben
         })();
       })();
     </script>
@@ -1899,6 +1979,7 @@
 
   </body>
 </html>
+
 
 
 
