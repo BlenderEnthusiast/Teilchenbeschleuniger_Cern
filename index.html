@@ -1349,7 +1349,8 @@
       (function(){
     
         const BASE = 'ATLAS/';
-      
+    
+        // 14 segments (0..13). Empty title => H2 hidden, subtext bigger & top-aligned.
         const META = [
           { title:"", text:"Das hier ist der 1,65 Meter hohe Vasista." },
           { title:"", text:"Und das hier ist A Toroidal LHC Apparatus (ATLAS), einer der vier Kollisionsdetektoren des LHC-Ringes." },
@@ -1364,48 +1365,62 @@
           { title:"", text:"" },
           { title:"", text:"" },
           { title:"", text:"" },
-          { title:"", text:"" } 
+          { title:"", text:"" } // Segment 13 (14th segment) => last frame of 13.mp4
         ];
-      
-        // ====== DOM ================================================================
+    
+        // ===== DOM =====
         const titleEl = document.getElementById('clip-title');
         const textEl  = document.getElementById('clip-text');
         const btnPrev = document.getElementById('btn-prev');
         const btnNext = document.getElementById('btn-next');
-      
-        const A   = document.getElementById('vidA');   
-        const B   = document.getElementById('vidB');  
-        const PRE = document.getElementById('vidPre');
+    
+        const A   = document.getElementById('vidA');   // visible layer
+        const B   = document.getElementById('vidB');   // second layer
+        const PRE = document.getElementById('vidPre'); // hidden preloader
         const fader = document.getElementById('vfader');
-      
+    
         let active = A;
         let back   = B;
-        let i = 0;          
+        let i = 0;       // current segment 0..13
         let busy = false;
-      
-        // ====== Helpers ============================================================
-        const once = (el, ev, opts={}) => new Promise(res => el.addEventListener(ev, res, { once:true, ...opts }));
-      
+    
+        // ===== Helpers =====
+        const once = (el, ev, opts={}) =>
+          new Promise(res => el.addEventListener(ev, res, { once:true, ...opts }));
+    
         function setSrc(videoEl, url){
           while(videoEl.firstChild) videoEl.removeChild(videoEl.firstChild);
           videoEl.removeAttribute('src');
           videoEl.src = url;
         }
-      
+    
         async function primeAtStart(videoEl){
           try { videoEl.pause(); } catch {}
-          
           videoEl.currentTime = 0;
           await Promise.race([ once(videoEl,'seeked'), new Promise(r=>setTimeout(r,150)) ]);
-          
           try { await videoEl.play(); } catch {}
           await Promise.race([ once(videoEl,'timeupdate'), new Promise(r=>setTimeout(r,100)) ]);
           try { videoEl.pause(); } catch {}
-         
           try { videoEl.currentTime = 0; } catch {}
         }
-      
-
+    
+        async function primeAtEnd(videoEl){
+          try { videoEl.pause(); } catch {}
+          if (!isFinite(videoEl.duration) || isNaN(videoEl.duration)) {
+            await Promise.race([ once(videoEl,'loadedmetadata'), new Promise(r=>setTimeout(r,300)) ]);
+          }
+          const dur = videoEl.duration || 0;
+          const EPS = Math.min(0.05, Math.max(0.02, dur * 0.01)); // 1–5% or 20–50ms
+          const target = Math.max(0, dur - EPS);
+    
+          videoEl.currentTime = target;
+          await Promise.race([ once(videoEl,'seeked'), new Promise(r=>setTimeout(r,250)) ]);
+    
+          try { await videoEl.play(); } catch {}
+          await Promise.race([ once(videoEl,'timeupdate'), new Promise(r=>setTimeout(r,120)) ]);
+          try { videoEl.pause(); } catch {}
+        }
+    
         function swapTo(el){
           el.classList.add('active');
           active.classList.remove('active');
@@ -1413,13 +1428,12 @@
           active = el;
           back   = prev;
         }
-      
+    
         function setButtons(){
           btnPrev.disabled = busy || (i === 0);
-          btnNext.disabled = busy || (i === META.length - 1); // letzter Stop = 13
+          btnNext.disabled = busy || (i === META.length - 1); // last segment = 13
         }
-      
-        // Smooth Text + „no-title“-Handling
+    
         function updateCopy(idx){
           titleEl.classList.add('text-fade');
           textEl.classList.add('text-fade');
@@ -1438,135 +1452,112 @@
             textEl.classList.remove('text-fade');
           }, 200);
         }
-      
-        // 1) Stronger end-frame primer
-        async function primeAtEnd(videoEl){
-          try { videoEl.pause(); } catch {}
-          // ensure metadata available
-          if (!isFinite(videoEl.duration) || isNaN(videoEl.duration)) {
-            await Promise.race([ once(videoEl,'loadedmetadata'), new Promise(r=>setTimeout(r,300)) ]);
-          }
-          // aim just before the true end so a frame exists
-          const dur = videoEl.duration || 0;
-          const EPS = Math.min(0.05, Math.max(0.02, dur * 0.01)); // 1–5% or 20–50ms
-          const target = Math.max(0, dur - EPS);
-        
-          videoEl.currentTime = target;
-          await Promise.race([ once(videoEl,'seeked'), new Promise(r=>setTimeout(r,250)) ]);
-        
-          // nudge decoder to actually paint
-          try { await videoEl.play(); } catch {}
-          await Promise.race([ once(videoEl,'timeupdate'), new Promise(r=>setTimeout(r,120)) ]);
-          try { videoEl.pause(); } catch {}
-        }
-        
-        // 2) Make this async and wait for load/seek BEFORE swapping
+    
         async function showPreOnActive(){
           const src = PRE.currentSrc || PRE.src;
           setSrc(back, src);
-        
-          // make sure back has data
+    
           await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,500)) ]);
-        
-          // jump to exactly the same timestamp as PRE
+    
           try { back.currentTime = PRE.currentTime; } catch {}
           await Promise.race([ once(back,'seeked'), new Promise(r=>setTimeout(r,300)) ]);
-        
-          // optional: draw a frame so opacity transition has pixels
+    
           try { await back.play(); } catch {}
           await Promise.race([ once(back,'timeupdate'), new Promise(r=>setTimeout(r,80)) ]);
           try { back.pause(); } catch {}
-        
-          swapTo(back); // now it’s definitely showing a real frame
+    
+          swapTo(back);
         }
-
+    
+        // Prepare a freeze frame for segment j:
+        // j = 0..12 -> first frame of (j+1).mp4
+        // j = 13    -> last frame of 13.mp4
         function prepareFreezeOf(j){
           return (async ()=>{
             if (j < META.length - 1) {
-              setSrc(PRE, `${BASE}${j+1}.mp4`);
+              setSrc(PRE, `${BASE}${j+1}.mp4`); // clips 1..13
               await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
               await primeAtStart(PRE);
             } else {
               setSrc(PRE, `${BASE}13.mp4`);
               await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
-              await primeAtEnd(PRE); // letzter Frame!
+              await primeAtEnd(PRE); // last frame for segment 13
             }
           })();
         }
-      
-        // ====== Navigation ==========================================================
+    
+        // ===== Navigation =====
         async function playForward(){
           if (busy || i >= META.length - 1) return;
           busy = true; setButtons();
-      
-          const transIdx = i + 1;   // Clip 1..13
-          const target   = i + 1;   // Ziel-Segment 1..13
-      
+    
+          const transIdx = i + 1; // play clip 1..13
+          const target   = i + 1; // target segment 1..13
+    
           setSrc(back, `${BASE}${transIdx}.mp4`);
           await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,500)) ]);
-      
+    
           const playingEl = back;
           const freezePromise = prepareFreezeOf(target);
-      
+    
           const onDone = async () => {
             try { playingEl.pause(); } catch {}
             await freezePromise;
-            await showPreOnActive();   // <-- await here
+            await showPreOnActive();
             i = target;
             updateCopy(i);
             busy = false; setButtons();
           };
-
-      
+    
           playingEl.addEventListener('ended', onDone, { once:true });
-      
+    
           swapTo(playingEl);
           try { await playingEl.play(); } catch {}
-          if (playingEl.ended) onDone(); // ultra-kurzer Clip Guard
+          if (playingEl.ended) onDone(); // guard for ultra-short clips
         }
-      
+    
         async function playBackward(){
           if (busy || i <= 0) return;
           busy = true; setButtons();
-      
-          const transIdx = i;       // Clip 1..13
-          const target   = i - 1;   // Ziel-Segment
-      
+    
+          const transIdx = i;     // reverse clip i-i (1..13)
+          const target   = i - 1; // target segment
+    
           setSrc(back, `${BASE}${transIdx}-${transIdx}.mp4`);
           await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,500)) ]);
-      
+    
           const playingEl = back;
           const freezePromise = prepareFreezeOf(target);
-      
+    
           const onDone = async () => {
             try { playingEl.pause(); } catch {}
             await freezePromise;
-            showPreOnActive();
+            await showPreOnActive(); // IMPORTANT: await to avoid black
             i = target;
             updateCopy(i);
             busy = false; setButtons();
           };
-      
+    
           playingEl.addEventListener('ended', onDone, { once:true });
-      
+    
           swapTo(playingEl);
           try { await playingEl.play(); } catch {}
           if (playingEl.ended) onDone();
         }
-      
-        // ====== Init ================================================================
+    
+        // ===== Init =====
         (async function init(){
-          // Segment 0 zeigt den Start von Clip 1
+          // Segment 0 starts at first frame of clip 1
           updateCopy(0);
           setSrc(active, `${BASE}1.mp4`);
           await Promise.race([ once(active,'loadeddata'), new Promise(r=>setTimeout(r,500)) ]);
           await primeAtStart(active);
           active.classList.add('active');
           setButtons();
-      
-          // Preload Freeze für Segment 1
+    
+          // Preload freeze for next segment
           prepareFreezeOf(1).catch(()=>{});
-      
+    
           btnNext.addEventListener('click', playForward);
           btnPrev.addEventListener('click', playBackward);
           window.addEventListener('keydown', (e)=>{
@@ -1574,12 +1565,12 @@
             if(e.key==='ArrowLeft'){ e.preventDefault(); playBackward(); }
           });
         })();
-      
+    
       })();
     </script>
-
   </body>
 </html>
+
 
 
 
