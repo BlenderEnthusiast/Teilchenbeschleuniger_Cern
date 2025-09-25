@@ -1448,76 +1448,82 @@
           back.pause();
           swapTo(back);
         }
-      
 
-      
-        // 1) Freeze-Prep als Promise zurückgeben (Start für Segmente 0..12, Endframe für Segment 13)
-        function prepareFreezeOf(j){
-          return (async ()=>{
-            if (j < META.length - 1) {
-              // Stops 0..12 -> Start von Clip (j+1).mp4
-              setSrc(PRE, `${BASE}${j+1}.mp4`);
-              await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
-              await primeAtStart(PRE);
-            } else {
-              // Stop 13 -> ***letzter Frame*** von 13.mp4
-              setSrc(PRE, `${BASE}13.mp4`);
-              await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
-              await primeAtEnd(PRE); // <- last frame!
-            }
-          })();
-        }
+        // keep your helpers (setSrc, prepareFreezeOf, showPreOnActive, updateCopy, setButtons) as-is
         
-        // 2) Vorwärts: immer auf den vorbereiteten Freeze warten, damit wir sicher den richtigen Frame zeigen
         async function playForward(){
           if (busy || i >= META.length - 1) return;
           busy = true; setButtons();
         
-          const transIdx = i + 1;          // Clip-Nummer 1..13
-          const target   = i + 1;          // Ziel-Segment 1..13
+          const transIdx = i + 1;   // 1..13
+          const target   = i + 1;
         
+          // Prepare and attach 'ended' BEFORE play
           setSrc(back, `${BASE}${transIdx}.mp4`);
           await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,500)) ]);
-          try { await back.play(); } catch {}
-          swapTo(back);
-        
-          // Freeze vorbereiten & darauf warten (wichtiger Fix fürs letzte Segment)
           const freezePromise = prepareFreezeOf(target);
         
-          active.onended = async () => {
-            try { active.pause(); } catch {}
-            await freezePromise;          // <- Warten bis PRE am Ziel-Frame ist
+          const onDone = async () => {
+            try { back.pause(); } catch {}
+            await freezePromise;
             showPreOnActive();
             i = target;
             updateCopy(i);
             busy = false; setButtons();
           };
+        
+          back.addEventListener('ended', onDone, { once:true });
+        
+          // Swap and start
+          swapTo(back);
+          try { await back.play(); } catch {}
+          // If it already ended (very short clip), run handler immediately
+          if (back.ended) onDone();
         }
         
-        // 3) Rückwärts: dito (auf Freeze warten)
         async function playBackward(){
           if (busy || i <= 0) return;
           busy = true; setButtons();
         
-          const transIdx = i;              // Clip-Nummer 1..13
+          const transIdx = i;       // 1..13
           const target   = i - 1;
         
           setSrc(back, `${BASE}${transIdx}-${transIdx}.mp4`);
           await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,500)) ]);
-          try { await back.play(); } catch {}
-          swapTo(back);
-        
           const freezePromise = prepareFreezeOf(target);
         
-          active.onended = async () => {
-            try { active.pause(); } catch {}
-            await freezePromise;          // <- sicher am Start-Frame (oder End-Frame bei 13)
+          const onDone = async () => {
+            try { back.pause(); } catch {}
+            await freezePromise;
             showPreOnActive();
             i = target;
             updateCopy(i);
             busy = false; setButtons();
           };
+        
+          back.addEventListener('ended', onDone, { once:true });
+        
+          swapTo(back);
+          try { await back.play(); } catch {}
+          if (back.ended) onDone();
         }
+        
+        // unchanged; returns a Promise that resolves when PRE is at the correct frame
+        function prepareFreezeOf(j){
+          return (async ()=>{
+            if (j < META.length - 1) {
+              setSrc(PRE, `${BASE}${j+1}.mp4`);
+              await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
+              await primeAtStart(PRE); // start frame
+            } else {
+              setSrc(PRE, `${BASE}13.mp4`);
+              await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
+              await primeAtEnd(PRE);   // last frame
+            }
+          })();
+        }
+
+
 
 
       
@@ -1545,6 +1551,7 @@
     </script>
   </body>
 </html>
+
 
 
 
