@@ -1405,22 +1405,7 @@
           try { videoEl.currentTime = 0; } catch {}
         }
       
-        async function primeAtEnd(videoEl){
-          try { videoEl.pause(); } catch {}
-         
-          if (isNaN(videoEl.duration) || !isFinite(videoEl.duration)) {
-            await Promise.race([ once(videoEl,'loadedmetadata'), new Promise(r=>setTimeout(r,200)) ]);
-          }
-          const EPS = 0.03; // kleiner Puffer vor dem echten Ende
-          const target = Math.max(0, (videoEl.duration || 0) - EPS);
-          videoEl.currentTime = target;
-          await Promise.race([ once(videoEl,'seeked'), new Promise(r=>setTimeout(r,150)) ]);
-          // zur Sicherheit noch ein kleines Stück spielen, dann pausieren
-          try { await videoEl.play(); } catch {}
-          await Promise.race([ once(videoEl,'timeupdate'), new Promise(r=>setTimeout(r,100)) ]);
-          try { videoEl.pause(); } catch {}
-        }
-      
+
         function swapTo(el){
           el.classList.add('active');
           active.classList.remove('active');
@@ -1454,16 +1439,47 @@
           }, 200);
         }
       
-        function showPreOnActive(){
-          setSrc(back, PRE.currentSrc || PRE.src);
-          try{ back.currentTime = PRE.currentTime; }catch{}
-          back.pause();
-          swapTo(back);
+        // 1) Stronger end-frame primer
+        async function primeAtEnd(videoEl){
+          try { videoEl.pause(); } catch {}
+          // ensure metadata available
+          if (!isFinite(videoEl.duration) || isNaN(videoEl.duration)) {
+            await Promise.race([ once(videoEl,'loadedmetadata'), new Promise(r=>setTimeout(r,300)) ]);
+          }
+          // aim just before the true end so a frame exists
+          const dur = videoEl.duration || 0;
+          const EPS = Math.min(0.05, Math.max(0.02, dur * 0.01)); // 1–5% or 20–50ms
+          const target = Math.max(0, dur - EPS);
+        
+          videoEl.currentTime = target;
+          await Promise.race([ once(videoEl,'seeked'), new Promise(r=>setTimeout(r,250)) ]);
+        
+          // nudge decoder to actually paint
+          try { await videoEl.play(); } catch {}
+          await Promise.race([ once(videoEl,'timeupdate'), new Promise(r=>setTimeout(r,120)) ]);
+          try { videoEl.pause(); } catch {}
         }
-      
-        // Freeze-Ziel für Segment j vorbereiten:
-        // - j < 13: START von Clip (j+1).mp4
-        // - j = 13: END-Frame von 13.mp4
+        
+        // 2) Make this async and wait for load/seek BEFORE swapping
+        async function showPreOnActive(){
+          const src = PRE.currentSrc || PRE.src;
+          setSrc(back, src);
+        
+          // make sure back has data
+          await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,500)) ]);
+        
+          // jump to exactly the same timestamp as PRE
+          try { back.currentTime = PRE.currentTime; } catch {}
+          await Promise.race([ once(back,'seeked'), new Promise(r=>setTimeout(r,300)) ]);
+        
+          // optional: draw a frame so opacity transition has pixels
+          try { await back.play(); } catch {}
+          await Promise.race([ once(back,'timeupdate'), new Promise(r=>setTimeout(r,80)) ]);
+          try { back.pause(); } catch {}
+        
+          swapTo(back); // now it’s definitely showing a real frame
+        }
+
         function prepareFreezeOf(j){
           return (async ()=>{
             if (j < META.length - 1) {
@@ -1495,11 +1511,12 @@
           const onDone = async () => {
             try { playingEl.pause(); } catch {}
             await freezePromise;
-            showPreOnActive();
+            await showPreOnActive();   // <-- await here
             i = target;
             updateCopy(i);
             busy = false; setButtons();
           };
+
       
           playingEl.addEventListener('ended', onDone, { once:true });
       
@@ -1563,6 +1580,7 @@
 
   </body>
 </html>
+
 
 
 
