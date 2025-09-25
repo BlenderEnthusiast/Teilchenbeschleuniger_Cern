@@ -1352,15 +1352,20 @@
         const BASE = 'ATLAS/';
       
         // 14 segments (0..13); segment 13 is the last frame of 13.mp4
-        const META = [
-          { title:"", text:"Das hier ist der 1,65 Meter hohe Vasista." },
-          { title:"", text:"Und das hier ist A Toroidal LHC Apparatus (ATLAS), einer der vier Kollisionsdetektoren des LHC-Ringes." },
-          { title:"", text:"100 Meter unter dem Boden steht dieser kolossale Detektor mit der 15-fachen Höhe Vasistas und wertet Kollisionen von Protonen und schweren Ionen aus." },
-          { title:"", text:"Mit einer Länge von 46 Metern und rund 7 000 Tonnen Gewicht besteht ATLAS aus konzentrischen Detektorschichten, die wir im Folgenden kennenlernen." },
-          { title:"", text:"" },{ title:"", text:"" },{ title:"", text:"" },{ title:"", text:"" },
-          { title:"", text:"" },{ title:"", text:"" },{ title:"", text:"" },{ title:"", text:"" },
-          { title:"", text:"" },{ title:"", text:"" }
-        ];
+        const SEGMENTS = [
+          { title:"", text:"Das hier ist der 1,65 Meter hohe Vasista.", fwd:`${BASE}1.mp4`,  rev:`${BASE}1-1.mp4` },
+          { title:"", text:"Und das hier ist A Toroidal LHC Apparatus (ATLAS), einer der vier Kollisionsdetektoren des LHC-Ringes.", fwd:`${BASE}2.mp4`,  rev:`${BASE}2-2.mp4` },
+          { title:"", text:"100 Meter unter dem Boden steht dieser kolossale Detektor mit der 15-fachen Höhe Vasistas und wertet Kollisionen von Protonen und schweren Ionen aus.", fwd:`${BASE}3.mp4`,  rev:`${BASE}3-3.mp4` },
+          { title:"", text:"Mit einer Länge von 46 Metern und rund 7 000 Tonnen Gewicht besteht ATLAS aus konzentrischen Detektorschichten, die wir im Folgenden kennenlernen.", fwd:`${BASE}4.mp4`,  rev:`${BASE}4-4.mp4` },
+          { title:"", text:"", fwd:`${BASE}5.mp4`,  rev:`${BASE}5-5.mp4` },
+          { title:"", text:"", fwd:`${BASE}6.mp4`,  rev:`${BASE}6-6.mp4` },
+          { title:"", text:"", fwd:`${BASE}7.mp4`,  rev:`${BASE}7-7.mp4` },
+          { title:"", text:"", fwd:`${BASE}8.mp4`,  rev:`${BASE}8-8.mp4` },
+          { title:"", text:"", fwd:`${BASE}9.mp4`,  rev:`${BASE}9-9.mp4` },
+          { title:"", text:"", fwd:`${BASE}10.mp4`, rev:`${BASE}10-10.mp4` },
+          { title:"", text:"", fwd:`${BASE}11.mp4`, rev:`${BASE}11-11.mp4` },
+          { title:"", text:"", fwd:`${BASE}12.mp4`, rev:`${BASE}12-12.mp4` },
+          { title:"", text:"", fwd:`${BASE}13.mp4`, rev:`${BASE}13-13.mp4` }
       
         // DOM
         const titleEl = document.getElementById('clip-title');
@@ -1568,6 +1573,7 @@
 
   </body>
 </html>
+
 
 
 
