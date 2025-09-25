@@ -6,7 +6,6 @@
     <meta name="color-scheme" content="dark light" />
     <title>Teilchenbeschleuniger – Prototyp</title>
 
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet"/>
@@ -22,27 +21,24 @@
       body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; background:var(--bg); color:var(--fg); }
       img { max-width:100%; display:block; }
       a { color:inherit; }
-
       .container { max-width:1100px; margin:0 auto; padding:0 20px; }
       .header { position:sticky; top:0; z-index:40; backdrop-filter:saturate(120%) blur(10px); background:rgba(11,11,12,.6); border-bottom:1px solid var(--line); }
       .nav { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; }
       .nav a { color:var(--muted); text-decoration:none; font-size:14px; margin-left:18px; }
       .nav a:hover { color:var(--fg); }
-
       .section { padding:80px 0; border-top:1px solid var(--line); scroll-margin-top:84px; }
       .reveal{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .6s ease}
       .reveal.show{opacity:1;transform:none}
-
+    
       /* ================= HERO ================= */
       .hero{position:relative;min-height:88vh;display:grid;place-items:center;overflow:hidden}
       .hero .bg{position:absolute;inset:0;background:radial-gradient(1200px 600px at 70% 20%,rgba(255,255,255,.08),transparent),linear-gradient(180deg,#0c0c10,#09090b)}
       .hero .content{position:relative;text-align:center;padding:40px}
       .title{font-size:clamp(36px,6vw,72px);font-weight:700;letter-spacing:-.02em}
       .subtitle{max-width:750px;margin:14px auto 0;color:var(--muted);font-size:clamp(16px,2.2vw,18px)}
-
       .grid{display:grid;gap:22px}
       .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
-
+    
       /* ================= HORIZONTAL TIMELINE ================= */
       #timeline h2 { font-size: clamp(26px, 3.8vw, 40px); margin:0 0 16px; }
       .timeline-slider { display:flex; align-items:center; justify-content:center; gap:18px; margin:40px 0; }
@@ -54,36 +50,29 @@
       .event-info h3 { margin:0; font-size:clamp(18px,2vw,28px); font-weight:700; letter-spacing:-.01em; }
       .event-info p { font-size:15px; color:var(--muted); margin:0; }
       .event-info a { width:fit-content; margin-top:8px; color:var(--accent); text-decoration:none; font-weight:600; }
-
       .nav-btn { background:transparent; border:2px solid var(--line); border-radius:50%; width:44px; height:44px; color:var(--fg); cursor:pointer; display:grid; place-items:center; transition:transform .25s ease, background .25s ease, opacity .25s ease; }
       .nav-btn:hover { background:var(--line); transform:scale(1.05); }
       .nav-btn:active { transform:scale(.97); }
       .nav-btn[disabled] { cursor:not-allowed; opacity:.4; background:transparent !important; transform:none !important; }
-
       .progress { margin-top:22px; position:relative; }
       .bar { height:4px; background:#2d2d32; border-radius:999px; position:relative; overflow:visible; }
       .marker { position:absolute; top:50%; left:0; width:16px; height:16px; background:var(--marker); border-radius:50%; box-shadow:0 0 0 4px rgba(255,255,255,.08); transform:translate(-8px,-50%); transition:transform .55s cubic-bezier(.22,.61,.36,1); }
-
       .pips { position:absolute; inset:0; pointer-events:none; }
       .pip { position:absolute; top:50%; width:12px; height:12px; border-radius:50%; background:var(--disabled); transform:translate(-6px,-50%); border:2px solid var(--bg); box-shadow:0 0 0 3px rgba(255,255,255,.06); pointer-events:auto; cursor:pointer; transition:background .2s ease, transform .2s ease; }
       .pip:hover { transform:translate(-6px,-50%) scale(1.07); }
       .pip.active { background:var(--marker); box-shadow:0 0 0 4px rgba(245,158,11,.15); }
-
-      .labels { display:flex; justify-content:space-between; gap:8px; margin-top:8px; font-size:12px; color:var(--muted); white-space:nowrap; }
-
       .event-card .anim-wrap{ position:relative; flex:1; display:flex; gap:22px; }
       .slide { display:flex; gap:22px; width:100%; }
       .slide.enter { animation: fadeIn .45s cubic-bezier(.22,.61,.36,1); }
       .slide.leave { animation: fadeOut .38s cubic-bezier(.4,.0,.2,1); position:absolute; inset:0; }
       @keyframes fadeIn { from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none} }
       @keyframes fadeOut { from{opacity:1; transform:none} to{opacity:0; transform:translateY(-8px)} }
-
       @media (max-width: 900px){
         .event-card{ flex-direction:column; }
         .event-media{ flex-basis:auto; }
         .event-media img{ height:220px; }
       }
-
+    
       /* ================= TOPIC GRID ================= */
       .topic-grid{ display:grid; gap:6px; margin:18px 0; grid-template-columns: 1fr; perspective:800px; }
       .topic-card{ position:relative; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; min-height:60px; text-decoration:none; color:var(--fg); display:flex; flex-direction:column; justify-content:center; gap:6px; transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease, background .25s ease; will-change:transform; }
@@ -92,21 +81,17 @@
       .topic-card:hover, .topic-card:focus-visible{ transform: translateY(-2px) scale(1.01) rotateX(1deg); border-color: var(--accent); box-shadow: 0 6px 20px rgba(125,211,252,.18); outline:none; background: linear-gradient(180deg,#18181b,#141416); }
       @media (max-width:900px){ .topic-grid{ grid-template-columns: 1fr 1fr; } }
       @media (max-width:600px){ .topic-grid{ grid-template-columns: 1fr; } }
-
+    
       /* ================= ACCORDION ================= */
       .accordion{padding:0; overflow:hidden; border:1px solid var(--line); border-radius:16px; transition:border-color .28s ease, box-shadow .28s ease, background .28s ease}
-      .accordion-header{
-        width:100%; display:flex; justify-content:space-between; align-items:center;
-        gap:12px; padding:16px 18px; background:transparent; border:0; color:var(--fg);
-        cursor:pointer; font-size:24px; font-weight:700; text-align:left;
-      }
+      .accordion-header{width:100%; display:flex; justify-content:space-between; align-items:center; gap:12px; padding:16px 18px; background:transparent; border:0; color:var(--fg); cursor:pointer; font-size:24px; font-weight:700; text-align:left;}
       .accordion .chev{transition:transform .3s ease, color .3s ease; opacity:.9}
       .accordion.open .chev{transform:rotate(90deg); color:#9affa7}
       .accordion-content{ height:0; overflow:hidden; padding:0 18px; transition: height .42s cubic-bezier(.22,.61,.36,1); will-change: height; color:var(--muted); }
       .accordion-inner{ padding:12px 0 16px; }
       .accordion.open{ border-color:#90ff86; box-shadow:0 6px 22px rgba(134,225,255,.16); }
       @media (max-width:900px){ .accordion-header{font-size:16px; padding:14px 16px} }
-
+    
       /* ================= Beschleuniger kette ================= */
       #chain-switch .sub{ color:var(--muted); margin:-6px 0 16px; }
       .chain-toggle{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:8px 0 20px; }
@@ -114,29 +99,17 @@
       .mode-btn:hover{ transform:translateY(-2px); border-color:var(--accent); box-shadow:0 8px 20px rgba(134,225,255,.15); }
       .mode-btn.active{ background:linear-gradient(180deg,#181a1f,#13151a); border-color:var(--accent); box-shadow:0 8px 22px rgba(134,225,255,.22); }
       @media(max-width:700px){ .chain-toggle{ grid-template-columns:1fr; } }
-
       .flow-card { display:grid; grid-template-columns: 1fr 1fr; gap:24px; background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015)); border:1px solid var(--line); border-radius:18px; padding:60px 20px 20px; box-shadow:0 10px 30px rgba(0,0,0,.25); position:relative; }
       .flow-step-title { position:absolute; top:16px; left:50%; transform:translateX(-50%); font-size:22px; font-weight:800; margin:0; text-align:center; width:calc(100% - 40px); }
       .flow-right { display:flex; flex-direction:column; align-items:center; text-align:center; }
       .flow-left { position:relative; display:flex; flex-direction:column; justify-content:flex-start; height:100%; max-height:490px; overflow-y:auto; padding-bottom:50px; }
       .flow-mini-text { margin:0 0 12px; font-size:15px; line-height:1.6; color:var(--muted); }
       .step-nav-fixed { position:absolute; bottom:0; left:50%; transform:translateX(-50%); display:flex; gap:12px; }
-
       .step-btn { padding:10px 32px; min-width:160px; border-radius:12px; border:1px solid var(--line); background:#121215; color:var(--fg); font-weight:300; font-size:12px; text-align:center; cursor:pointer; transition: background .25s ease, border-color .25s ease, transform .12s ease, opacity .25s ease; }
       .step-btn:hover { background:#1b1b20; border-color:var(--accent); }
       .step-btn:disabled { opacity:.5; cursor:not-allowed; }
       @media (max-width:900px){ .flow-card{ grid-template-columns:1fr } .flow-left{ max-height:none; padding-bottom:60px; } }
-
-      .mv-dot{
-        opacity: 0 !important;
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        pointer-events: none !important;
-      }
-      .mv-dot:focus,
-      .mv-dot:focus-visible{ outline: none !important; }
-
+    
       /* ================= HOTSPOTS (Bild) ================= */
       #ring-hotspots .stage{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#0f0f12}
       #ring-hotspots .stage img{width:100%;height:520px;object-fit:cover;opacity:.85;filter:grayscale(20%)}
@@ -146,7 +119,7 @@
       .fact h3{margin:0 0 6px;font-size:16px}
       .fact p{margin:0;color:var(--muted);font-size:14px}
       .fact.show{display:block}
-
+    
       /* ================= PHYSIK DEMO ================= */
       #acceleration-chain .chain{display:grid;grid-template-columns:1fr 1fr;gap:22px}
       .timeline-box{position:relative;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
@@ -163,7 +136,7 @@
       #bfield::-webkit-slider-runnable-track{height:4px;background:#2d2b30;border-radius:999px}
       .svgbox{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
       @media (max-width:900px){ #acceleration-chain .chain{grid-template-columns:1fr} }
-
+    
       /* ================= RINGS ================= */
       #collision-detector .rings{display:grid;grid-template-columns:1fr 1fr;gap:22px}
       .detector{position:relative;aspect-ratio:1/1;border-radius:18px;border:1px solid var(--line);overflow:hidden;background:radial-gradient(circle at 50% 50%,#1b1b1f,#101014)}
@@ -173,12 +146,12 @@
       .layers-legend .row .name{font-weight:600}
       .layers-legend button{border:none;background:#fff;color:#000;padding:6px 10px;border-radius:10px;cursor:pointer;font-weight:600}
       @media (max-width:900px){ #collision-detector .rings{grid-template-columns:1fr} }
-
+    
       /* ================= SAFETY / FOOTER ================= */
       .safety{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
       @media (max-width:900px){ .safety{grid-template-columns:1fr} }
       .footer{padding:40px 0;color:var(--muted);text-align:center;border-top:1px solid var(--line)}
-
+    
       /* ================= Anchor Flash ================= */
       .section.flash{position:relative}
       .section.flash::before{
@@ -187,38 +160,22 @@
         animation: flashPulse 1200ms ease-out forwards 300ms;
       }
       @keyframes flashPulse{ 0%{opacity:0} 20%{opacity:1} 60%{opacity:.85} 100%{opacity:0} }
-
+    
       .flow-viewport { width: 100%; aspect-ratio: 1 / 1; border-radius: 14px; border: 1px solid var(--line); overflow: hidden; background: #0f1014; }
       model-viewer { width: 100%; height: 100%; display: block; outline: none; }
-
-      /* === PONG OVERLAY ===================================== */
+    
+      /* ================= PONG OVERLAY ================= */
       #pong-overlay[hidden]{ display:none !important; }
-      #pong-overlay{
-        position:fixed; inset:0; z-index:9999;
-        background:rgba(5,6,8,.92);
-        display:grid; grid-template-rows:1fr auto; gap:0;
-        backdrop-filter:saturate(115%) blur(6px);
-      }
+      #pong-overlay{ position:fixed; inset:0; z-index:9999; background:rgba(5,6,8,.92); display:grid; grid-template-rows:1fr auto; gap:0; backdrop-filter:saturate(115%) blur(6px); }
       #pong-stage{ position:relative; display:grid; place-items:center; padding:16px; }
-      #pong-canvas{
-        width: min(100vw, 1000px);
-        height: min(calc(100vh - 120px), 700px);
-        border: 1px solid var(--line);
-        border-radius: 16px;
-        background: radial-gradient(circle at 50% 50%, #0f1116, #0b0c10 60%);
-        box-shadow: inset 0 20px 60px rgba(0,0,0,.45);
-      }
-      #pong-hud{
-        display:flex; align-items:center; justify-content:space-between;
-        gap:12px; padding:10px 16px; border-top:1px solid var(--line);
-        background:linear-gradient(180deg,#131418,#0e0f13);
-      }
+      #pong-canvas{ width: min(100vw, 1000px); height: min(calc(100vh - 120px), 700px); border: 1px solid var(--line); border-radius: 16px; background: radial-gradient(circle at 50% 50%, #0f1116, #0b0c10 60%); box-shadow: inset 0 20px 60px rgba(0,0,0,.45); }
+      #pong-hud{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 16px; border-top:1px solid var(--line); background:linear-gradient(180deg,#131418,#0e0f13); }
       .pong-pill{ display:inline-flex; align-items:center; gap:10px; border:1px solid var(--line); border-radius:9999px; padding:8px 12px; background:var(--card); color:var(--fg); font-weight:600; font-size:13px; }
       .pong-muted{ color:var(--muted); font-weight:500; }
       #pong-close{ border:1px solid var(--line); background:transparent; color:var(--fg); border-radius:10px; padding:8px 12px; cursor:pointer; }
       #pong-close:hover{ background:#17181c; border-color:var(--accent); }
-
-      /* Blaue MV-Hotspots (ohne Labels) */
+    
+      /* ================= MV HOTSPOTS ================= */
       .mv-dot{
         --size: 14px;
         width: var(--size);
@@ -230,439 +187,59 @@
         cursor: pointer;
       }
       .mv-dot:focus{ outline: 2px solid #fff; outline-offset: 2px; }
-      
-      #dvd-wrap {
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        background: transparent;    
-        opacity: 0;             
-        pointer-events: none;       
-        transition: opacity 2s ease;
-      }
-      
-
-      #dvd-wrap.active {
-        opacity: 1;
-        pointer-events: auto;       
-      }
-
-      
-      #content-wrap.blur {
-        filter: blur(12px);      
-        transition: filter 2s cubic-bezier(.4, 0, .2, 1);
-      }
-      
-      #dvd-box iframe,
-      #dvd-box video {
-        width: 2000px;   
-        height: auto;  
-        max-width: 200vw; 
-      }
     
-      #content-wrap {
-        transition: filter 2s cubic-bezier(.4, 0, .2, 1);
+      /* ================= DVD OVERLAY ================= */
+      #dvd-wrap { position: fixed; inset: 0; z-index: 9999; background: transparent; opacity: 0; pointer-events: none; transition: opacity 2s ease; }
+      #dvd-wrap.active { opacity: 1; pointer-events: auto; }
+      #content-wrap.blur { filter: blur(12px); transition: filter 2s cubic-bezier(.4, 0, .2, 1); }
+      #dvd-box iframe, #dvd-box video { width: 2000px; height: auto; max-width: 200vw; }
+      #content-wrap { transition: filter 2s cubic-bezier(.4, 0, .2, 1); }
+    
+      /* ================= ATLAS FREEFORM (SCROLL-SCRUB) ================= */
+      .atlas-free{ position: relative; padding-right: min(36vw, 520px); min-height: 800vh; }
+      .atlas-video-stick{ position: sticky; top: 50vh; transform: translateY(-50%); display:flex; justify-content:center; align-items:center; pointer-events:none; }
+      #atlasVideo{
+        pointer-events:auto; width:min(82vw,1000px); aspect-ratio:16 / 9; display:block; background:#000;
+        border-radius:12px; border:1px solid var(--line); box-shadow:0 20px 60px rgba(0,0,0,.35);
       }
-
-      
-      .clip-card {
-        background: var(--card, #141416);
-        border: 1px solid var(--line, #242428);
-        border-radius: 18px;
-        padding: 18px;
-        max-width: 1000px;
-        margin: 40px auto;
+      #vfader{
+        position:fixed; left:50%; top:50%; width:min(82vw,1000px); aspect-ratio:16 / 9;
+        transform:translate(-50%,-50%); border-radius:12px; pointer-events:none; background:rgba(0,0,0,.28);
+        opacity:0; transition:opacity .18s ease; box-shadow:0 0 0 1px var(--line) inset;
       }
-      
-      .clip-box {
-        display: grid;
-        grid-template-columns: 1.1fr 1.4fr;
-        gap: 24px;
-        align-items: stretch;
+      #vfader.fade{ opacity:1; }
+      .atlas-side{ position:relative; width:min(34vw,480px); margin-left:auto; }
+      .atlas-feed{ display:flex; flex-direction:column; gap:96px; padding-top:12px; }
+      .seg-block h3{ margin:0 0 8px 0; font-size:18px; font-weight:700; letter-spacing:-.01em; }
+      .seg-block p{ margin:0; color:var(--muted); font-size:15px; line-height:1.8; }
+      .seg-block.new{ animation: segFocus .5s ease-out; }
+      @keyframes segFocus{ from{ transform: translateY(6px); opacity:.7 } to{ transform:none; opacity:1 } }
+      .sr-only{ position:absolute !important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+      @media (max-width: 980px){
+        .atlas-free{ padding-right:0; min-height:600vh; }
+        .atlas-side{ width:100%; margin-top:24px; }
+        #atlasVideo, #vfader{ width:100%; }
       }
-      @media (max-width:900px){ .clip-box { grid-template-columns: 1fr; } }
-      
-      .clip-left { display:flex; flex-direction:column; gap:14px; }
-      .clip-controls { margin-top:auto; display:flex; gap:12px; }
-      
-      .step-btn {
-        padding:10px 32px;
-        min-width:160px;
-        border-radius:12px;
-        border:1px solid var(--line, #242428);
-        background:#121215;
-        color:var(--fg, #fafafa);
-        font-weight:300;
-        font-size:12px;
-        cursor:pointer;
-      }
-      .step-btn:hover { background:#1b1b20; border-color:var(--accent, #7dd3fc); }
-      .step-btn:disabled { opacity:.5; cursor:not-allowed; }
-      
-      .clip-right {
-        position:relative;
-        border:1px solid var(--line, #242428);
-        border-radius:16px;
-        overflow:hidden;
-        background:#000;
-        aspect-ratio:1/1;   /* square player */
-        width:100%;
-      }
+      /* === ATLAS Freeform: tall section + centered sticky video + right feed === */
+      .atlas-free{ position:relative; padding-right:min(36vw,520px); min-height:800vh; }
+      .atlas-video-stick{ position:sticky; top:50vh; transform:translateY(-50%); display:flex; justify-content:center; align-items:center; pointer-events:none; }
+      #atlasVideo{ pointer-events:auto; width:min(82vw,1000px); aspect-ratio:16/9; display:block; background:#000; border-radius:12px; border:1px solid var(--line); box-shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 18px 50px rgba(0,0,0,.38); }
+      #vfader{ position:fixed; left:50%; top:50%; width:min(82vw,1000px); aspect-ratio:16/9; transform:translate(-50%,-50%); border-radius:12px; pointer-events:none; background:rgba(0,0,0,.28); opacity:0; transition:opacity .18s ease; box-shadow:0 0 0 1px var(--line) inset; }
+      #vfader.fade{ opacity:1; }
+      .atlas-side{ position:relative; width:min(34vw,480px); margin-left:auto; }
+      .atlas-feed{ display:flex; flex-direction:column; gap:96px; padding-top:12px; }
+      .seg-block h3{ margin:0 0 8px 0; font-size:18px; font-weight:700; letter-spacing:-.01em; }
+      .seg-block p{ margin:0; color:var(--muted); font-size:15px; line-height:1.8; }
+      .seg-block.new{ animation:segFocus .5s ease-out; }
+      @keyframes segFocus{ from{ transform:translateY(6px); opacity:.7 } to{ transform:none; opacity:1 } }
+      .sr-only{ position:absolute !important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+      @media (max-width:980px){ .atlas-free{ padding-right:0; min-height:600vh; } .atlas-side{ width:100%; margin-top:24px; } #atlasVideo,#vfader{ width:100%; } }
 
-      #vfader {
-        position:absolute;
-        inset:0;
-        pointer-events:none;
-        opacity:0;
-        background:rgba(0,0,0,.35);
-      }
-      #vfader.fade {
-        transition:opacity .35s ease;
-        opacity:1;
-      }
+    </style>
 
+  </head>
 
-      </style>
-      <style>
-        .clip-card {
-          background: #141416;
-          border: 1px solid #242428;
-          border-radius: 18px;
-          padding: 18px;
-          max-width: 1000px;
-          margin: 40px auto;
-        }
-      
-        .clip-box {
-          display: grid;
-          grid-template-columns: 1.1fr 1.4fr;
-          gap: 24px;
-          align-items: stretch;
-        }
-        @media (max-width:900px){ .clip-box { grid-template-columns: 1fr; } }
-      
-        .clip-left { display:flex; flex-direction:column; gap:14px; }
-        .clip-controls { margin-top:auto; display:flex; gap:12px; }
-      
-        .step-btn {
-          padding:10px 32px;
-          min-width:160px;
-          border-radius:12px;
-          border:1px solid #242428;
-          background:#121215;
-          color:#fafafa;
-          font-weight:300;
-          font-size:12px;
-          cursor:pointer;
-          transition: background .25s ease, border-color .25s ease, opacity .25s ease;
-        }
-        .step-btn:hover { background:#1b1b20; border-color:#7dd3fc; }
-        .step-btn:disabled { opacity:.5; cursor:not-allowed; }
-      
-        .clip-right {
-          position:relative;
-          border:1px solid #242428;
-          border-radius:16px;
-          overflow:hidden;
-          background:#000;
-          aspect-ratio:1/1;
-          width:100%;
-        }
-      
-        .clip-right video {
-          position:absolute;
-          inset:0;
-          width:100%;
-          height:100%;
-          object-fit:contain;
-          background:#000;
-          opacity:0;
-          transition: opacity .22s ease; /* kurzer, knackiger Crossfade */
-        }
-        .clip-right video.active { opacity:1; }
-      
-        /* sanfter Overlay-Fader für harte Sprünge (meist unsichtbar dank Preload) */
-        #vfader {
-          position:absolute; inset:0; pointer-events:none;
-          background:rgba(0,0,0,.35);
-          opacity:0; transition:opacity .18s ease;
-        }
-        #vfader.fade { opacity:1; }
-        /* === ATLAS: Freeflow Layout ===================================== */
-        .atlas-wrap{
-          display:grid;
-          grid-template-columns: minmax(320px, 520px) 1fr;
-          gap:28px;
-          align-items:start;
-        }
-        @media (max-width: 980px){
-          .atlas-wrap{ grid-template-columns: 1fr; }
-        }
-        
-        .atlas-left{
-          position: sticky;
-          top: 96px; /* unterhalb deiner Sticky-Headerhöhe */
-        }
-        
-        .atlas-video{
-          position:relative;
-          border:1px solid var(--line);
-          border-radius:16px;
-          overflow:hidden;
-          background:#000;
-          width:100%;
-          aspect-ratio: 16 / 9;
-        }
-        .atlas-video video{
-          position:absolute; inset:0;
-          width:100%; height:100%;
-          object-fit:contain;
-          opacity:0; transition: opacity .22s ease;
-          background:#000;
-        }
-        .atlas-video video.active{ opacity:1; }
-        
-        #vfader{
-          position:absolute; inset:0; pointer-events:none;
-          background:rgba(0,0,0,.28); opacity:0; transition:opacity .18s ease;
-        }
-        #vfader.fade{ opacity:1; }
-        
-        .atlas-hint{
-          margin-top:10px;
-          color:var(--muted);
-          font-size:12px;
-          border:1px dashed var(--line);
-          border-radius:10px;
-          padding:8px 10px;
-        }
-        
-        /* Screenreader-only helper */
-        .sr-only{
-          position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
-          overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
-        }
-        
-        /* === Cards im Feed (rechts) ===================================== */
-        .atlas-feed{ display:flex; flex-direction:column; gap:14px; }
-        
-        .seg-card{
-          background:var(--card);
-          border:1px solid var(--line);
-          border-radius:14px;
-          padding:16px;
-        }
-        .seg-title{
-          margin:0 0 6px 0;
-          font-size:16px; font-weight:700; letter-spacing:-.01em;
-        }
-        .seg-text{
-          margin:0; color:var(--muted); font-size:14px; line-height:1.6;
-        }
-        
-        /* Optional: leichter “Anheften”-Effekt für die neu hinzugefügte Karte */
-        .seg-card.new{
-          outline: 2px solid rgba(125,211,252,.35);
-          box-shadow: 0 8px 22px rgba(134,225,255,.12);
-          animation: segPop .5s ease-out forwards;
-        }
-        @keyframes segPop{
-          0%{ transform: translateY(4px); opacity:.7; }
-          100%{ transform:none; opacity:1; }
-        }
-        /* === ATLAS Freeform Layout =================================== */
-        .atlas-free{
-          position: relative;
-          /* genug Platz rechts lassen, damit der Feed Luft hat */
-          padding-right: min(36vw, 520px);
-        }
-        
-        /* Sticky Video: bleibt horizontal zentriert */
-        .atlas-video-stick{
-          position: sticky;
-          top: 96px;                /* unterhalb deines Sticky-Headers */
-          display: flex;
-          justify-content: center;  /* horizontal zentrieren */
-          align-items: center;
-          min-height: min(60vh, 720px); /* angenehme Höhe beim Scrollen */
-          pointer-events: none;     /* nur Video selbst soll Input annehmen */
-        }
-        
-        /* Cleanes Video (kein Rahmen/Box) */
-        #atlasVideo{
-          pointer-events: auto;
-          width: min(82vw, 1000px);
-          aspect-ratio: 16 / 9;
-          display: block;
-          background: #000;
-          border-radius: 12px;
-          box-shadow: 0 20px 60px rgba(0,0,0,.35);
-        }
-        
-        /* dezenter Fader für harte Sprünge */
-        #vfader{
-          position: absolute;
-          inset: 0;
-          margin: auto;
-          width: min(82vw, 1000px);
-          aspect-ratio: 16 / 9;
-          border-radius: 12px;
-          pointer-events: none;
-          background: rgba(0,0,0,.28);
-          opacity: 0;
-          transition: opacity .18s ease;
-        }
-        #vfader.fade{ opacity: 1; }
-        
-        /* Rechter Feed (rechts ausgerichtet, große Abstände) */
-        .atlas-side{
-          position: relative;
-          width: min(34vw, 480px);
-          /* rechts andocken */
-          margin-left: auto;
-        }
-        
-        .atlas-feed{
-          display: flex;
-          flex-direction: column;
-          gap: 64px;             /* größere Abstände zwischen Absätzen */
-          padding-top: 12px;
-        }
-        
-        /* Minimalistische Absätze (keine Boxen) */
-        .seg-block h3{
-          margin: 0 0 8px 0;
-          font-size: 18px;
-          font-weight: 700;
-          letter-spacing: -.01em;
-        }
-        .seg-block p{
-          margin: 0;
-          color: var(--muted);
-          font-size: 15px;
-          line-height: 1.7;
-        }
-        
-        /* sanfter Fokus für neu hinzugefügten Absatz */
-        .seg-block.new{
-          animation: segFocus .5s ease-out;
-        }
-        @keyframes segFocus{
-          from{ transform: translateY(6px); opacity: .7; }
-          to  { transform: none;           opacity: 1; }
-        }
-        
-        /* Screenreader-only helper */
-        .sr-only{
-          position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
-          overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
-        }
-        
-        /* Responsive: wenn wenig Breite, Feed unter das Video setzen */
-        @media (max-width: 980px){
-          .atlas-free{ padding-right: 0; }
-          .atlas-side{
-            width: 100%;
-            margin-top: 16px;
-          }
-          #vfader, #atlasVideo{
-            width: 100%;
-          }
-        }
-
-        /* === ATLAS Freeform: sehr hohe Section + zentriertes sticky Video ======= */
-
-        /* Macht die ATLAS-Zone VIEL höher (zusätzlich dynamisch via JS, s.u.) */
-        .atlas-free{
-          position: relative;
-          padding-right: min(36vw, 520px); /* Platz für rechten Feed */
-          min-height: 800vh;               /* große Grundhöhe; JS erhöht das noch */
-        }
-        
-        /* Video-Wrapper: sticky + echte Vertikalmitte */
-        .atlas-video-stick{
-          position: sticky;
-          /* zentriert vertikal: wir setzen den Referenzpunkt in die Bildschirmmitte ... */
-          top: 50vh;
-          /* ... und ziehen das Element um die Hälfte seiner Höhe nach oben */
-          transform: translateY(-50%);
-          display: flex;
-          justify-content: center;   /* horizontal mittig */
-          align-items: center;
-          pointer-events: none;      /* nur das Video selbst soll Events kriegen */
-        }
-        
-        /* Cleanes Video (kein Rahmen), begrenzt auf sinnvolle Größe */
-        #atlasVideo{
-          pointer-events: auto;
-          width: min(82vw, 1000px);
-          aspect-ratio: 16 / 9;
-          display: block;
-          background: #000;
-          border-radius: 12px;
-          box-shadow: 0 20px 60px rgba(0,0,0,.35);
-        }
-        
-        /* Overlay-Fader (für harte Sprünge) – exakt über dem Video positioniert */
-        #vfader{
-          position: fixed;            /* fixiert, damit es immer über dem Video liegt */
-          left: 50%;
-          top: 50%;
-          width: min(82vw, 1000px);
-          aspect-ratio: 16 / 9;
-          transform: translate(-50%, -50%);
-          border-radius: 12px;
-          pointer-events: none;
-          background: rgba(0,0,0,.28);
-          opacity: 0;
-          transition: opacity .18s ease;
-        }
-        #vfader.fade{ opacity: 1; }
-        
-        /* Rechter Feed rechts angedockt, mit großen Abständen zwischen Absätzen */
-        .atlas-side{
-          position: relative;
-          width: min(34vw, 480px);
-          margin-left: auto;
-        }
-        .atlas-feed{
-          display: flex;
-          flex-direction: column;
-          gap: 96px;                 /* größere Abstände */
-          padding-top: 12px;
-        }
-        
-        /* Minimalistische Absätze */
-        .seg-block h3{
-          margin: 0 0 8px 0;
-          font-size: 18px; font-weight: 700; letter-spacing: -.01em;
-        }
-        .seg-block p{
-          margin: 0; color: var(--muted); font-size: 15px; line-height: 1.8;
-        }
-        .seg-block.new{ animation: segFocus .5s ease-out; }
-        @keyframes segFocus{ from{ transform: translateY(6px); opacity:.7 } to{ transform:none; opacity:1 } }
-        
-        /* A11y helper */
-        .sr-only{
-          position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
-          overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
-        }
-        
-        /* Responsive: Feed unter Video */
-        @media (max-width: 980px){
-          .atlas-free{ padding-right: 0; min-height: 600vh; }
-          .atlas-side{ width: 100%; margin-top: 24px; }
-          #atlasVideo{ width: 100%; }
-          #vfader{ width: 100%; }
-        }
-
-
-
-      </style>
-    </head>
   <body>
-    <!-- ================= HEADER ================= -->
     <header class="header">
       <div class="nav container">
         <div>Beschleuniger</div>
@@ -678,9 +255,7 @@
       </div>
     </header>
 
-      
-    <div id="content-wrap">  
-      <!-- ================= HERO ================= -->
+    <div id="content-wrap">
       <section class="hero" id="hero" aria-labelledby="hero-title">
         <div class="bg" aria-hidden="true"></div>
         <div class="content container">
@@ -688,8 +263,7 @@
           <p class="subtitle">Eine Einführung in CERN, seine Geschichte und seine Beschleuniger (Fokus: LHC-Komplex) – plus ein Blick auf die Physik dahinter.</p>
         </div>
       </section>
-  
-      <!-- ================= EINLEITUNG ================= -->
+
       <section class="section" id="cern-teile">
         <div class="container">
           <div class="accordion card reveal" id="cern-accordion">
@@ -705,8 +279,7 @@
               </div>
             </div>
           </div>
-  
-          <!-- Links -->
+
           <div class="topic-grid" aria-label="Themen">
             <a class="topic-card" href="#timeline">
               <h3>Zeitleiste</h3>
@@ -735,22 +308,17 @@
           </div>
         </div>
       </section>
-  
-      <!-- ================= TIMELINE ================= -->
+
       <section class="section" id="timeline">
         <div class="container">
           <h2 class="reveal">Geschichte</h2>
-  
           <div class="timeline-slider reveal">
             <button class="nav-btn prev" type="button" aria-label="Zurück" title="Zurück">◀</button>
-  
             <div class="event-card" aria-live="polite">
-              <div class="anim-wrap"><!-- dynamic slide injected here --></div>
+              <div class="anim-wrap"></div>
             </div>
-  
             <button class="nav-btn next" type="button" aria-label="Weiter" title="Weiter">▶</button>
           </div>
-  
           <div class="progress" aria-label="Zeitstrahl">
             <div class="bar" id="tl-bar">
               <div class="marker" id="tl-marker" aria-hidden="true"></div>
@@ -760,20 +328,16 @@
           </div>
         </div>
       </section>
-  
-      <!-- ================= BESCHLEUNIGERKETTE (Model Viewer) ================= -->
+
       <section class="section" id="chain-switch">
         <div class="container">
           <h2>Beschleunigerkette</h2>
           <p class="sub">Erkunde die Elemente der LHC Beschleunigerkette für Protonen</p>
-  
-  
+
           <div class="flow-card" aria-live="polite">
             <h3 class="flow-step-title" id="flow-title">Linear Accelerator 4 (LINAC4)</h3>
-  
             <div class="flow-right">
               <div class="flow-viewport">
-  
                 <model-viewer
                   id="mv"
                   src="LHC.glb"
@@ -786,150 +350,26 @@
                   shadow-intensity="3"
                   environment-image="neutral"
                   interaction-prompt="none"
-  
                   field-of-view="45deg"
-                
                   min-camera-orbit="auto 60deg 10m"
                   max-camera-orbit="auto 60deg 4000m"
-                
                   interpolation-decay="200">
-                
-                  <!-- 9 Hotspots (ohne Labels) -->
-                  <button class="mv-dot" slot="hotspot-LINAC4"    data-name="LINAC4"    data-position="20.6911m -0.684515m -112.797m"  data-normal="0m 1m 0m"></button>
-                  <button class="mv-dot" slot="hotspot-PSBooster" data-name="PSBooster" data-position="36.691m 0.25m -77.884m"         data-normal="0m 1m 0m"></button>
-                  <button class="mv-dot" slot="hotspot-PS"        data-name="PS"        data-position="-0.06m 0.25m -80.025m"          data-normal="0m 1m 0m"></button>
-                  <button class="mv-dot" slot="hotspot-SPS"       data-name="SPS"       data-position="0m 0.25m 253.5m"                data-normal="0m 1m 0m"></button>
-                  <button class="mv-dot" slot="hotspot-LHC"       data-name="LHC"       data-position="0m 0.25m 877.53m"               data-normal="0m 1m 0m"></button>
-                  <button class="mv-dot" slot="hotspot-ATLAS"     data-name="ATLAS"     data-position="0m 0.25m -4.5m"                 data-normal="0m 1m 0m"></button>
-                  <button class="mv-dot" slot="hotspot-ALICE"     data-name="ALICE"     data-position="473m 0.25m 144.7m"              data-normal="0m 1m 0m"></button>
-                  <button class="mv-dot" slot="hotspot-LHCb"      data-name="LHCb"      data-position="-518.19m 0.25m 178.78m"         data-normal="0m 1m 0m"></button>
-                  <button class="mv-dot" slot="hotspot-CMS"       data-name="CMS"       data-position="-16.125m 0.25m 1762m"           data-normal="0m 1m 0m"></button>
-                
+                  <button class="mv-dot" slot="hotspot-LINAC4" data-name="LINAC4" data-position="20.6911m -0.684515m -112.797m" data-normal="0m 1m 0m"></button>
+                  <button class="mv-dot" slot="hotspot-PSBooster" data-name="PSBooster" data-position="36.691m 0.25m -77.884m" data-normal="0m 1m 0m"></button>
+                  <button class="mv-dot" slot="hotspot-PS" data-name="PS" data-position="-0.06m 0.25m -80.025m" data-normal="0m 1m 0m"></button>
+                  <button class="mv-dot" slot="hotspot-SPS" data-name="SPS" data-position="0m 0.25m 253.5m" data-normal="0m 1m 0m"></button>
+                  <button class="mv-dot" slot="hotspot-LHC" data-name="LHC" data-position="0m 0.25m 877.53m" data-normal="0m 1m 0m"></button>
+                  <button class="mv-dot" slot="hotspot-ATLAS" data-name="ATLAS" data-position="0m 0.25m -4.5m" data-normal="0m 1m 0m"></button>
+                  <button class="mv-dot" slot="hotspot-ALICE" data-name="ALICE" data-position="473m 0.25m 144.7m" data-normal="0m 1m 0m"></button>
+                  <button class="mv-dot" slot="hotspot-LHCb" data-name="LHCb" data-position="-518.19m 0.25m 178.78m" data-normal="0m 1m 0m"></button>
+                  <button class="mv-dot" slot="hotspot-CMS" data-name="CMS" data-position="-16.125m 0.25m 1762m" data-normal="0m 1m 0m"></button>
                 </model-viewer>
-                
-                <!-- Smooth focus/zoom controller -->
-                <script>
-                (function(){
-                  const mv = document.getElementById('mv');
-                  if(!mv) return;
-                
-                  // Utils
-                  const parsePos = (s) => (s||'0m 0m 0m').split(' ').map(p => parseFloat(String(p).replace('m',''))||0);
-                  const fmtPos   = (v) => `${v[0].toFixed(3)}m ${v[1].toFixed(3)}m ${v[2].toFixed(3)}m`;
-                  const parseOrbit = (s) => {
-                    const parts = (s||'auto auto 200m').split(' ');
-                    const num = (p)=> (p==null||p==='auto')?null:parseFloat(p);
-                    return { theta: parts[0]==='auto'?null:num(parts[0]), phi: parts[1]==='auto'?null:num(parts[1]), r: num(parts[2])??200 };
-                  };
-                  const fmtOrbit = ({theta=null,phi=null,r=200}) => `${theta==null?'auto':theta+'deg'} ${phi==null?'auto':phi+'deg'} ${(+r).toFixed(3)}m`;
-                  const easeInOutCubic=(t)=> t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
-                
-                  function readPositions(){
-                    const map={};
-                    mv.querySelectorAll('button.mv-dot[data-name]').forEach(btn=>{
-                      map[btn.dataset.name]=btn.dataset.position||'0m 0m 0m';
-                    });
-                    return map;
-                  }
-                  let POS = readPositions();
-                  const mo = new MutationObserver(()=>{ POS = readPositions(); });
-                  mo.observe(mv,{subtree:true, attributes:true, attributeFilter:['data-position']});
-                
-                  const ORBIT_RADIUS = {
-                    LINAC4:   20,
-                    PSBooster:25,
-                    PS:      200,
-                    SPS:     1000,
-                    LHC:     4000,
-                    ATLAS:   20,
-                    CMS:     20,
-                    ALICE:   20,
-                    LHCb:    20
-                  };
-  
-  
-                
-                  let currTarget=null;
-                  let currOrbit=null;
-                  let animId=null;
-                
-                  mv.addEventListener('load', ()=>{
-                    const attrTarget = mv.getAttribute('camera-target');
-                    currTarget = (attrTarget && !/auto/i.test(attrTarget)) ? parsePos(attrTarget)
-                                : POS.LINAC4 ? parsePos(POS.LINAC4) : [0,0,0];
-                    currOrbit = parseOrbit(mv.getAttribute('camera-orbit'));
-                    if(!currOrbit || isNaN(currOrbit.r)) currOrbit = {theta:null, phi:null, r: ORBIT_RADIUS.LINAC4};
-                    mv.setAttribute('camera-target', fmtPos(currTarget));
-                    mv.setAttribute('camera-orbit',  fmtOrbit(currOrbit));
-                  }, {once:true});
-                
-                  function stopAnim(){ if(animId){ cancelAnimationFrame(animId); animId=null; } }
-                
-                  async function focusTo(name, duration=900){
-                    const targetStr = POS[name];
-                    if(!targetStr) return;
-                    if(mv.updateComplete) await mv.updateComplete;
-                
-                    const startPos   = currTarget || (mv.getAttribute('camera-target') ? parsePos(mv.getAttribute('camera-target')) : [0,0,0]);
-                    const endPos     = parsePos(targetStr);
-                    const startOrbit = currOrbit || parseOrbit(mv.getAttribute('camera-orbit'));
-                    const desiredR   = ORBIT_RADIUS[name] ?? startOrbit.r ?? 200;
-                    const endOrbit   = { theta:startOrbit.theta, phi:startOrbit.phi, r:desiredR };
-                
-                    const t0 = performance.now();
-                    stopAnim();
-                
-                    const step = (now)=>{
-                      const t = Math.min(1,(now - t0)/duration);
-                      const k = easeInOutCubic(t);
-                
-                      const pos = [
-                        startPos[0] + (endPos[0]-startPos[0]) * k,
-                        startPos[1] + (endPos[1]-startPos[1]) * k,
-                        startPos[2] + (endPos[2]-startPos[2]) * k,
-                      ];
-                      const r = (startOrbit.r ?? 200) + ((endOrbit.r)-(startOrbit.r ?? 200)) * k;
-                
-                      mv.setAttribute('camera-target', fmtPos(pos));
-                      mv.setAttribute('camera-orbit',  fmtOrbit({theta:startOrbit.theta, phi:startOrbit.phi, r}));
-                
-                      if(t<1){
-                        animId = requestAnimationFrame(step);
-                      }else{
-                        currTarget = endPos;
-                        currOrbit  = {theta:startOrbit.theta, phi:startOrbit.phi, r:endOrbit.r};
-                        animId = null;
-                      }
-                    };
-                    animId = requestAnimationFrame(step);
-                  }
-                
-                  mv.addEventListener('click', (e)=>{
-                    const btn = e.composedPath().find(n=> n?.classList?.contains?.('mv-dot'));
-                    if(btn && btn.dataset?.name){
-                      focusTo(btn.dataset.name, 800);
-                    }
-                  });
-                
-                  window.__MV_FOCUS__ = { focusTo, get POS(){ return POS; } };
-                })();
-                </script>
-                
-                <!-- Control Panel (XY editor) -->
                 <div id="mv-hotspot-controls" class="card" style="margin-top:12px">
                   <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:end">
                     <label>
                       <div style="font-size:12px;color:var(--muted)">Hotspot</div>
                       <select id="mv-hotspot-select">
-                        <option>LINAC4</option>
-                        <option>PSBooster</option>
-                        <option>PS</option>
-                        <option>SPS</option>
-                        <option>LHC</option>
-                        <option>ATLAS</option>
-                        <option>CMS</option>
-                        <option>ALICE</option>
-                        <option>LHCb</option>
+                        <option>LINAC4</option><option>PSBooster</option><option>PS</option><option>SPS</option><option>LHC</option><option>ATLAS</option><option>CMS</option><option>ALICE</option><option>LHCb</option>
                       </select>
                     </label>
                     <label>
@@ -942,38 +382,10 @@
                     </label>
                     <button id="mv-apply" class="step-btn" type="button">Setzen</button>
                   </div>
-                  <div style="margin-top:8px; font-size:12px; color:var(--muted)">
-                    Hinweis: Z bleibt hier 0 m (kannst du im Script erweitern).
-                  </div>
+                  <div style="margin-top:8px; font-size:12px; color:var(--muted)">Hinweis: Z bleibt hier 0 m (kannst du im Script erweitern).</div>
                 </div>
-                
-                <script>
-                (function(){
-                  const mv = document.getElementById('mv');
-                  const sel = document.getElementById('mv-hotspot-select');
-                  const xIn = document.getElementById('mv-x');
-                  const yIn = document.getElementById('mv-y');
-                  const btn = document.getElementById('mv-apply');
-                  const getBtn = (name)=> mv.querySelector(`button.mv-dot[data-name="${name}"]`);
-                  function load(name){
-                    const b=getBtn(name); if(!b) return;
-                    const [xm,ym] = (b.dataset.position||'0m 0m 0m').split(' ');
-                    xIn.value=parseFloat(xm)||0; yIn.value=parseFloat(ym)||0;
-                  }
-                  function apply(){
-                    const b=getBtn(sel.value); if(!b) return;
-                    const x=parseFloat(xIn.value)||0; const y=parseFloat(yIn.value)||0; const z=0;
-                    b.dataset.position = `${x}m ${y}m ${z}m`;
-                  }
-                  sel.addEventListener('change',()=>load(sel.value));
-                  btn.addEventListener('click',apply);
-                  load(sel.value);
-                })();
-                </script>
-  
               </div>
             </div>
-  
             <div class="flow-left">
               <p id="flow-text" class="flow-mini-text">
                 Der Linear Accelerator 4 (LINAC4) wurde 2020 offiziell in Betrieb genommen und ist der erste Schritt in der LHC-Beschleunigerkette. Er beschleunigt negativ geladene Wasserstoffionen (H⁻) auf eine Energie von 160 MeV, was etwa 0,43 % der Lichtgeschwindigkeit entspricht. Anschließend werden die Elektronen abgestreift, sodass reine Protonen entstehen. Der LINAC4 ersetzt den älteren LINAC2 und liefert einen dichteren und stärkeren Strahl. Er arbeitet als linearer Beschleuniger mit Radiofrequenz-Kavitäten. Die erzeugten Protonen werden anschließend in den Proton Synchrotron Booster eingespeist. LINAC4 bildet damit die Einspeisung für den gesamten weiteren Beschleunigerkomplex.
@@ -986,8 +398,7 @@
           </div>
         </div>
       </section>
-  
-      <!-- ================= TEILCHENBESCHLEUNIGER (Bild-Hotspots) ================= -->
+
       <section class="section" id="ring-hotspots">
         <div class="container">
           <h2 class="reveal">Teilchenbeschleuniger allgemein</h2>
@@ -1005,23 +416,19 @@
           </div>
         </div>
       </section>
-  
-      <!-- ================= ATLAS ================= -->
+
       <section class="section" id="acceleration-chain">
         <div class="container">
           <h2 class="reveal">A Toroidal LHC Apparatus</h2>
-          <p class="reveal">Eine Einführung in einen der 4 Detektoren des LHCs, ATLAS</p>
+          <p class="reveal">Eine Einführung in einen der 4 Detektoren des LHCs, Atlas</p>
         </div>
       
-        <!-- Sehr hohe Section + zentriertes, sticky Video -->
         <div class="atlas-free container">
-          <!-- Video bleibt horizontal UND vertikal zentriert -->
           <div class="atlas-video-stick" aria-describedby="atlas-instructions">
             <video id="atlasVideo" playsinline muted preload="auto"></video>
             <div id="vfader" aria-hidden="true"></div>
           </div>
       
-          <!-- Rechter Feed mit großzügigen Abständen -->
           <aside class="atlas-side">
             <div id="atlas-feed" class="atlas-feed"></div>
             <p class="sr-only" id="atlas-instructions">
@@ -1033,9 +440,6 @@
       </section>
 
 
-
-  
-      <!-- ================= KOLLISIONEN ================= -->
       <section class="section" id="collision-detector">
         <div class="container">
           <h2 class="reveal">Kollisionen</h2>
@@ -1056,8 +460,7 @@
           </div>
         </div>
       </section>
-  
-      <!-- ================= SICHERHEIT ================= -->
+
       <section class="section" id="safety">
         <div class="container">
           <h2 class="reveal">Sicherheit und Realität</h2>
@@ -1068,8 +471,7 @@
           </div>
         </div>
       </section>
-  
-      <!-- ================= QUELLEN ================= -->
+
       <section class="section" id="sources">
         <div class="container">
           <h2 class="reveal">Quellen</h2>
@@ -1079,12 +481,9 @@
           </ul>
         </div>
       </section>
-  
-      <!-- === PONG OVERLAY =================================== -->
+
       <div id="pong-overlay" role="dialog" aria-modal="true" aria-label="Pong" hidden>
-        <div id="pong-stage">
-          <canvas id="pong-canvas" aria-label="Pong Spielfeld"></canvas>
-        </div>
+        <div id="pong-stage"><canvas id="pong-canvas" aria-label="Pong Spielfeld"></canvas></div>
         <div id="pong-hud" class="container">
           <div class="pong-pill">Score: <span id="pong-score">0</span></div>
           <div class="pong-pill">Highscore: <span id="pong-best">0</span></div>
@@ -1093,20 +492,13 @@
         </div>
       </div>
     </div>
-    
-    <!-- DVD-Bounce-Box -->
+
     <div id="dvd-wrap" aria-hidden="true">
       <div id="dvd-box">
-        <iframe
-          id="dvd-iframe"
-          src="https://www.youtube.com/embed/RATozKcpDc4?autoplay=1&mute=1&controls=0&loop=1&playlist=RATozKcpDc4&modestbranding=1&rel=0&playsinline=1"
-          title="screensaver"
-          frameborder="0"
-          allow="autoplay; encrypted-media"
-          style="width:320px;height:180px;pointer-events:none;">
-        </iframe>
+        <iframe id="dvd-iframe" src="https://www.youtube.com/embed/RATozKcpDc4?autoplay=1&mute=1&controls=0&loop=1&playlist=RATozKcpDc4&modestbranding=1&rel=0&playsinline=1" title="screensaver" frameborder="0" allow="autoplay; encrypted-media" style="width:320px;height:180px;pointer-events:none;"></iframe>
       </div>
     </div>
+
 
     
 
@@ -1782,203 +1174,85 @@
 
 
     <script>
-      /**
-       * ATLAS Scroll-Scrub (Frame für Frame)
-       * - Sehr hohe Section, Video ist klebend UND vertikal/horizontal zentriert
-       * - Rechter Feed stapelt Absätze; alter Text bleibt stehen
-       * - Scrub über Segmentgrenzen (vor/zurück)
-       */
+      /* === ATLAS scroll-scrub: centered sticky video + right-side feed === */
       (function(){
-        // ======= Config ============================================================
-        const BASE = 'ATLAS/';     // Ordner mit deinen Clips
-        const COUNT = 14;          // Anzahl Segmente
-        const FPS = 30;            // setze auf 25/60 falls nötig
-        const FRAME = 1 / FPS;
+        const BASE='ATLAS/'; const COUNT=14; const FPS=30; const FRAME=1/FPS;
+        const SEC_PER_WHEEL_DELTA=FRAME/120; const SEC_PER_TOUCH_PX=FRAME/40; const VISIBLE_RATIO=.35;
       
-        // Scrub-Sensitivität
-        const SEC_PER_WHEEL_DELTA = FRAME / 120;  // ~1 Frame pro 120 deltaY
-        const SEC_PER_TOUCH_PX    = FRAME / 40;   // ~1 Frame pro 40px Fingerbewegung
-        const VISIBLE_RATIO       = 0.35;
+        const SEGMENTS=Array.from({length:COUNT},(_,k)=>({title:`Segment ${k+1}`,text:`Beschreibung Segment ${k+1}`,src:`${BASE}${k+1}.mp4`}));
       
-        // ======= Segmente (Texte kannst du später aus JSON ziehen) =================
-        const SEGMENTS = Array.from({length: COUNT}, (_,k) => {
-          const n = k+1;
-          return { title: `Segment ${n}`, text: `Beschreibung Segment ${n}`, src: `${BASE}${n}.mp4` };
-        });
+        const section=document.getElementById('acceleration-chain');
+        const atlasFree=section?.querySelector('.atlas-free');
+        const feed=document.getElementById('atlas-feed');
+        const video=document.getElementById('atlasVideo');
+        const fader=document.getElementById('vfader');
+        if(!section||!atlasFree||!feed||!video) return;
       
-        // ======= DOM ===============================================================
-        const section = document.getElementById('acceleration-chain');
-        const atlasFree = section?.querySelector('.atlas-free');
-        const feed    = document.getElementById('atlas-feed');
-        const video   = document.getElementById('atlasVideo');
-        const fader   = document.getElementById('vfader');
-        if(!section || !atlasFree || !feed || !video) return;
+        let i=0, durations=Array(COUNT).fill(null), appendedCount=0, pendingSec=0, seeking=false, raf=null, touchY=null;
       
-        // ======= State =============================================================
-        let i = 0;
-        let durations = Array(COUNT).fill(null);
-        let appendedCount = 0;
-        let pendingSec = 0;
-        let seeking = false, raf = null;
-        let touchY = null;
+        const once=(el,ev,opts={})=>new Promise(res=>el.addEventListener(ev,res,{once:true,...opts}));
+        function isAtlasInView(){ const r=section.getBoundingClientRect(), vh=window.innerHeight||document.documentElement.clientHeight; const visible=Math.max(0,Math.min(r.bottom,vh)-Math.max(r.top,0)); const ratio=visible/Math.min(vh,Math.max(1,r.height)); return ratio>VISIBLE_RATIO; }
+        function fadeOn(){ fader?.classList.add('fade'); } function fadeOff(){ fader?.classList.remove('fade'); }
+        function setSrc(el,url){ while(el.firstChild) el.removeChild(el.firstChild); el.removeAttribute('src'); el.src=url; }
       
-        // ======= Utils =============================================================
-        const once = (el, ev, opts={}) => new Promise(res => el.addEventListener(ev, res, {once:true, ...opts}));
-      
-        function isAtlasInView(){
-          const r = section.getBoundingClientRect();
-          const vh = window.innerHeight || document.documentElement.clientHeight;
-          const visible = Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0));
-          const ratio = visible / Math.min(vh, Math.max(1, r.height));
-          return ratio > VISIBLE_RATIO;
-        }
-      
-        function fadeOn(){ fader?.classList.add('fade'); }
-        function fadeOff(){ fader?.classList.remove('fade'); }
-      
-        function setSrc(el, url){
-          while(el.firstChild) el.removeChild(el.firstChild);
-          el.removeAttribute('src');
-          el.src = url;
-        }
-      
-        async function loadSegment(idx, snapT=0){
-          if(idx < 0 || idx >= SEGMENTS.length) return;
-          fadeOn();
-          setSrc(video, SEGMENTS[idx].src);
-          await Promise.race([ once(video,'loadedmetadata'), new Promise(r=>setTimeout(r,600)) ]);
-          durations[idx] = video.duration || durations[idx] || 0;
-          try{ video.pause(); }catch{}
-          const dur = Math.max(0, durations[idx] || 0);
-          const t = Math.min(Math.max(0, snapT), Math.max(0, dur - 1e-4));
-          video.currentTime = t;
-          await Promise.race([ once(video,'seeked'), new Promise(r=>setTimeout(r,120)) ]);
+        async function loadSegment(idx,snapT=0){
+          if(idx<0||idx>=SEGMENTS.length) return;
+          fadeOn(); setSrc(video,SEGMENTS[idx].src);
+          await Promise.race([once(video,'loadedmetadata'),new Promise(r=>setTimeout(r,600))]);
+          durations[idx]=video.duration||durations[idx]||0;
+          try{video.pause();}catch{}
+          const dur=Math.max(0,durations[idx]||0);
+          const t=Math.min(Math.max(0,snapT),Math.max(0,dur-1e-4));
+          video.currentTime=t;
+          await Promise.race([once(video,'seeked'),new Promise(r=>setTimeout(r,120))]);
           requestAnimationFrame(()=>fadeOff());
         }
       
         function appendBlock(idx){
-          if(appendedCount > idx) return;
-          const seg = SEGMENTS[idx];
-          const wrap = document.createElement('section');
-          wrap.className = 'seg-block new';
-          wrap.innerHTML = `<h3>${seg.title}</h3><p>${seg.text}</p>`;
-          feed.appendChild(wrap);
-          appendedCount = idx + 1;
-          setTimeout(()=>wrap.classList.remove('new'), 700);
+          if(appendedCount>idx) return;
+          const seg=SEGMENTS[idx];
+          const wrap=document.createElement('section');
+          wrap.className='seg-block new';
+          wrap.innerHTML=`<h3>${seg.title}</h3><p>${seg.text}</p>`;
+          feed.appendChild(wrap); appendedCount=idx+1; setTimeout(()=>wrap.classList.remove('new'),700);
         }
-        function removeLastBlock(){
-          if(appendedCount <= 1) return;
-          const last = feed.lastElementChild;
-          if(last) last.remove();
-          appendedCount -= 1;
-        }
+        function removeLastBlock(){ if(appendedCount<=1) return; const last=feed.lastElementChild; if(last) last.remove(); appendedCount-=1; }
       
-        // ======= Scrubbing =========================================================
         async function applyScrub(){
-          if(seeking) return;
-          seeking = true;
-      
-          let delta = pendingSec;
-          pendingSec = 0;
-          if(Math.abs(delta) < 1e-6){ seeking = false; return; }
-      
-          let dur = durations[i] ?? video.duration ?? 0;
-          let t = (video.currentTime || 0) + delta;
-      
-          // vorwärts über Ende
-          while(t >= dur - 1e-4 && i < SEGMENTS.length - 1){
-            const overflow = t - (dur - 1e-4);
-            i += 1;
-            await loadSegment(i, 0);
-            appendBlock(i);
-            dur = durations[i] ?? video.duration ?? 0;
-            t = Math.min(overflow, Math.max(0, dur - 1e-4));
-          }
-      
-          // rückwärts vor 0
-          while(t < 0 && i > 0){
-            const under = -t;
-            i -= 1;
-            await loadSegment(i, Math.max(0, (durations[i] ?? 0) - 1e-4));
-            removeLastBlock();
-            dur = durations[i] ?? video.duration ?? 0;
-            t = Math.max(0, dur - 1e-4 - under);
-          }
-      
-          // clamp & seek
-          t = Math.min(Math.max(0, t), Math.max(0, (durations[i] ?? 0) - 1e-4));
-          video.currentTime = t;
-          await Promise.race([ once(video,'seeked'), new Promise(r=>setTimeout(r,80)) ]);
-      
-          seeking = false;
-          if(Math.abs(pendingSec) >= (FRAME * 0.25)){
-            raf = requestAnimationFrame(applyScrub);
-          }
+          if(seeking) return; seeking=true;
+          let delta=pendingSec; pendingSec=0;
+          if(Math.abs(delta)<1e-6){ seeking=false; return; }
+          let dur=durations[i]??video.duration??0;
+          let t=(video.currentTime||0)+delta;
+          while(t>=dur-1e-4 && i<SEGMENTS.length-1){ const overflow=t-(dur-1e-4); i+=1; await loadSegment(i,0); appendBlock(i); dur=durations[i]??video.duration??0; t=Math.min(overflow,Math.max(0,dur-1e-4)); }
+          while(t<0 && i>0){ const under=-t; i-=1; await loadSegment(i,Math.max(0,(durations[i]??0)-1e-4)); removeLastBlock(); dur=durations[i]??video.duration??0; t=Math.max(0,dur-1e-4-under); }
+          t=Math.min(Math.max(0,t),Math.max(0,(durations[i]??0)-1e-4));
+          video.currentTime=t;
+          await Promise.race([once(video,'seeked'),new Promise(r=>setTimeout(r,80))]);
+          seeking=false;
+          if(Math.abs(pendingSec)>=FRAME*0.25){ raf=requestAnimationFrame(()=>{raf=null; applyScrub();}); }
         }
+        function queueScrub(sec){ if(!isAtlasInView()) return; pendingSec+=sec; if(!raf){ raf=requestAnimationFrame(()=>{raf=null; applyScrub();}); } }
       
-        function queueScrub(sec){
-          if(!isAtlasInView()) return;
-          pendingSec += sec;
-          if(!raf){
-            raf = requestAnimationFrame(()=>{ raf=null; applyScrub(); });
-          }
-        }
+        window.addEventListener('wheel',e=>{ if(!isAtlasInView()) return; let dy=e.deltaY; if(e.deltaMode===1) dy*=16; else if(e.deltaMode===2) dy*=window.innerHeight; dy=Math.max(-600,Math.min(600,dy)); queueScrub(dy*SEC_PER_WHEEL_DELTA); },{passive:true});
+        window.addEventListener('touchstart',e=>{ if(!isAtlasInView()) return; touchY=e.touches?.[0]?.clientY??null; },{passive:true});
+        window.addEventListener('touchmove',e=>{ if(!isAtlasInView()||touchY==null) return; const y=e.touches?.[0]?.clientY??touchY; const dy=touchY-y; touchY=y; queueScrub(dy*SEC_PER_TOUCH_PX); },{passive:true});
+        window.addEventListener('touchend',()=>{ touchY=null; },{passive:true});
+        window.addEventListener('keydown',e=>{ if(!isAtlasInView()) return; if(e.key==='ArrowRight'||e.key==='Enter') queueScrub(+FRAME); if(e.key==='ArrowLeft'||e.key==='Backspace') queueScrub(-FRAME); if(e.key==='PageDown') queueScrub(+FRAME*10); if(e.key==='PageUp') queueScrub(-FRAME*10); });
       
-        // ======= Input =============================================================
-        window.addEventListener('wheel', (e)=>{
-          if(!isAtlasInView()) return;
-          let dy = e.deltaY;
-          if(e.deltaMode === 1) dy *= 16;
-          else if(e.deltaMode === 2) dy *= window.innerHeight;
-          dy = Math.max(-600, Math.min(600, dy));
-          queueScrub(dy * SEC_PER_WHEEL_DELTA);
-        }, { passive:true });
+        function updateTallness(){ const extraVhPerSeg=50, baseVh=400, totalVh=baseVh+(COUNT-1)*extraVhPerSeg; atlasFree.style.minHeight=`${totalVh}vh`; }
+        window.addEventListener('resize',updateTallness);
       
-        window.addEventListener('touchstart', (e)=>{
-          if(!isAtlasInView()) return;
-          touchY = e.touches?.[0]?.clientY ?? null;
-        }, { passive:true });
-        window.addEventListener('touchmove', (e)=>{
-          if(!isAtlasInView() || touchY == null) return;
-          const y = e.touches?.[0]?.clientY ?? touchY;
-          const dy = touchY - y; // up => forward
-          touchY = y;
-          queueScrub(dy * SEC_PER_TOUCH_PX);
-        }, { passive:true });
-        window.addEventListener('touchend', ()=>{ touchY = null; }, { passive:true });
-      
-        window.addEventListener('keydown', (e)=>{
-          if(!isAtlasInView()) return;
-          if(e.key === 'ArrowRight' || e.key === 'Enter') queueScrub(+FRAME);
-          if(e.key === 'ArrowLeft'  || e.key === 'Backspace') queueScrub(-FRAME);
-          if(e.key === 'PageDown')  queueScrub(+FRAME * 10);
-          if(e.key === 'PageUp')    queueScrub(-FRAME * 10);
-        });
-      
-        // ======= Dynamische Section-Höhe ===========================================
-        function updateTallness(){
-          // genug Scroll-Strecke: pro Segment ca. 50vh extra
-          const extraVhPerSeg = 50;
-          const baseVh = 400; // Grundhöhe
-          const totalVh = baseVh + (COUNT - 1) * extraVhPerSeg;
-          atlasFree.style.minHeight = `${totalVh}vh`;
-        }
-        window.addEventListener('resize', updateTallness);
-      
-        // ======= Init ==============================================================
-        (async function init(){
-          updateTallness();
-          appendBlock(0);               // erster Absatz
-          await loadSegment(0, 0);      // erstes Segment laden
-          try{ video.pause(); }catch{}  // bereit zum Scrubben
-        })();
+        (async function init(){ updateTallness(); appendBlock(0); await loadSegment(0,0); try{video.pause();}catch{} })();
       })();
     </script>
+    
 
 
 
   </body>
 </html>
+
 
 
 
