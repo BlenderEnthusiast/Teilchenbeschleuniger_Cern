@@ -1344,69 +1344,83 @@
     </script>
 
 
-    <script>
-      (function(){
-        // ==== Stops (frames) ====
-        const STOPS = [0,130,230,320,440,600,760,830,930,1020,1100,1210,1310,1420];
-        // Segments are [startFrame, endFrame, title, text]
-        const FRAMES = STOPS.slice(0, -1).map((s, idx) => [
-          s, STOPS[idx + 1], `Segment ${idx + 1}`, `Beschreibung Segment ${idx + 1}`
-        ]);
-      
-        const FPS = 30;
-        const FRAME = 1 / FPS;
-        const EPS = 0.002; // tiny guard to avoid frame 0 quirks
-        const toT = f => f / FPS;
-      
-        // DOM
-        const v       = document.getElementById('clip-video');
-        const prevBtn = document.getElementById('btn-prev');
-        const nextBtn = document.getElementById('btn-next');
-        const titleEl = document.getElementById('clip-title');
-        const textEl  = document.getElementById('clip-text');
-        const fader   = document.getElementById('vfader');
-      
-        // State
-        let i = 0;
-        let busy = false;
-        let forwardTimer = null;
-        let reverseTimer = null;         // <— NEU
-        function clearTimers(){          // <— NEU
-          if (forwardTimer) { clearInterval(forwardTimer); forwardTimer = null; }
-          if (reverseTimer) { clearInterval(reverseTimer); reverseTimer = null; }
-        }
-
-        async function playThenFreezeNext(idx){
-        if (busy) return;
-        busy = true; setButtons();
-        clearTimers();                 // <— NEU
-
-        }
-
-
-        // Helpers
-        function fadeOn(){ fader.classList.add('fade'); }
-        function fadeOff(){ fader.classList.remove('fade'); }
-        const once = (el, ev) => new Promise(res => el.addEventListener(ev, res, { once:true }));
-      
-        async function seekTo(t){
-          fadeOn();
-          v.pause();
-          v.currentTime = Math.max(EPS, t);
-          // Wait just until browser says we're at that position
-          await once(v, 'seeked');
-          // Let a frame paint, then fade out
-          requestAnimationFrame(() => fadeOff());
-        }
-      
-        function setCopy(idx){
-        // Fade out
-        titleEl.classList.add("text-fade");
-        textEl.classList.add("text-fade");
-      
+   
+   <script>
+    (function(){
+      const BASE = 'ATLAS/';
+    
+      // 13 Segmente (Titel leer = nur Subtext)
+      const SEGMENTS = [
+        { title:"", text:"Das hier ist der 1,65 Meter hohe Vasista.", fwd:`${BASE}1.mp4`,  rev:`${BASE}1-1.mp4` },
+        { title:"", text:"Und das hier ist A Toroidal LHC Apparatus (ATLAS), einer der vier Kollisionsdetektoren des LHC-Ringes.", fwd:`${BASE}2.mp4`,  rev:`${BASE}2-2.mp4` },
+        { title:"", text:"100 Meter unter dem Boden steht dieser kolossale Detektor mit der 15-fachen Höhe Vasistas und wertet Kollisionen von Protonen und schweren Ionen aus.", fwd:`${BASE}3.mp4`,  rev:`${BASE}3-3.mp4` },
+        { title:"", text:"Mit einer Länge von 46 Metern und rund 7 000 Tonnen Gewicht besteht ATLAS aus konzentrischen Detektorschichten, die wir im Folgenden kennenlernen.", fwd:`${BASE}4.mp4`,  rev:`${BASE}4-4.mp4` },
+        { title:"", text:"", fwd:`${BASE}5.mp4`,  rev:`${BASE}5-5.mp4` },
+        { title:"", text:"", fwd:`${BASE}6.mp4`,  rev:`${BASE}6-6.mp4` },
+        { title:"", text:"", fwd:`${BASE}7.mp4`,  rev:`${BASE}7-7.mp4` },
+        { title:"", text:"", fwd:`${BASE}8.mp4`,  rev:`${BASE}8-8.mp4` },
+        { title:"", text:"", fwd:`${BASE}9.mp4`,  rev:``${BASE}9.mp4`,  rev:`${BASE}9-9.mp4` },
+        { title:"", text:"", fwd:`${BASE}10.mp4`, rev:`${BASE}10-10.mp4` },
+        { title:"", text:"", fwd:`${BASE}11.mp4`, rev:`${BASE}11-11.mp4` },
+        { title:"", text:"", fwd:`${BASE}12.mp4`, rev:`${BASE}12-12.mp4` },
+        { title:"", text:"", fwd:`${BASE}13.mp4`, rev:`${BASE}13-13.mp4` }
+      ];
+    
+      // DOM
+      const titleEl = document.getElementById('clip-title');
+      const textEl  = document.getElementById('clip-text');
+      const btnPrev = document.getElementById('btn-prev');
+      const btnNext = document.getElementById('btn-next');
+    
+      const A   = document.getElementById('vidA');   // sichtbarer Layer
+      const B   = document.getElementById('vidB');   // zweiter Layer
+      const PRE = document.getElementById('vidPre'); // unsichtbarer Preload-Buffer
+      const fader = document.getElementById('vfader');
+    
+      let active = A;
+      let back   = B;
+      let i = 0;
+      let busy = false;
+    
+      const once = (el, ev, opts={}) => new Promise(res => el.addEventListener(ev, res, { once:true, ...opts }));
+    
+      function setSrc(videoEl, url){
+        while(videoEl.firstChild) videoEl.removeChild(videoEl.firstChild);
+        videoEl.removeAttribute('src');
+        videoEl.src = url;
+      }
+    
+      async function primeAtStart(videoEl){
+        try { videoEl.pause(); } catch{}
+        videoEl.currentTime = 0;
+        await Promise.race([ once(videoEl,'seeked'), new Promise(r=>setTimeout(r,120)) ]);
+        try { await videoEl.play(); } catch {}
+        await Promise.race([ once(videoEl,'timeupdate'), new Promise(r=>setTimeout(r,80)) ]);
+        try { videoEl.pause(); } catch {}
+        try { videoEl.currentTime = 0; } catch{}
+      }
+    
+      function swapTo(el){
+        el.classList.add('active');
+        active.classList.remove('active');
+        const prev = active;
+        active = el;
+        back   = prev;
+      }
+    
+      function setButtons(){
+        btnPrev.disabled = busy || (i===0);
+        btnNext.disabled = busy || (i===SEGMENTS.length-1);
+      }
+    
+      // Smooth Text + „no-title“-Handling
+      function updateCopy(idx){
+        titleEl.classList.add('text-fade');
+        textEl.classList.add('text-fade');
+    
         setTimeout(() => {
           const seg = SEGMENTS[idx];
-      
+    
           if (!seg.title) {
             titleEl.style.display = "none";
             textEl.classList.add("no-title");
@@ -1415,389 +1429,95 @@
             titleEl.textContent = seg.title;
             textEl.classList.remove("no-title");
           }
-      
+    
           textEl.textContent = seg.text || "";
-      
-          // Fade in
-          titleEl.classList.remove("text-fade");
-          textEl.classList.remove("text-fade");
-        }, 200);
+    
+          titleEl.classList.remove('text-fade');
+          textEl.classList.remove('text-fade');
+        }, 200); // < transition-Dauer
       }
-
-        function setButtons(){
-          prevBtn.disabled = (i === 0) || busy;
-          nextBtn.disabled = (i >= FRAMES.length - 1) || busy;
-        }
-      
-        async function freezeAtStart(idx){
-          await seekTo(toT(FRAMES[idx][0]) + EPS);
-        }
-      
-        // ------- Forward (play to endT precisely) -------
-        async function playThenFreezeNext(idx){
-          if (busy) return;
-          busy = true; setButtons();
-      
-          const startT = toT(FRAMES[idx][0]) + EPS;
-          const endT   = toT(FRAMES[idx][1]) - EPS;
-      
-          await seekTo(startT);
-      
-          // Use requestVideoFrameCallback if supported
-          if ('requestVideoFrameCallback' in v) {
-            let stop = false;
-            const onFrame = () => {
-              if (stop) return;
-              // Stop exactly at endT
-              if (v.currentTime >= endT) {
-                v.pause();
-                // snap to exact boundary to avoid “half frame”
-                v.currentTime = endT;
-                stop = true;
-                v.requestVideoFrameCallback(() => {
-                  // advance to next segment and freeze at its start
-                  if (idx < FRAMES.length - 1) {
-                    i = idx + 1;
-                    freezeAtStart(i).then(()=>{ setCopy(); busy = false; setButtons(); });
-                  } else {
-                    busy = false; setButtons();
-                  }
-                });
-                return;
-              }
-              v.requestVideoFrameCallback(onFrame);
-            };
-            // start playback then frame-watch
-            try { await v.play(); } catch {}
-            v.requestVideoFrameCallback(onFrame);
-          } else {
-            // Fallback: high-rate interval watcher
-            try { await v.play(); } catch {}
-            forwardTimer && clearInterval(forwardTimer);
-            forwardTimer = setInterval(() => {
-              if (v.currentTime >= endT) {
-                clearInterval(forwardTimer);
-                v.pause();
-                v.currentTime = endT;
-                // advance to next
-                if (idx < FRAMES.length - 1) {
-                  i = idx + 1;
-                  freezeAtStart(i).then(()=>{ setCopy(); busy = false; setButtons(); });
-                } else {
-                  busy = false; setButtons();
-                }
-              }
-            }, 16); // ~60Hz
-          }
-        }
-      
-  
-        // ------- Reverse (rAF-basiert + fastSeek) -------
-        async function reversePrev(){
-          if (busy || i === 0) return;
-          busy = true; setButtons();
-          clearTimers();
-        
-          const prevIdx = i - 1;
-          const startT = toT(FRAMES[prevIdx][0]) + EPS;
-          const endT   = toT(FRAMES[prevIdx][1]) - EPS;
-        
-          await seekTo(endT);
-          v.pause();
-        
-          let t = endT;
-          let running = true;
-        
-          const BASE_STEP = FRAME * 0.85; // vorsichtig kleiner als 1/FPS
-          let step = BASE_STEP;
-        
-          function stepBack() {
-            if (!running) return;
-        
-            // Adaptiv etwas größer/kleiner machen je nach readyState
-            // (wenn Decoder hinterherhinkt, kleinere Schritte)
-            if (v.readyState < 2 && step > FRAME * 0.5) step *= 0.9;
-            else if (v.readyState >= 3 && step < FRAME * 1.2) step *= 1.02;
-        
-            t -= step;
-            if (t <= startT + 0.0005) {
-              t = startT;
-              running = false;
-            }
-        
-            // Prefer fastSeek if supported
-            if (typeof v.fastSeek === 'function') {
-              try { v.fastSeek(t); } catch { v.currentTime = t; }
-            } else {
-              v.currentTime = t;
-            }
-        
-            if (running) {
-              requestAnimationFrame(stepBack);
-            } else {
-              // Am Start „einrasten“
-              requestAnimationFrame(() => {
-                v.currentTime = startT;
-                i = prevIdx;
-                busy = false;
-                setCopy(); setButtons();
-              });
-            }
-          }
-        
-          requestAnimationFrame(stepBack);
-        }
-
-
-      
-        // Wire up
-        nextBtn.addEventListener('click', () => playThenFreezeNext(i));
-        prevBtn.addEventListener('click', reversePrev);
-        window.addEventListener('keydown', e => {
-          if (e.key === 'ArrowLeft')  { e.preventDefault(); reversePrev(); }
-          if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); playThenFreezeNext(i); }
+    
+      async function prepareFreezeOf(idx){
+        setSrc(PRE, SEGMENTS[idx].fwd);
+        await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
+        await primeAtStart(PRE);
+      }
+    
+      function showPreOnActive(){
+        setSrc(back, PRE.currentSrc || PRE.src);
+        try { back.currentTime = PRE.currentTime; } catch{}
+        back.pause();
+        swapTo(back);
+      }
+    
+      // Weiter
+      async function playForward(){
+        if (busy || i >= SEGMENTS.length-1) return;
+        busy = true; setButtons();
+    
+        const nextIdx = i + 1;
+    
+        setSrc(back, SEGMENTS[i].fwd);
+        await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
+        try { await back.play(); } catch {}
+        swapTo(back);
+    
+        prepareFreezeOf(nextIdx).catch(()=>{});
+    
+        active.onended = async () => {
+          try { active.pause(); } catch{}
+          showPreOnActive();
+          i = nextIdx;
+          updateCopy(i);
+          busy = false; setButtons();
+        };
+      }
+    
+      // Zurück
+      async function playBackward(){
+        if (busy || i === 0) return;
+        busy = true; setButtons();
+    
+        const prevIdx = i - 1;
+        setSrc(back, SEGMENTS[prevIdx].rev);
+        await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
+        try { await back.play(); } catch {}
+        swapTo(back);
+    
+        prepareFreezeOf(prevIdx).catch(()=>{});
+    
+        active.onended = async () => {
+          try { active.pause(); } catch{}
+          showPreOnActive();
+          i = prevIdx;
+          updateCopy(i);
+          busy = false; setButtons();
+        };
+      }
+    
+      // Init
+      (async function init(){
+        updateCopy(0);
+        setSrc(active, SEGMENTS[0].fwd);
+        await Promise.race([ once(active,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
+        await primeAtStart(active);
+        active.classList.add('active');
+        setButtons();
+    
+        if (SEGMENTS.length > 1) prepareFreezeOf(1).catch(()=>{});
+    
+        btnNext.addEventListener('click', playForward);
+        btnPrev.addEventListener('click', playBackward);
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); playForward(); }
+          if (e.key === 'ArrowLeft') { e.preventDefault(); playBackward(); }
         });
-      
-        // Init
-        v.addEventListener('loadedmetadata', () => freezeAtStart(i), { once:true });
-        v.load();
-        setCopy(); setButtons();
       })();
-    </script>
-    <script>
-      (function(){
-        // ====== Pfad & Segmente ===================================================
-        const BASE = 'ATLAS/'; // <- dein Ordner
-    
-        // Erst die 4 gewünschten Titel ohne Subtext:
-        const fixedFirstFour = [
-          {
-            title: "",
-            text:  "Das hier ist der 1,65 Meter hohe Vasista.",
-            fwd:   `${BASE}1.mp4`,
-            rev:   `${BASE}1-1.mp4`
-          },
-          {
-            title: "",
-            text:  "Und das hier ist A Toroidal LHC Apparatus (ATLAS), einer der vier Kollisionsdetektoren des LHC-Ringes.",
-            fwd:   `${BASE}2.mp4`,
-            rev:   `${BASE}2-2.mp4`
-          },
-          {
-            title: "",
-            text:  "100 Meter unter dem Boden steht dieser Kolossale Detektor mit der 15-fachen Höhe Vasistas und wertet Kollisionen von Protonen und schweren Ionen aus.",
-            fwd:   `${BASE}3.mp4`,
-            rev:   `${BASE}3-3.mp4`
-          },
-          {
-            title: "",
-            text:  "Mit einer Länge von 46 Metern und rund 7 000 Tonnen Gewicht.",
-            fwd:   `${BASE}4.mp4`,
-            rev:   `${BASE}4-4.mp4`
-          },
-          {
-            title: "",
-            text: "",
-            fwd: `${BASE}5.mp4`,
-            rev: `${BASE}5-5.mp4`
-          },
-          {
-            title: "",
-            text: "",
-            fwd: `${BASE}6.mp4`,
-            rev: `${BASE}6-6.mp4`
-          },
-          {
-            title: "",
-            text: "",
-            fwd: `${BASE}7.mp4`,
-            rev: `${BASE}7-7.mp4`
-          },
-          {
-            title: "",
-            text: "",
-            fwd: `${BASE}8.mp4`,
-            rev: `${BASE}8-8.mp4`
-          },
-          {
-            title: "",
-            text: "",
-            fwd: `${BASE}9.mp4`,
-            rev: `${BASE}9-9.mp4`
-          },
-          {
-            title: "",
-            text: "",
-            fwd: `${BASE}10.mp4`,
-            rev: `${BASE}10-10.mp4`
-          },
-          {
-            title: "",
-            text: "",
-            fwd: `${BASE}11.mp4`,
-            rev: `${BASE}11-11.mp4`
-          },
-          {
-            title: "",
-            text: "",
-            fwd: `${BASE}12.mp4`,
-            rev: `${BASE}12-12.mp4`
-          },
-          {
-            title: "",
-            text: "",
-            fwd: `${BASE}13.mp4`,
-            rev: `${BASE}13-13.mp4`
-          }
-        ];
-    
-        // Danach die restlichen Segmente (5–14) wie gehabt automatisch:
-        const autoRest = Array.from({length: 10}, (_, k) => {
-          const n = k + 5; // beginnt bei 5
-          return {
-            title: `Segment ${n}`,
-            text:  `Beschreibung Segment ${n}`,
-            fwd:   `${BASE}${n}.mp4`,
-            rev:   `${BASE}${n}-${n}.mp4`
-          };
-        });
-    
-        const SEGMENTS = [...fixedFirstFour, ...autoRest];
-    
-        // ====== DOM ===============================================================
-        const titleEl = document.getElementById('clip-title');
-        const textEl  = document.getElementById('clip-text');
-        const btnPrev = document.getElementById('btn-prev');
-        const btnNext = document.getElementById('btn-next');
-    
-        const A   = document.getElementById('vidA');   // sichtbarer Layer
-        const B   = document.getElementById('vidB');   // zweiter Layer
-        const PRE = document.getElementById('vidPre'); // unsichtbarer Preload-Buffer
-        const fader = document.getElementById('vfader');
-    
-        let active = A;
-        let back   = B;
-        let i = 0;
-        let busy = false;
-    
-        // ====== Helpers ===========================================================
-        const once = (el, ev, opts={}) => new Promise(res => el.addEventListener(ev, res, { once:true, ...opts }));
-    
-        function setCopy(idx){
-          titleEl.textContent = SEGMENTS[idx].title;
-          textEl.textContent  = SEGMENTS[idx].text; // leer = kein Subtext sichtbar
-        }
-        function setButtons(){
-          btnPrev.disabled = busy || (i===0);
-          btnNext.disabled = busy || (i===SEGMENTS.length-1);
-        }
-        function fadeOn(){ fader.classList.add('fade'); }
-        function fadeOff(){ fader.classList.remove('fade'); }
-    
-        function setSrc(videoEl, url){
-          while(videoEl.firstChild) videoEl.removeChild(videoEl.firstChild);
-          videoEl.removeAttribute('src');
-          videoEl.src = url;
-        }
-    
-        async function primeAtStart(videoEl){
-          try { videoEl.pause(); } catch{}
-          videoEl.currentTime = 0;
-          await Promise.race([ once(videoEl,'seeked'), new Promise(r=>setTimeout(r,120)) ]);
-          try { await videoEl.play(); } catch {}
-          await Promise.race([ once(videoEl,'timeupdate'), new Promise(r=>setTimeout(r,80)) ]);
-          try { videoEl.pause(); } catch {}
-          try { videoEl.currentTime = 0; } catch{}
-        }
-    
-        function swapTo(el){
-          el.classList.add('active');
-          active.classList.remove('active');
-          const prev = active;
-          active = el;
-          back   = prev;
-        }
-    
-        async function prepareFreezeOf(idx){
-          setSrc(PRE, SEGMENTS[idx].fwd);
-          await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
-          await primeAtStart(PRE);
-        }
-    
-        function showPreOnActive(){
-          setSrc(back, PRE.currentSrc || PRE.src);
-          try { back.currentTime = PRE.currentTime; } catch{}
-          back.pause();
-          swapTo(back);
-        }
-    
-        // Weiter
-        async function playForward(){
-          if (busy || i >= SEGMENTS.length-1) return;
-          busy = true; setButtons();
-    
-          const nextIdx = i + 1;
-    
-          setSrc(back, SEGMENTS[i].fwd);
-          await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
-          try { await back.play(); } catch {}
-          swapTo(back);
-    
-          prepareFreezeOf(nextIdx).catch(()=>{});
-    
-          active.onended = async () => {
-            try { active.pause(); } catch{}
-            showPreOnActive();
-            i = nextIdx;
-            setCopy(i);
-            busy = false; setButtons();
-          };
-        }
-    
-        // Zurück
-        async function playBackward(){
-          if (busy || i === 0) return;
-          busy = true; setButtons();
-    
-          const prevIdx = i - 1;
-          setSrc(back, SEGMENTS[prevIdx].rev);
-          await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
-          try { await back.play(); } catch {}
-          swapTo(back);
-    
-          prepareFreezeOf(prevIdx).catch(()=>{});
-    
-          active.onended = async () => {
-            try { active.pause(); } catch{}
-            showPreOnActive();
-            i = prevIdx;
-            setCopy(i);
-            busy = false; setButtons();
-          };
-        }
-    
-        // Init
-        (async function init(){
-          setCopy(0);
-          setSrc(active, SEGMENTS[0].fwd);
-          await Promise.race([ once(active,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
-          await primeAtStart(active);
-          active.classList.add('active');
-          setButtons();
-    
-          if (SEGMENTS.length > 1) prepareFreezeOf(1).catch(()=>{});
-    
-          btnNext.addEventListener('click', playForward);
-          btnPrev.addEventListener('click', playBackward);
-          window.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); playForward(); }
-            if (e.key === 'ArrowLeft') { e.preventDefault(); playBackward(); }
-          });
-        })();
-      })();
-    </script>
+    })();
+   </script>
   </body>
 </html>
+
 
 
 
