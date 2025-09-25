@@ -388,6 +388,16 @@
           opacity:0; transition:opacity .18s ease;
         }
         #vfader.fade { opacity:1; }
+        #clip-title,
+        #clip-text {
+          opacity: 1;
+          transition: opacity 0.4s ease; /* Dauer und Kurve */
+        }
+        
+        .text-fade {
+          opacity: 0;
+        }
+
       </style>
     </head>
   <body>
@@ -1372,7 +1382,31 @@
           requestAnimationFrame(() => fadeOff());
         }
       
-        function setCopy(){ titleEl.textContent = FRAMES[i][2]; textEl.textContent = FRAMES[i][3]; }
+        function setCopy(idx){
+          // Fade out
+          titleEl.classList.add("text-fade");
+          textEl.classList.add("text-fade");
+        
+          setTimeout(() => {
+            const seg = SEGMENTS[idx];
+        
+            // handle title
+            if (!seg.title) {
+              titleEl.style.display = "none";
+            } else {
+              titleEl.style.display = "";
+              titleEl.textContent = seg.title;
+            }
+        
+            // handle text
+            textEl.textContent = seg.text || "";
+        
+            // Fade in
+            titleEl.classList.remove("text-fade");
+            textEl.classList.remove("text-fade");
+          }, 200); // kleine Verzögerung, muss < transition-Dauer sein
+        }
+
         function setButtons(){
           prevBtn.disabled = (i === 0) || busy;
           nextBtn.disabled = (i >= FRAMES.length - 1) || busy;
@@ -1747,6 +1781,7 @@
     </script>
   </body>
 </html>
+
 
 
 
