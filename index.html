@@ -1345,26 +1345,29 @@
 
 
    
-  <script>
+    <script>
       (function(){
         const BASE = 'ATLAS/';
       
-        const SEGMENTS = [
-          { title:"Einleitung", text:"Das hier ist der 1,65 Meter hohe Vasista.", fwd:`${BASE}1.mp4`,  rev:`${BASE}1-1.mp4` },
-          { title:"Einleitung", text:"Und das hier ist A Toroidal LHC Apparatus (ATLAS), einer der vier Kollisionsdetektoren des LHC-Ringes.", fwd:`${BASE}2.mp4`,  rev:`${BASE}2-2.mp4` },
-          { title:"Einleitung", text:"100 Meter unter dem Boden steht dieser kolossale Detektor mit der 15-fachen Höhe Vasistas und wertet Kollisionen von Protonen und schweren Ionen aus.", fwd:`${BASE}3.mp4`,  rev:`${BASE}3-3.mp4` },
-          { title:"Einleitung", text:"Mit einer Länge von 46 Metern und rund 7 000 Tonnen Gewicht besteht ATLAS aus konzentrischen Detektorschichten, die wir im Folgenden kennenlernen.", fwd:`${BASE}4.mp4`,  rev:`${BASE}4-4.mp4` },
-          { title:"", text:"", fwd:`${BASE}5.mp4`,  rev:`${BASE}5-5.mp4` },
-          { title:"", text:"", fwd:`${BASE}6.mp4`,  rev:`${BASE}6-6.mp4` },
-          { title:"", text:"", fwd:`${BASE}7.mp4`,  rev:`${BASE}7-7.mp4` },
-          { title:"", text:"", fwd:`${BASE}8.mp4`,  rev:`${BASE}8-8.mp4` },
-          { title:"", text:"", fwd:`${BASE}9.mp4`,  rev:`${BASE}9-9.mp4` },           
-          { title:"", text:"", fwd:`${BASE}10.mp4`, rev:`${BASE}10-10.mp4` },
-          { title:"", text:"", fwd:`${BASE}11.mp4`, rev:`${BASE}11-11.mp4` },
-          { title:"", text:"", fwd:`${BASE}12.mp4`, rev:`${BASE}12-12.mp4` },
-          { title:"", text:"", fwd:`${BASE}13.mp4`, rev:`${BASE}13-13.mp4` }
+        // 14 Segmente (Stops). Nur Meta (Titel/Text) – Clips werden dynamisch gewählt.
+        const META = [
+          { title:"", text:"Das hier ist der 1,65 Meter hohe Vasista." },
+          { title:"", text:"Und das hier ist A Toroidal LHC Apparatus (ATLAS), einer der vier Kollisionsdetektoren des LHC-Ringes." },
+          { title:"", text:"100 Meter unter dem Boden steht dieser kolossale Detektor mit der 15-fachen Höhe Vasistas und wertet Kollisionen von Protonen und schweren Ionen aus." },
+          { title:"", text:"Mit einer Länge von 46 Metern und rund 7 000 Tonnen Gewicht besteht ATLAS aus konzentrischen Detektorschichten, die wir im Folgenden kennenlernen." },
+          { title:"", text:"" }, // 5
+          { title:"", text:"" }, // 6
+          { title:"", text:"" }, // 7
+          { title:"", text:"" }, // 8
+          { title:"", text:"" }, // 9
+          { title:"", text:"" }, // 10
+          { title:"", text:"" }, // 11
+          { title:"", text:"" }, // 12
+          { title:"", text:"" }, // 13
+          { title:"", text:"" }  // 14 (letzter Stop)
         ];
       
+        // DOM
         const titleEl = document.getElementById('clip-title');
         const textEl  = document.getElementById('clip-text');
         const btnPrev = document.getElementById('btn-prev');
@@ -1376,65 +1379,163 @@
         const fader = document.getElementById('vfader');
       
         let active = A, back = B, i = 0, busy = false;
-        const once = (el, ev, opts={}) => new Promise(r => el.addEventListener(ev, r, { once:true, ...opts }));
       
-        function setSrc(v, url){ while(v.firstChild) v.removeChild(v.firstChild); v.removeAttribute('src'); v.src = url; }
-        async function primeAtStart(v){ try{v.pause();}catch{} v.currentTime=0; await Promise.race([once(v,'seeked'),new Promise(r=>setTimeout(r,120))]); try{await v.play();}catch{} await Promise.race([once(v,'timeupdate'),new Promise(r=>setTimeout(r,80))]); try{v.pause();}catch{} try{v.currentTime=0;}catch{} }
-        function swapTo(el){ el.classList.add('active'); active.classList.remove('active'); const prev=active; active=el; back=prev; }
-        function setButtons(){ btnPrev.disabled = busy || (i===0); btnNext.disabled = busy || (i===SEGMENTS.length-1); }
+        const once = (el, ev, opts={}) => new Promise(res => el.addEventListener(ev, res, { once:true, ...opts }));
       
+        function setSrc(videoEl, url){
+          while(videoEl.firstChild) videoEl.removeChild(videoEl.firstChild);
+          videoEl.removeAttribute('src');
+          videoEl.src = url;
+        }
+      
+        async function primeAtStart(videoEl){
+          try{ videoEl.pause(); }catch{}
+          videoEl.currentTime = 0;
+          await Promise.race([ once(videoEl,'seeked'), new Promise(r=>setTimeout(r,120)) ]);
+          try{ await videoEl.play(); }catch{}
+          await Promise.race([ once(videoEl,'timeupdate'), new Promise(r=>setTimeout(r,80)) ]);
+          try{ videoEl.pause(); }catch{}
+          try{ videoEl.currentTime = 0; }catch{}
+        }
+      
+        async function primeAtEnd(videoEl){
+          try{ videoEl.pause(); }catch{}
+          await once(videoEl,'loadedmetadata').catch(()=>{});
+          const t = Math.max(0, (videoEl.duration || 0) - 0.03);
+          try{ videoEl.currentTime = t; }catch{}
+          await Promise.race([ once(videoEl,'seeked'), new Promise(r=>setTimeout(r,150)) ]);
+          try{ videoEl.pause(); }catch{}
+        }
+      
+        function swapTo(el){
+          el.classList.add('active');
+          active.classList.remove('active');
+          const prev = active;
+          active = el;
+          back   = prev;
+        }
+      
+        function setButtons(){
+          btnPrev.disabled = busy || (i === 0);
+          btnNext.disabled = busy || (i === META.length - 1); // letzter Stop = 13
+        }
+      
+        // Smooth Text + „no-title“-Handling
         function updateCopy(idx){
-          titleEl.classList.add('text-fade'); textEl.classList.add('text-fade');
-          setTimeout(()=>{ const seg=SEGMENTS[idx];
-            if(!seg.title){ titleEl.style.display='none'; textEl.classList.add('no-title'); }
-            else{ titleEl.style.display=''; titleEl.textContent=seg.title; textEl.classList.remove('no-title'); }
+          titleEl.classList.add('text-fade');
+          textEl.classList.add('text-fade');
+          setTimeout(()=>{
+            const seg = META[idx] || {title:"", text:""};
+            if(!seg.title){
+              titleEl.style.display = 'none';
+              textEl.classList.add('no-title');
+            }else{
+              titleEl.style.display = '';
+              titleEl.textContent = seg.title;
+              textEl.classList.remove('no-title');
+            }
             textEl.textContent = seg.text || '';
-            titleEl.classList.remove('text-fade'); textEl.classList.remove('text-fade');
-          },200);
+            titleEl.classList.remove('text-fade');
+            textEl.classList.remove('text-fade');
+          }, 200);
         }
       
-        async function prepareFreezeOf(idx){
-          setSrc(PRE, SEGMENTS[idx].fwd);
-          await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
-          await primeAtStart(PRE);
+        // === Freeze vorbereiten für Ziel-Segment j ===
+        async function prepareFreezeOf(j){
+          if(j < META.length - 1){
+            // Normale Stops 0..12: friere den Start von Clip (j+1).mp4 ein
+            setSrc(PRE, `${BASE}${j+1}.mp4`);
+            await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
+            await primeAtStart(PRE);
+          }else{
+            // Letzter Stop (13): friere den letzten Frame von 13.mp4 ein
+            setSrc(PRE, `${BASE}13.mp4`);
+            await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
+            await primeAtEnd(PRE);
+          }
         }
-        function showPreOnActive(){ setSrc(back, PRE.currentSrc || PRE.src); try{ back.currentTime = PRE.currentTime; }catch{} back.pause(); swapTo(back); }
       
+        function showPreOnActive(){
+          setSrc(back, PRE.currentSrc || PRE.src);
+          try{ back.currentTime = PRE.currentTime; }catch{}
+          back.pause();
+          swapTo(back);
+        }
+      
+        // === Vorwärts: von Segment i -> i+1 mit Clip (i+1).mp4 ===
         async function playForward(){
-          if(busy || i>=SEGMENTS.length-1) return; busy=true; setButtons();
-          const nextIdx=i+1;
-          setSrc(back, SEGMENTS[i].fwd);
-          await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
-          try{ await back.play(); }catch{} swapTo(back);
-          prepareFreezeOf(nextIdx).catch(()=>{});
-          active.onended = async ()=>{ try{active.pause();}catch{} showPreOnActive(); i=nextIdx; updateCopy(i); busy=false; setButtons(); };
-        }
-        async function playBackward(){
-          if(busy || i===0) return; busy=true; setButtons();
-          const prevIdx=i-1;
-          setSrc(back, SEGMENTS[prevIdx].rev);
-          await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
-          try{ await back.play(); }catch{} swapTo(back);
-          prepareFreezeOf(prevIdx).catch(()=>{});
-          active.onended = async ()=>{ try{active.pause();}catch{} showPreOnActive(); i=prevIdx; updateCopy(i); busy=false; setButtons(); };
+          if(busy || i >= META.length - 1) return;
+          busy = true; setButtons();
+      
+          const transIdx = i + 1;       // Clip-Nummer (1..13)
+          const target   = i + 1;       // Ziel-Segment
+      
+          setSrc(back, `${BASE}${transIdx}.mp4`);
+          await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,500)) ]);
+          try{ await back.play(); }catch{}
+          swapTo(back);
+      
+          // Nächsten Freeze vorbereiten
+          prepareFreezeOf(target).catch(()=>{});
+      
+          active.onended = async ()=>{
+            try{ active.pause(); }catch{}
+            showPreOnActive();
+            i = target;
+            updateCopy(i);
+            busy = false; setButtons();
+          };
         }
       
+        // === Rückwärts: von Segment i -> i-1 mit Clip (i-i).mp4 ===
+        async function playBackward(){
+          if(busy || i <= 0) return;
+          busy = true; setButtons();
+      
+          const transIdx = i;           // Clip-Nummer (1..13)
+          const target   = i - 1;
+      
+          setSrc(back, `${BASE}${transIdx}-${transIdx}.mp4`);
+          await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,500)) ]);
+          try{ await back.play(); }catch{}
+          swapTo(back);
+      
+          prepareFreezeOf(target).catch(()=>{});
+      
+          active.onended = async ()=>{
+            try{ active.pause(); }catch{}
+            showPreOnActive();
+            i = target;
+            updateCopy(i);
+            busy = false; setButtons();
+          };
+        }
+      
+        // === Init ===
         (async function init(){
+          // Segment 0 zeigt den Start von Clip 1
           updateCopy(0);
-          setSrc(active, SEGMENTS[0].fwd);
-          await Promise.race([ once(active,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
+          setSrc(active, `${BASE}1.mp4`);
+          await Promise.race([ once(active,'loadeddata'), new Promise(r=>setTimeout(r,500)) ]);
           await primeAtStart(active);
           active.classList.add('active');
           setButtons();
-          if(SEGMENTS.length>1) prepareFreezeOf(1).catch(()=>{});
+      
+          // Preload Segment 1 Freeze
+          prepareFreezeOf(1).catch(()=>{});
+      
           btnNext.addEventListener('click', playForward);
           btnPrev.addEventListener('click', playBackward);
-          window.addEventListener('keydown', e=>{ if(e.key==='ArrowRight'||e.key==='Enter'){ e.preventDefault(); playForward(); } if(e.key==='ArrowLeft'){ e.preventDefault(); playBackward(); } });
+          window.addEventListener('keydown', (e)=>{
+            if(e.key==='ArrowRight' || e.key==='Enter'){ e.preventDefault(); playForward(); }
+            if(e.key==='ArrowLeft'){ e.preventDefault(); playBackward(); }
+          });
         })();
       })();
     </script>
   </body>
 </html>
+
 
 
 
