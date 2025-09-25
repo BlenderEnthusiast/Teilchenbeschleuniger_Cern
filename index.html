@@ -470,6 +470,106 @@
           0%{ transform: translateY(4px); opacity:.7; }
           100%{ transform:none; opacity:1; }
         }
+        /* === ATLAS Freeform Layout =================================== */
+        .atlas-free{
+          position: relative;
+          /* genug Platz rechts lassen, damit der Feed Luft hat */
+          padding-right: min(36vw, 520px);
+        }
+        
+        /* Sticky Video: bleibt horizontal zentriert */
+        .atlas-video-stick{
+          position: sticky;
+          top: 96px;                /* unterhalb deines Sticky-Headers */
+          display: flex;
+          justify-content: center;  /* horizontal zentrieren */
+          align-items: center;
+          min-height: min(60vh, 720px); /* angenehme Höhe beim Scrollen */
+          pointer-events: none;     /* nur Video selbst soll Input annehmen */
+        }
+        
+        /* Cleanes Video (kein Rahmen/Box) */
+        #atlasVideo{
+          pointer-events: auto;
+          width: min(82vw, 1000px);
+          aspect-ratio: 16 / 9;
+          display: block;
+          background: #000;
+          border-radius: 12px;
+          box-shadow: 0 20px 60px rgba(0,0,0,.35);
+        }
+        
+        /* dezenter Fader für harte Sprünge */
+        #vfader{
+          position: absolute;
+          inset: 0;
+          margin: auto;
+          width: min(82vw, 1000px);
+          aspect-ratio: 16 / 9;
+          border-radius: 12px;
+          pointer-events: none;
+          background: rgba(0,0,0,.28);
+          opacity: 0;
+          transition: opacity .18s ease;
+        }
+        #vfader.fade{ opacity: 1; }
+        
+        /* Rechter Feed (rechts ausgerichtet, große Abstände) */
+        .atlas-side{
+          position: relative;
+          width: min(34vw, 480px);
+          /* rechts andocken */
+          margin-left: auto;
+        }
+        
+        .atlas-feed{
+          display: flex;
+          flex-direction: column;
+          gap: 64px;             /* größere Abstände zwischen Absätzen */
+          padding-top: 12px;
+        }
+        
+        /* Minimalistische Absätze (keine Boxen) */
+        .seg-block h3{
+          margin: 0 0 8px 0;
+          font-size: 18px;
+          font-weight: 700;
+          letter-spacing: -.01em;
+        }
+        .seg-block p{
+          margin: 0;
+          color: var(--muted);
+          font-size: 15px;
+          line-height: 1.7;
+        }
+        
+        /* sanfter Fokus für neu hinzugefügten Absatz */
+        .seg-block.new{
+          animation: segFocus .5s ease-out;
+        }
+        @keyframes segFocus{
+          from{ transform: translateY(6px); opacity: .7; }
+          to  { transform: none;           opacity: 1; }
+        }
+        
+        /* Screenreader-only helper */
+        .sr-only{
+          position:absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+          overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+        }
+        
+        /* Responsive: wenn wenig Breite, Feed unter das Video setzen */
+        @media (max-width: 980px){
+          .atlas-free{ padding-right: 0; }
+          .atlas-side{
+            width: 100%;
+            margin-top: 16px;
+          }
+          #vfader, #atlasVideo{
+            width: 100%;
+          }
+        }
+
 
       </style>
     </head>
@@ -825,33 +925,26 @@
           <p class="reveal">Eine Einführung in einen der 4 Detektoren des LHCs, ATLAS</p>
         </div>
       
-        <div class="atlas-wrap container">
-          <!-- Sticky Video (links) -->
-          <aside class="atlas-left">
-            <div class="atlas-video">
-              <!-- sichtbare Layer -->
-              <video id="vidA" playsinline muted preload="auto"></video>
-              <video id="vidB" playsinline muted preload="auto"></video>
-              <!-- unsichtbarer Preloader -->
-              <video id="vidPre" playsinline muted preload="auto" style="display:none"></video>
-              <!-- dezenter Overlay-Fader (bei Sprüngen fast unsichtbar) -->
-              <div id="vfader"></div>
-            </div>
+        <!-- Freeform Layout: zentriertes, sticky Video + rechter Feed -->
+        <div class="atlas-free container">
+          <!-- Sticky, zentriertes Video -->
+          <div class="atlas-video-stick" aria-describedby="atlas-instructions">
+            <video id="atlasVideo" playsinline muted preload="auto"></video>
+            <div id="vfader" aria-hidden="true"></div>
+          </div>
       
-            <div class="atlas-hint" aria-hidden="true">
-              🖱️ Zum Fortfahren <strong>scrollen</strong> · Zurück <strong>nach oben</strong> scrollen
-            </div>
-            <p class="sr-only" id="clip-instructions">
-              Scrolle nach unten, um das nächste Segment abzuspielen. Scrolle nach oben, um das vorherige Segment abzuspielen.
+          <!-- Rechter Feed: gestapelte Segmente mit größeren Abständen -->
+          <aside class="atlas-side">
+            <div id="atlas-feed" class="atlas-feed"></div>
+            <p class="sr-only" id="atlas-instructions">
+              Scrolle nach unten, um vorwärts durch das Video zu scrubben (Frame für Frame).
+              Scrolle nach oben, um rückwärts zu scrubben. Beim Überschreiten eines Segmentendes
+              erscheint rechts ein neuer Textabsatz; beim Zurückgehen verschwindet der letzte Absatz.
             </p>
           </aside>
-      
-          <!-- Feed (rechts): Segmente stapeln sich -->
-          <main id="atlas-feed" class="atlas-feed" aria-labelledby="clip-instructions">
-            <!-- Der erste Segment-Card wird per JS eingefügt -->
-          </main>
         </div>
       </section>
+
 
   
       <!-- ================= KOLLISIONEN ================= -->
@@ -1602,52 +1695,52 @@
 
     <script>
       /**
-       * ATLAS scroll-scrub: frame-by-frame with wheel/touch/keys
-       * - sticky video left (#vidA is used; #vidB/#vidPre are ignored)
-       * - cards on the right stack; new card appears when you cross into the next segment
-       * - scroll up/down moves ~1 frame per "notch" (tunable)
+       * ATLAS Scroll-Scrub (Frame für Frame)
+       * - Video bleibt zentriert/sticky (#atlasVideo)
+       * - rechter Feed (#atlas-feed) stapelt Absätze (kein Übergang des alten Textes)
+       * - scrubbt sauber über Segmentgrenzen (vor/zurück)
        */
       (function(){
-        // ================== CONFIG ===============================================
-        const BASE = 'ATLAS/';     // your folder with clips
-        const COUNT = 14;          // number of segments
-        const FPS = 30;            // assumed fps for "frame" size
-        const FRAME_SEC = 1 / FPS; // seconds per frame
+        // ======= Konfiguration =====================================================
+        const BASE = 'ATLAS/';     // Ordner mit deinen Clips
+        const COUNT = 14;          // Anzahl Segmente
+        const FPS = 30;            // angenommenes FPS (anpassen falls 25/60)
+        const FRAME = 1 / FPS;
       
-        // How many seconds per wheel delta unit.
-        // In Chrome/Win a typical wheel "notch" ~ 120; we map that to 1 frame.
-        const SEC_PER_DELTA = FRAME_SEC / 120;
+        // Wheel/Touch-Sensitivität:
+        // ~120 deltaY ≈ 1 Frame (Chrome/Win). Bei Bedarf anpassen.
+        const SEC_PER_WHEEL_DELTA = FRAME / 120;
+        const SEC_PER_TOUCH_PX    = FRAME / 40;  // ~40px Fingerbewegung ≈ 1 Frame
       
-        // Touch sensitivity (px of finger movement -> seconds)
-        const SEC_PER_TOUCHPX = FRAME_SEC / 40; // ~40px ≈ 1 frame
+        const VISIBLE_RATIO = 0.35; // ab welcher Sichtbarkeit die Section reagiert
       
-        // How visible the section must be to react to input
-        const VISIBLE_RATIO = 0.35;
-      
-        // ================== SEGMENTS META =========================================
+        // ======= Segment-Metadaten (Titel/Text kannst du später ersetzen) ==========
         const SEGMENTS = Array.from({length: COUNT}, (_,k) => {
           const n = k+1;
-          return { title:`Segment ${n}`, text:`Beschreibung Segment ${n}`, src:`${BASE}${n}.mp4` };
+          return {
+            title: `Segment ${n}`,
+            text:  `Beschreibung Segment ${n}`,
+            src:   `${BASE}${n}.mp4`
+          };
         });
       
-        // ================== DOM ====================================================
+        // ======= DOM ===============================================================
         const section = document.getElementById('acceleration-chain');
         const feed    = document.getElementById('atlas-feed');
-        const video   = document.getElementById('vidA');   // we scrub on this one
-        const fader   = document.getElementById('vfader'); // subtle overlay
+        const video   = document.getElementById('atlasVideo');
+        const fader   = document.getElementById('vfader');
+        if(!section || !feed || !video) return;
       
-        if (!section || !feed || !video) return;
+        // ======= State =============================================================
+        let i = 0;                              // aktuelles Segment
+        let durations = Array(COUNT).fill(null);
+        let appendedCount = 0;                  // wie viele Absätze im Feed
+        let pendingSec = 0;                     // angesammelte Scrub-Zeit
+        let seeking = false, raf = null;
+        let touchY = null;
       
-        // ================== STATE ==================================================
-        let i = 0;                  // current segment index
-        let durations = Array(COUNT).fill(null);  // cached durations
-        let appendedCards = 0;      // how many cards currently in feed
-        let pendingSec = 0;         // accumulated time delta to apply
-        let raf = null;             // scrub loop handle
-        let seeking = false;
-      
-        // ================== UTILS ==================================================
-        const once = (el, ev, opts={}) => new Promise(res => el.addEventListener(ev, res, { once:true, ...opts }));
+        // ======= Utils =============================================================
+        const once = (el, ev, opts={}) => new Promise(res => el.addEventListener(ev, res, {once:true, ...opts}));
       
         function isAtlasInView(){
           const r = section.getBoundingClientRect();
@@ -1661,166 +1754,152 @@
         function fadeOff(){ fader?.classList.remove('fade'); }
       
         function setSrc(el, url){
-          while (el.firstChild) el.removeChild(el.firstChild);
+          while(el.firstChild) el.removeChild(el.firstChild);
           el.removeAttribute('src');
           el.src = url;
         }
       
-        async function loadSegment(idx, snapT = 0){
-          if (idx < 0 || idx >= SEGMENTS.length) return;
+        async function loadSegment(idx, snapT=0){
+          if(idx < 0 || idx >= SEGMENTS.length) return;
           fadeOn();
           setSrc(video, SEGMENTS[idx].src);
-          await Promise.race([ once(video, 'loadedmetadata'), new Promise(r=>setTimeout(r, 600)) ]);
+          await Promise.race([ once(video,'loadedmetadata'), new Promise(r=>setTimeout(r,600)) ]);
           durations[idx] = video.duration || durations[idx] || 0;
-          try { video.pause(); } catch {}
-          // clamp into range [0, duration]
+          try{ video.pause(); }catch{}
           const dur = Math.max(0, durations[idx] || 0);
           const t = Math.min(Math.max(0, snapT), Math.max(0, dur - 1e-4));
           video.currentTime = t;
-          await Promise.race([ once(video, 'seeked'), new Promise(r=>setTimeout(r, 120)) ]);
+          await Promise.race([ once(video,'seeked'), new Promise(r=>setTimeout(r,120)) ]);
           requestAnimationFrame(()=>fadeOff());
         }
       
-        function appendCard(idx){
-          // only append if we haven't already added this one
-          if (appendedCards > idx) return;
+        // Absatz hinzufügen (rechts), ohne den alten zu ändern
+        function appendBlock(idx){
+          if(appendedCount > idx) return; // schon vorhanden
           const seg = SEGMENTS[idx];
-          const card = document.createElement('article');
-          card.className = 'seg-card new';
-          card.innerHTML = `
-            <h3 class="seg-title">${seg.title}</h3>
-            <p class="seg-text">${seg.text}</p>
+          const wrap = document.createElement('section');
+          wrap.className = 'seg-block new';
+          wrap.innerHTML = `
+            <h3>${seg.title}</h3>
+            <p>${seg.text}</p>
           `;
-          feed.appendChild(card);
-          appendedCards = idx + 1;
-          setTimeout(()=>card.classList.remove('new'), 700);
+          // Klassen für typografische Styles setzen
+          wrap.firstElementChild.classList.add('seg-block__title','seg-title');
+          wrap.lastElementChild.classList.add('seg-block__text','seg-text');
+          feed.appendChild(wrap);
+          appendedCount = idx + 1;
+          setTimeout(()=>wrap.classList.remove('new'), 700);
         }
       
-        function removeLastCard(){
-          if (appendedCards <= 1) return; // keep first card
+        // Letzten Absatz entfernen (beim Scrubben zurück)
+        function removeLastBlock(){
+          if(appendedCount <= 1) return; // ersten behalten
           const last = feed.lastElementChild;
-          if (last) last.remove();
-          appendedCards -= 1;
+          if(last) last.remove();
+          appendedCount -= 1;
         }
       
-        // ================== SCRUB LOOP ============================================
+        // ======= Scrub-Apply (seek, über Grenzen springen) =========================
         async function applyScrub(){
-          if (seeking) return;
+          if(seeking) return;
           seeking = true;
       
-          // consume pending seconds
           let delta = pendingSec;
           pendingSec = 0;
+          if(Math.abs(delta) < 1e-6){ seeking = false; return; }
       
-          // nothing to do
-          if (Math.abs(delta) < 1e-6){ seeking = false; return; }
-      
-          // current time & duration
-          const dur = durations[i] ?? video.duration ?? 0;
+          let dur = durations[i] ?? video.duration ?? 0;
           let t = (video.currentTime || 0) + delta;
       
-          // forward across segment boundary
-          while (t >= dur - 1e-4 && i < SEGMENTS.length - 1){
-            // carry overflow into next segment
+          // nach vorn über Segmentende
+          while(t >= dur - 1e-4 && i < SEGMENTS.length - 1){
             const overflow = t - (dur - 1e-4);
             i += 1;
             await loadSegment(i, 0);
-            appendCard(i);
-            // update dur for new seg (after metadata)
-            const nd = durations[i] ?? video.duration ?? 0;
-            t = Math.min(overflow, Math.max(0, nd - 1e-4));
+            appendBlock(i);
+            dur = durations[i] ?? video.duration ?? 0;
+            t = Math.min(overflow, Math.max(0, dur - 1e-4));
           }
       
-          // backward across boundary
-          while (t < 0 && i > 0){
+          // nach hinten vor Frame 0
+          while(t < 0 && i > 0){
             const under = -t;
             i -= 1;
             await loadSegment(i, Math.max(0, (durations[i] ?? 0) - 1e-4));
-            removeLastCard();
-            const pd = durations[i] ?? video.duration ?? 0;
-            t = Math.max(0, pd - 1e-4 - under);
+            removeLastBlock();
+            dur = durations[i] ?? video.duration ?? 0;
+            t = Math.max(0, dur - 1e-4 - under);
           }
       
-          // snap within current segment
+          // clamp & seek
           t = Math.min(Math.max(0, t), Math.max(0, (durations[i] ?? 0) - 1e-4));
           video.currentTime = t;
-          await Promise.race([ once(video, 'seeked'), new Promise(r=>setTimeout(r, 80)) ]);
+          await Promise.race([ once(video,'seeked'), new Promise(r=>setTimeout(r,80)) ]);
       
           seeking = false;
-          // if more pending accumulated while we were seeking, schedule again
-          if (Math.abs(pendingSec) >= (FRAME_SEC * 0.25)){
+          if(Math.abs(pendingSec) >= (FRAME * 0.25)){
             raf = requestAnimationFrame(applyScrub);
           }
         }
       
         function queueScrub(sec){
-          if (!isAtlasInView()) return;
+          if(!isAtlasInView()) return;
           pendingSec += sec;
-          if (!raf){
-            raf = requestAnimationFrame(()=>{
-              raf = null;
-              applyScrub();
-            });
+          if(!raf){
+            raf = requestAnimationFrame(()=>{ raf=null; applyScrub(); });
           }
         }
       
-        // ================== INPUT HANDLERS =========================================
-        // Wheel / trackpad (deltaMode: 0=pixel, 1=line, 2=page)
+        // ======= Input: Wheel/Touch/Keys ==========================================
         window.addEventListener('wheel', (e)=>{
-          if (!isAtlasInView()) return;
+          if(!isAtlasInView()) return;
           let dy = e.deltaY;
-          if (e.deltaMode === 1) dy *= 16;   // rough line->px
-          else if (e.deltaMode === 2) dy *= window.innerHeight;
-          // clamp extreme spikes
-          dy = Math.max(-600, Math.min(600, dy));
-          queueScrub(dy * SEC_PER_DELTA);
+          if(e.deltaMode === 1) dy *= 16;           // line -> px grob
+          else if(e.deltaMode === 2) dy *= window.innerHeight;
+          dy = Math.max(-600, Math.min(600, dy));   // clamp spikes
+          queueScrub(dy * SEC_PER_WHEEL_DELTA);
         }, { passive:true });
       
-        // Touch scrubbing
-        let touchY = null;
         window.addEventListener('touchstart', (e)=>{
-          if (!isAtlasInView()) return;
+          if(!isAtlasInView()) return;
           touchY = e.touches?.[0]?.clientY ?? null;
         }, { passive:true });
+      
         window.addEventListener('touchmove', (e)=>{
-          if (!isAtlasInView() || touchY == null) return;
+          if(!isAtlasInView() || touchY == null) return;
           const y = e.touches?.[0]?.clientY ?? touchY;
-          const dy = touchY - y; // swipe up -> forward
+          const dy = touchY - y; // up => forward
           touchY = y;
-          queueScrub(dy * SEC_PER_TOUCHPX);
+          queueScrub(dy * SEC_PER_TOUCH_PX);
         }, { passive:true });
+      
         window.addEventListener('touchend', ()=>{ touchY = null; }, { passive:true });
       
-        // Keyboard (precise frame steps)
         window.addEventListener('keydown', (e)=>{
-          if (!isAtlasInView()) return;
-          if (e.key === 'ArrowRight' || e.key === 'Enter') { queueScrub(+FRAME_SEC); }
-          if (e.key === 'ArrowLeft'  || e.key === 'Backspace') { queueScrub(-FRAME_SEC); }
-          if (e.key === 'PageDown')  { queueScrub(+FRAME_SEC * 10); }
-          if (e.key === 'PageUp')    { queueScrub(-FRAME_SEC * 10); }
+          if(!isAtlasInView()) return;
+          if(e.key === 'ArrowRight' || e.key === 'Enter') queueScrub(+FRAME);
+          if(e.key === 'ArrowLeft'  || e.key === 'Backspace') queueScrub(-FRAME);
+          if(e.key === 'PageDown')  queueScrub(+FRAME * 10);
+          if(e.key === 'PageUp')    queueScrub(-FRAME * 10);
         });
       
-        // ================== INIT ====================================================
+        // ======= Init ==============================================================
         (async function init(){
-          // first card
-          const first = document.createElement('article');
-          first.className = 'seg-card';
-          first.innerHTML = `<h3 class="seg-title">${SEGMENTS[0].title}</h3><p class="seg-text">${SEGMENTS[0].text}</p>`;
-          feed.appendChild(first);
-          appendedCards = 1;
+          // erster Absatz ohne Effekt
+          appendBlock(0);
       
-          // load first segment and pause on frame 0
+          // erstes Segment laden & auf Frame 0 pausieren
           await loadSegment(0, 0);
-      
-          // prefer no autoplay; just ready to scrub
-          try { video.pause(); } catch {}
+          try{ video.pause(); }catch{}
         })();
       })();
     </script>
 
 
+
   </body>
 </html>
+
 
 
 
