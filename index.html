@@ -1347,39 +1347,43 @@
    
     <script>
       (function(){
+    
         const BASE = 'ATLAS/';
       
-        // 14 Segmente (Stops). Nur Meta (Titel/Text) – Clips werden dynamisch gewählt.
         const META = [
           { title:"", text:"Das hier ist der 1,65 Meter hohe Vasista." },
           { title:"", text:"Und das hier ist A Toroidal LHC Apparatus (ATLAS), einer der vier Kollisionsdetektoren des LHC-Ringes." },
           { title:"", text:"100 Meter unter dem Boden steht dieser kolossale Detektor mit der 15-fachen Höhe Vasistas und wertet Kollisionen von Protonen und schweren Ionen aus." },
           { title:"", text:"Mit einer Länge von 46 Metern und rund 7 000 Tonnen Gewicht besteht ATLAS aus konzentrischen Detektorschichten, die wir im Folgenden kennenlernen." },
-          { title:"", text:"" }, // 5
-          { title:"", text:"" }, // 6
-          { title:"", text:"" }, // 7
-          { title:"", text:"" }, // 8
-          { title:"", text:"" }, // 9
-          { title:"", text:"" }, // 10
-          { title:"", text:"" }, // 11
-          { title:"", text:"" }, // 12
-          { title:"", text:"" }, // 13
-          { title:"", text:"" }  // 14 (letzter Stop)
+          { title:"", text:"" },
+          { title:"", text:"" },
+          { title:"", text:"" },
+          { title:"", text:"" },
+          { title:"", text:"" },
+          { title:"", text:"" },
+          { title:"", text:"" },
+          { title:"", text:"" },
+          { title:"", text:"" },
+          { title:"", text:"" } 
         ];
       
-        // DOM
+        // ====== DOM ================================================================
         const titleEl = document.getElementById('clip-title');
         const textEl  = document.getElementById('clip-text');
         const btnPrev = document.getElementById('btn-prev');
         const btnNext = document.getElementById('btn-next');
       
-        const A   = document.getElementById('vidA');
-        const B   = document.getElementById('vidB');
+        const A   = document.getElementById('vidA');   
+        const B   = document.getElementById('vidB');  
         const PRE = document.getElementById('vidPre');
         const fader = document.getElementById('vfader');
       
-        let active = A, back = B, i = 0, busy = false;
+        let active = A;
+        let back   = B;
+        let i = 0;          
+        let busy = false;
       
+        // ====== Helpers ============================================================
         const once = (el, ev, opts={}) => new Promise(res => el.addEventListener(ev, res, { once:true, ...opts }));
       
         function setSrc(videoEl, url){
@@ -1389,22 +1393,32 @@
         }
       
         async function primeAtStart(videoEl){
-          try{ videoEl.pause(); }catch{}
+          try { videoEl.pause(); } catch {}
+          
           videoEl.currentTime = 0;
-          await Promise.race([ once(videoEl,'seeked'), new Promise(r=>setTimeout(r,120)) ]);
-          try{ await videoEl.play(); }catch{}
-          await Promise.race([ once(videoEl,'timeupdate'), new Promise(r=>setTimeout(r,80)) ]);
-          try{ videoEl.pause(); }catch{}
-          try{ videoEl.currentTime = 0; }catch{}
+          await Promise.race([ once(videoEl,'seeked'), new Promise(r=>setTimeout(r,150)) ]);
+          
+          try { await videoEl.play(); } catch {}
+          await Promise.race([ once(videoEl,'timeupdate'), new Promise(r=>setTimeout(r,100)) ]);
+          try { videoEl.pause(); } catch {}
+         
+          try { videoEl.currentTime = 0; } catch {}
         }
       
         async function primeAtEnd(videoEl){
-          try{ videoEl.pause(); }catch{}
-          await once(videoEl,'loadedmetadata').catch(()=>{});
-          const t = Math.max(0, (videoEl.duration || 0) - 0.03);
-          try{ videoEl.currentTime = t; }catch{}
+          try { videoEl.pause(); } catch {}
+         
+          if (isNaN(videoEl.duration) || !isFinite(videoEl.duration)) {
+            await Promise.race([ once(videoEl,'loadedmetadata'), new Promise(r=>setTimeout(r,200)) ]);
+          }
+          const EPS = 0.03; // kleiner Puffer vor dem echten Ende
+          const target = Math.max(0, (videoEl.duration || 0) - EPS);
+          videoEl.currentTime = target;
           await Promise.race([ once(videoEl,'seeked'), new Promise(r=>setTimeout(r,150)) ]);
-          try{ videoEl.pause(); }catch{}
+          // zur Sicherheit noch ein kleines Stück spielen, dann pausieren
+          try { await videoEl.play(); } catch {}
+          await Promise.race([ once(videoEl,'timeupdate'), new Promise(r=>setTimeout(r,100)) ]);
+          try { videoEl.pause(); } catch {}
         }
       
         function swapTo(el){
@@ -1440,94 +1454,90 @@
           }, 200);
         }
       
-  
-      
         function showPreOnActive(){
           setSrc(back, PRE.currentSrc || PRE.src);
           try{ back.currentTime = PRE.currentTime; }catch{}
           back.pause();
           swapTo(back);
         }
-
-        // keep your helpers (setSrc, prepareFreezeOf, showPreOnActive, updateCopy, setButtons) as-is
-        
-        async function playForward(){
-          if (busy || i >= META.length - 1) return;
-          busy = true; setButtons();
-        
-          const transIdx = i + 1;   // 1..13
-          const target   = i + 1;
-        
-          // Prepare and attach 'ended' BEFORE play
-          setSrc(back, `${BASE}${transIdx}.mp4`);
-          await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,500)) ]);
-          const freezePromise = prepareFreezeOf(target);
-        
-          const onDone = async () => {
-            try { back.pause(); } catch {}
-            await freezePromise;
-            showPreOnActive();
-            i = target;
-            updateCopy(i);
-            busy = false; setButtons();
-          };
-        
-          back.addEventListener('ended', onDone, { once:true });
-        
-          // Swap and start
-          swapTo(back);
-          try { await back.play(); } catch {}
-          // If it already ended (very short clip), run handler immediately
-          if (back.ended) onDone();
-        }
-        
-        async function playBackward(){
-          if (busy || i <= 0) return;
-          busy = true; setButtons();
-        
-          const transIdx = i;       // 1..13
-          const target   = i - 1;
-        
-          setSrc(back, `${BASE}${transIdx}-${transIdx}.mp4`);
-          await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,500)) ]);
-          const freezePromise = prepareFreezeOf(target);
-        
-          const onDone = async () => {
-            try { back.pause(); } catch {}
-            await freezePromise;
-            showPreOnActive();
-            i = target;
-            updateCopy(i);
-            busy = false; setButtons();
-          };
-        
-          back.addEventListener('ended', onDone, { once:true });
-        
-          swapTo(back);
-          try { await back.play(); } catch {}
-          if (back.ended) onDone();
-        }
-        
-        // unchanged; returns a Promise that resolves when PRE is at the correct frame
+      
+        // Freeze-Ziel für Segment j vorbereiten:
+        // - j < 13: START von Clip (j+1).mp4
+        // - j = 13: END-Frame von 13.mp4
         function prepareFreezeOf(j){
           return (async ()=>{
             if (j < META.length - 1) {
               setSrc(PRE, `${BASE}${j+1}.mp4`);
               await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
-              await primeAtStart(PRE); // start frame
+              await primeAtStart(PRE);
             } else {
               setSrc(PRE, `${BASE}13.mp4`);
               await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
-              await primeAtEnd(PRE);   // last frame
+              await primeAtEnd(PRE); // letzter Frame!
             }
           })();
         }
-
-
-
-
       
-        // === Init ===
+        // ====== Navigation ==========================================================
+        async function playForward(){
+          if (busy || i >= META.length - 1) return;
+          busy = true; setButtons();
+      
+          const transIdx = i + 1;   // Clip 1..13
+          const target   = i + 1;   // Ziel-Segment 1..13
+      
+          setSrc(back, `${BASE}${transIdx}.mp4`);
+          await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,500)) ]);
+      
+          const playingEl = back;
+          const freezePromise = prepareFreezeOf(target);
+      
+          const onDone = async () => {
+            try { playingEl.pause(); } catch {}
+            await freezePromise;
+            showPreOnActive();
+            i = target;
+            updateCopy(i);
+            busy = false; setButtons();
+          };
+      
+          playingEl.addEventListener('ended', onDone, { once:true });
+      
+          swapTo(playingEl);
+          try { await playingEl.play(); } catch {}
+          if (playingEl.ended) onDone(); // ultra-kurzer Clip Guard
+        }
+      
+        async function playBackward(){
+          if (busy || i <= 0) return;
+          busy = true; setButtons();
+      
+          const transIdx = i;       // Clip 1..13
+          const target   = i - 1;   // Ziel-Segment
+      
+          setSrc(back, `${BASE}${transIdx}-${transIdx}.mp4`);
+          await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,500)) ]);
+      
+          const playingEl = back;
+          const freezePromise = prepareFreezeOf(target);
+      
+          const onDone = async () => {
+            try { playingEl.pause(); } catch {}
+            await freezePromise;
+            showPreOnActive();
+            i = target;
+            updateCopy(i);
+            busy = false; setButtons();
+          };
+      
+          playingEl.addEventListener('ended', onDone, { once:true });
+      
+          swapTo(playingEl);
+          try { await playingEl.play(); } catch {}
+          if (playingEl.ended) onDone();
+        }
+      
+        // ====== Init ================================================================
         (async function init(){
           // Segment 0 zeigt den Start von Clip 1
           updateCopy(0);
@@ -1537,7 +1547,7 @@
           active.classList.add('active');
           setButtons();
       
-          // Preload Segment 1 Freeze
+          // Preload Freeze für Segment 1
           prepareFreezeOf(1).catch(()=>{});
       
           btnNext.addEventListener('click', playForward);
@@ -1547,10 +1557,13 @@
             if(e.key==='ArrowLeft'){ e.preventDefault(); playBackward(); }
           });
         })();
+      
       })();
     </script>
+
   </body>
 </html>
+
 
 
 
