@@ -1440,20 +1440,7 @@
           }, 200);
         }
       
-        // === Freeze vorbereiten für Ziel-Segment j ===
-        async function prepareFreezeOf(j){
-          if(j < META.length - 1){
-            // Normale Stops 0..12: friere den Start von Clip (j+1).mp4 ein
-            setSrc(PRE, `${BASE}${j+1}.mp4`);
-            await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
-            await primeAtStart(PRE);
-          }else{
-            // Letzter Stop (13): friere den letzten Frame von 13.mp4 ein
-            setSrc(PRE, `${BASE}13.mp4`);
-            await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
-            await primeAtEnd(PRE);
-          }
-        }
+  
       
         function showPreOnActive(){
           setSrc(back, PRE.currentSrc || PRE.src);
@@ -1462,54 +1449,77 @@
           swapTo(back);
         }
       
-        // === Vorwärts: von Segment i -> i+1 mit Clip (i+1).mp4 ===
+
+      
+        // 1) Freeze-Prep als Promise zurückgeben (Start für Segmente 0..12, Endframe für Segment 13)
+        function prepareFreezeOf(j){
+          return (async ()=>{
+            if (j < META.length - 1) {
+              // Stops 0..12 -> Start von Clip (j+1).mp4
+              setSrc(PRE, `${BASE}${j+1}.mp4`);
+              await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
+              await primeAtStart(PRE);
+            } else {
+              // Stop 13 -> ***letzter Frame*** von 13.mp4
+              setSrc(PRE, `${BASE}13.mp4`);
+              await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
+              await primeAtEnd(PRE); // <- last frame!
+            }
+          })();
+        }
+        
+        // 2) Vorwärts: immer auf den vorbereiteten Freeze warten, damit wir sicher den richtigen Frame zeigen
         async function playForward(){
-          if(busy || i >= META.length - 1) return;
+          if (busy || i >= META.length - 1) return;
           busy = true; setButtons();
-      
-          const transIdx = i + 1;       // Clip-Nummer (1..13)
-          const target   = i + 1;       // Ziel-Segment
-      
+        
+          const transIdx = i + 1;          // Clip-Nummer 1..13
+          const target   = i + 1;          // Ziel-Segment 1..13
+        
           setSrc(back, `${BASE}${transIdx}.mp4`);
           await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,500)) ]);
-          try{ await back.play(); }catch{}
+          try { await back.play(); } catch {}
           swapTo(back);
-      
-          // Nächsten Freeze vorbereiten
-          prepareFreezeOf(target).catch(()=>{});
-      
-          active.onended = async ()=>{
-            try{ active.pause(); }catch{}
+        
+          // Freeze vorbereiten & darauf warten (wichtiger Fix fürs letzte Segment)
+          const freezePromise = prepareFreezeOf(target);
+        
+          active.onended = async () => {
+            try { active.pause(); } catch {}
+            await freezePromise;          // <- Warten bis PRE am Ziel-Frame ist
             showPreOnActive();
             i = target;
             updateCopy(i);
             busy = false; setButtons();
           };
         }
-      
-        // === Rückwärts: von Segment i -> i-1 mit Clip (i-i).mp4 ===
+        
+        // 3) Rückwärts: dito (auf Freeze warten)
         async function playBackward(){
-          if(busy || i <= 0) return;
+          if (busy || i <= 0) return;
           busy = true; setButtons();
-      
-          const transIdx = i;           // Clip-Nummer (1..13)
+        
+          const transIdx = i;              // Clip-Nummer 1..13
           const target   = i - 1;
-      
+        
           setSrc(back, `${BASE}${transIdx}-${transIdx}.mp4`);
           await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,500)) ]);
-          try{ await back.play(); }catch{}
+          try { await back.play(); } catch {}
           swapTo(back);
-      
-          prepareFreezeOf(target).catch(()=>{});
-      
-          active.onended = async ()=>{
-            try{ active.pause(); }catch{}
+        
+          const freezePromise = prepareFreezeOf(target);
+        
+          active.onended = async () => {
+            try { active.pause(); } catch {}
+            await freezePromise;          // <- sicher am Start-Frame (oder End-Frame bei 13)
             showPreOnActive();
             i = target;
             updateCopy(i);
             busy = false; setButtons();
           };
         }
+
+
       
         // === Init ===
         (async function init(){
@@ -1535,6 +1545,7 @@
     </script>
   </body>
 </html>
+
 
 
 
