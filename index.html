@@ -33,15 +33,15 @@
       .reveal{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .6s ease}
       .reveal.show{opacity:1;transform:none}
 
+      .grid{display:grid;gap:22px}
+      .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
+
       /* ================= HERO ================= */
       .hero{position:relative;min-height:88vh;display:grid;place-items:center;overflow:hidden}
       .hero .bg{position:absolute;inset:0;background:radial-gradient(1200px 600px at 70% 20%,rgba(255,255,255,.08),transparent),linear-gradient(180deg,#0c0c10,#09090b)}
       .hero .content{position:relative;text-align:center;padding:40px}
       .title{font-size:clamp(36px,6vw,72px);font-weight:700;letter-spacing:-.02em}
       .subtitle{max-width:750px;margin:14px auto 0;color:var(--muted);font-size:clamp(16px,2.2vw,18px)}
-
-      .grid{display:grid;gap:22px}
-      .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
 
       /* ================= HORIZONTAL TIMELINE ================= */
       #timeline h2 { font-size: clamp(26px, 3.8vw, 40px); margin:0 0 16px; }
@@ -54,30 +54,24 @@
       .event-info h3 { margin:0; font-size:clamp(18px,2vw,28px); font-weight:700; letter-spacing:-.01em; }
       .event-info p { font-size:15px; color:var(--muted); margin:0; }
       .event-info a { width:fit-content; margin-top:8px; color:var(--accent); text-decoration:none; font-weight:600; }
-
       .nav-btn { background:transparent; border:2px solid var(--line); border-radius:50%; width:44px; height:44px; color:var(--fg); cursor:pointer; display:grid; place-items:center; transition:transform .25s ease, background .25s ease, opacity .25s ease; }
       .nav-btn:hover { background:var(--line); transform:scale(1.05); }
       .nav-btn:active { transform:scale(.97); }
       .nav-btn[disabled] { cursor:not-allowed; opacity:.4; background:transparent !important; transform:none !important; }
-
       .progress { margin-top:22px; position:relative; }
       .bar { height:4px; background:#2d2d32; border-radius:999px; position:relative; overflow:visible; }
       .marker { position:absolute; top:50%; left:0; width:16px; height:16px; background:var(--marker); border-radius:50%; box-shadow:0 0 0 4px rgba(255,255,255,.08); transform:translate(-8px,-50%); transition:transform .55s cubic-bezier(.22,.61,.36,1); }
-
       .pips { position:absolute; inset:0; pointer-events:none; }
       .pip { position:absolute; top:50%; width:12px; height:12px; border-radius:50%; background:var(--disabled); transform:translate(-6px,-50%); border:2px solid var(--bg); box-shadow:0 0 0 3px rgba(255,255,255,.06); pointer-events:auto; cursor:pointer; transition:background .2s ease, transform .2s ease; }
       .pip:hover { transform:translate(-6px,-50%) scale(1.07); }
       .pip.active { background:var(--marker); box-shadow:0 0 0 4px rgba(245,158,11,.15); }
-
       .labels { display:flex; justify-content:space-between; gap:8px; margin-top:8px; font-size:12px; color:var(--muted); white-space:nowrap; }
-
       .event-card .anim-wrap{ position:relative; flex:1; display:flex; gap:22px; }
       .slide { display:flex; gap:22px; width:100%; }
       .slide.enter { animation: fadeIn .45s cubic-bezier(.22,.61,.36,1); }
       .slide.leave { animation: fadeOut .38s cubic-bezier(.4,.0,.2,1); position:absolute; inset:0; }
       @keyframes fadeIn { from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none} }
       @keyframes fadeOut { from{opacity:1; transform:none} to{opacity:0; transform:translateY(-8px)} }
-
       @media (max-width: 900px){
         .event-card{ flex-direction:column; }
         .event-media{ flex-basis:auto; }
@@ -95,11 +89,7 @@
 
       /* ================= ACCORDION ================= */
       .accordion{padding:0; overflow:hidden; border:1px solid var(--line); border-radius:16px; transition:border-color .28s ease, box-shadow .28s ease, background .28s ease}
-      .accordion-header{
-        width:100%; display:flex; justify-content:space-between; align-items:center;
-        gap:12px; padding:16px 18px; background:transparent; border:0; color:var(--fg);
-        cursor:pointer; font-size:24px; font-weight:700; text-align:left;
-      }
+      .accordion-header{width:100%; display:flex; justify-content:space-between; align-items:center; gap:12px; padding:16px 18px; background:transparent; border:0; color:var(--fg); cursor:pointer; font-size:24px; font-weight:700; text-align:left;}
       .accordion .chev{transition:transform .3s ease, color .3s ease; opacity:.9}
       .accordion.open .chev{transform:rotate(90deg); color:#9affa7}
       .accordion-content{ height:0; overflow:hidden; padding:0 18px; transition: height .42s cubic-bezier(.22,.61,.36,1); will-change: height; color:var(--muted); }
@@ -107,35 +97,25 @@
       .accordion.open{ border-color:#90ff86; box-shadow:0 6px 22px rgba(134,225,255,.16); }
       @media (max-width:900px){ .accordion-header{font-size:16px; padding:14px 16px} }
 
-      /* ================= Beschleuniger kette ================= */
+      /* ================= Beschleunigerkette (Model Viewer) ================= */
       #chain-switch .sub{ color:var(--muted); margin:-6px 0 16px; }
-      .chain-toggle{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:8px 0 20px; }
-      .mode-btn{ width:100%; padding:16px; font-weight:600; border-radius:9999px; border:1px solid var(--line); background:var(--card); color:var(--fg); cursor:pointer; transition: background .25s ease, box-shadow .25s ease, border-color .25s ease, transform .15s ease; }
-      .mode-btn:hover{ transform:translateY(-2px); border-color:var(--accent); box-shadow:0 8px 20px rgba(134,225,255,.15); }
-      .mode-btn.active{ background:linear-gradient(180deg,#181a1f,#13151a); border-color:var(--accent); box-shadow:0 8px 22px rgba(134,225,255,.22); }
-      @media(max-width:700px){ .chain-toggle{ grid-template-columns:1fr; } }
-
       .flow-card { display:grid; grid-template-columns: 1fr 1fr; gap:24px; background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015)); border:1px solid var(--line); border-radius:18px; padding:60px 20px 20px; box-shadow:0 10px 30px rgba(0,0,0,.25); position:relative; }
       .flow-step-title { position:absolute; top:16px; left:50%; transform:translateX(-50%); font-size:22px; font-weight:800; margin:0; text-align:center; width:calc(100% - 40px); }
       .flow-right { display:flex; flex-direction:column; align-items:center; text-align:center; }
       .flow-left { position:relative; display:flex; flex-direction:column; justify-content:flex-start; height:100%; max-height:490px; overflow-y:auto; padding-bottom:50px; }
       .flow-mini-text { margin:0 0 12px; font-size:15px; line-height:1.6; color:var(--muted); }
       .step-nav-fixed { position:absolute; bottom:0; left:50%; transform:translateX(-50%); display:flex; gap:12px; }
-
       .step-btn { padding:10px 32px; min-width:160px; border-radius:12px; border:1px solid var(--line); background:#121215; color:var(--fg); font-weight:300; font-size:12px; text-align:center; cursor:pointer; transition: background .25s ease, border-color .25s ease, transform .12s ease, opacity .25s ease; }
       .step-btn:hover { background:#1b1b20; border-color:var(--accent); }
       .step-btn:disabled { opacity:.5; cursor:not-allowed; }
       @media (max-width:900px){ .flow-card{ grid-template-columns:1fr } .flow-left{ max-height:none; padding-bottom:60px; } }
 
-      .mv-dot{
-        opacity: 0 !important;
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        pointer-events: none !important;
-      }
-      .mv-dot:focus,
-      .mv-dot:focus-visible{ outline: none !important; }
+      /* Blaue MV-Hotspots (ohne Labels) */
+      .mv-dot{ --size:14px; width:var(--size); height:var(--size); border-radius:50%; border:2px solid #0ea5ff; background:#38bdf8; box-shadow:0 0 0 6px rgba(56,189,248,.18); cursor:pointer; }
+      .mv-dot:focus, .mv-dot:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
+
+      .flow-viewport { width: 100%; aspect-ratio: 1 / 1; border-radius: 14px; border: 1px solid var(--line); overflow: hidden; background: #0f1014; }
+      model-viewer { width: 100%; height: 100%; display: block; outline: none; }
 
       /* ================= HOTSPOTS (Bild) ================= */
       #ring-hotspots .stage{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#0f0f12}
@@ -188,10 +168,7 @@
       }
       @keyframes flashPulse{ 0%{opacity:0} 20%{opacity:1} 60%{opacity:.85} 100%{opacity:0} }
 
-      .flow-viewport { width: 100%; aspect-ratio: 1 / 1; border-radius: 14px; border: 1px solid var(--line); overflow: hidden; background: #0f1014; }
-      model-viewer { width: 100%; height: 100%; display: block; outline: none; }
-
-      /* === PONG OVERLAY ===================================== */
+      /* ================= PONG OVERLAY ================= */
       #pong-overlay[hidden]{ display:none !important; }
       #pong-overlay{
         position:fixed; inset:0; z-index:9999;
@@ -218,178 +195,25 @@
       #pong-close{ border:1px solid var(--line); background:transparent; color:var(--fg); border-radius:10px; padding:8px 12px; cursor:pointer; }
       #pong-close:hover{ background:#17181c; border-color:var(--accent); }
 
-      /* Blaue MV-Hotspots (ohne Labels) */
-      .mv-dot{
-        --size: 14px;
-        width: var(--size);
-        height: var(--size);
-        border-radius: 50%;
-        border: 2px solid #0ea5ff;
-        background: #38bdf8;
-        box-shadow: 0 0 0 6px rgba(56,189,248,.18);
-        cursor: pointer;
-      }
-      .mv-dot:focus{ outline: 2px solid #fff; outline-offset: 2px; }
-      
-      #dvd-wrap {
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        background: transparent;    
-        opacity: 0;             
-        pointer-events: none;       
-        transition: opacity 2s ease;
-      }
-      
+      /* ================= Screensaver / Clip Player ================= */
+      #dvd-wrap { position: fixed; inset: 0; z-index: 9999; background: transparent; opacity: 0; pointer-events: none; transition: opacity 2s ease; }
+      #dvd-wrap.active { opacity: 1; pointer-events: auto; }
+      #content-wrap { transition: filter 2s cubic-bezier(.4, 0, .2, 1); }
+      #content-wrap.blur { filter: blur(12px); }
+      #dvd-box iframe, #dvd-box video { width: 2000px; height: auto; max-width: 200vw; }
 
-      #dvd-wrap.active {
-        opacity: 1;
-        pointer-events: auto;       
-      }
-
-      
-      #content-wrap.blur {
-        filter: blur(12px);      
-        transition: filter 2s cubic-bezier(.4, 0, .2, 1);
-      }
-      
-      #dvd-box iframe,
-      #dvd-box video {
-        width: 2000px;   
-        height: auto;  
-        max-width: 200vw; 
-      }
-    
-      #content-wrap {
-        transition: filter 2s cubic-bezier(.4, 0, .2, 1);
-      }
-
-      
-      .clip-card {
-        background: var(--card, #141416);
-        border: 1px solid var(--line, #242428);
-        border-radius: 18px;
-        padding: 18px;
-        max-width: 1000px;
-        margin: 40px auto;
-      }
-      
-      .clip-box {
-        display: grid;
-        grid-template-columns: 1.1fr 1.4fr;
-        gap: 24px;
-        align-items: stretch;
-      }
+      .clip-card { background: var(--card, #141416); border: 1px solid var(--line, #242428); border-radius: 18px; padding: 18px; max-width: 1000px; margin: 40px auto; }
+      .clip-box { display: grid; grid-template-columns: 1.1fr 1.4fr; gap: 24px; align-items: stretch; }
       @media (max-width:900px){ .clip-box { grid-template-columns: 1fr; } }
-      
       .clip-left { display:flex; flex-direction:column; gap:14px; }
       .clip-controls { margin-top:auto; display:flex; gap:12px; }
-      
-      .step-btn {
-        padding:10px 32px;
-        min-width:160px;
-        border-radius:12px;
-        border:1px solid var(--line, #242428);
-        background:#121215;
-        color:var(--fg, #fafafa);
-        font-weight:300;
-        font-size:12px;
-        cursor:pointer;
-      }
-      .step-btn:hover { background:#1b1b20; border-color:var(--accent, #7dd3fc); }
-      .step-btn:disabled { opacity:.5; cursor:not-allowed; }
-      
-      .clip-right {
-        position:relative;
-        border:1px solid var(--line, #242428);
-        border-radius:16px;
-        overflow:hidden;
-        background:#000;
-        aspect-ratio:1/1;   /* square player */
-        width:100%;
-      }
-
-      #vfader {
-        position:absolute;
-        inset:0;
-        pointer-events:none;
-        opacity:0;
-        background:rgba(0,0,0,.35);
-      }
-      #vfader.fade {
-        transition:opacity .35s ease;
-        opacity:1;
-      }
-
-
-      </style>
-      <style>
-        .clip-card {
-          background: #141416;
-          border: 1px solid #242428;
-          border-radius: 18px;
-          padding: 18px;
-          max-width: 1000px;
-          margin: 40px auto;
-        }
-      
-        .clip-box {
-          display: grid;
-          grid-template-columns: 1.1fr 1.4fr;
-          gap: 24px;
-          align-items: stretch;
-        }
-        @media (max-width:900px){ .clip-box { grid-template-columns: 1fr; } }
-      
-        .clip-left { display:flex; flex-direction:column; gap:14px; }
-        .clip-controls { margin-top:auto; display:flex; gap:12px; }
-      
-        .step-btn {
-          padding:10px 32px;
-          min-width:160px;
-          border-radius:12px;
-          border:1px solid #242428;
-          background:#121215;
-          color:#fafafa;
-          font-weight:300;
-          font-size:12px;
-          cursor:pointer;
-          transition: background .25s ease, border-color .25s ease, opacity .25s ease;
-        }
-        .step-btn:hover { background:#1b1b20; border-color:#7dd3fc; }
-        .step-btn:disabled { opacity:.5; cursor:not-allowed; }
-      
-        .clip-right {
-          position:relative;
-          border:1px solid #242428;
-          border-radius:16px;
-          overflow:hidden;
-          background:#000;
-          aspect-ratio:1/1;
-          width:100%;
-        }
-      
-        .clip-right video {
-          position:absolute;
-          inset:0;
-          width:100%;
-          height:100%;
-          object-fit:contain;
-          background:#000;
-          opacity:0;
-          transition: opacity .22s ease; /* kurzer, knackiger Crossfade */
-        }
-        .clip-right video.active { opacity:1; }
-      
-        /* sanfter Overlay-Fader für harte Sprünge (meist unsichtbar dank Preload) */
-        #vfader {
-          position:absolute; inset:0; pointer-events:none;
-          background:rgba(0,0,0,.35);
-          opacity:0; transition:opacity .18s ease;
-        }
-        #vfader.fade { opacity:1; }
-      </style>
-    </head>
+      .clip-right { position:relative; border:1px solid var(--line, #242428); border-radius:16px; overflow:hidden; background:#000; aspect-ratio:1/1; width:100%; }
+      .clip-right video { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#000; opacity:0; transition: opacity .22s ease; }
+      .clip-right video.active { opacity:1; }
+      #vfader { position:absolute; inset:0; pointer-events:none; opacity:0; background:rgba(0,0,0,.35); }
+      #vfader.fade { transition:opacity .35s ease; opacity:1; }
+    </style>
+  </head>
   <body>
     <!-- ================= HEADER ================= -->
     <header class="header">
@@ -407,8 +231,7 @@
       </div>
     </header>
 
-      
-    <div id="content-wrap">  
+    <div id="content-wrap">
       <!-- ================= HERO ================= -->
       <section class="hero" id="hero" aria-labelledby="hero-title">
         <div class="bg" aria-hidden="true"></div>
@@ -417,7 +240,7 @@
           <p class="subtitle">Eine Einführung in CERN, seine Geschichte und seine Beschleuniger (Fokus: LHC-Komplex) – plus ein Blick auf die Physik dahinter.</p>
         </div>
       </section>
-  
+
       <!-- ================= EINLEITUNG ================= -->
       <section class="section" id="cern-teile">
         <div class="container">
@@ -434,8 +257,7 @@
               </div>
             </div>
           </div>
-  
-          <!-- Links -->
+
           <div class="topic-grid" aria-label="Themen">
             <a class="topic-card" href="#timeline">
               <h3>Zeitleiste</h3>
@@ -464,22 +286,22 @@
           </div>
         </div>
       </section>
-  
+
       <!-- ================= TIMELINE ================= -->
       <section class="section" id="timeline">
         <div class="container">
           <h2 class="reveal">Geschichte</h2>
-  
+
           <div class="timeline-slider reveal">
             <button class="nav-btn prev" type="button" aria-label="Zurück" title="Zurück">◀</button>
-  
+
             <div class="event-card" aria-live="polite">
               <div class="anim-wrap"><!-- dynamic slide injected here --></div>
             </div>
-  
+
             <button class="nav-btn next" type="button" aria-label="Weiter" title="Weiter">▶</button>
           </div>
-  
+
           <div class="progress" aria-label="Zeitstrahl">
             <div class="bar" id="tl-bar">
               <div class="marker" id="tl-marker" aria-hidden="true"></div>
@@ -489,20 +311,18 @@
           </div>
         </div>
       </section>
-  
+
       <!-- ================= BESCHLEUNIGERKETTE (Model Viewer) ================= -->
       <section class="section" id="chain-switch">
         <div class="container">
           <h2>Beschleunigerkette</h2>
           <p class="sub">Erkunde die Elemente der LHC Beschleunigerkette für Protonen</p>
-  
-  
+
           <div class="flow-card" aria-live="polite">
             <h3 class="flow-step-title" id="flow-title">Linear Accelerator 4 (LINAC4)</h3>
-  
+
             <div class="flow-right">
               <div class="flow-viewport">
-  
                 <model-viewer
                   id="mv"
                   src="LHC.glb"
@@ -515,14 +335,11 @@
                   shadow-intensity="3"
                   environment-image="neutral"
                   interaction-prompt="none"
-  
                   field-of-view="45deg"
-                
                   min-camera-orbit="auto 60deg 10m"
                   max-camera-orbit="auto 60deg 4000m"
-                
                   interpolation-decay="200">
-                
+
                   <!-- 9 Hotspots (ohne Labels) -->
                   <button class="mv-dot" slot="hotspot-LINAC4"    data-name="LINAC4"    data-position="20.6911m -0.684515m -112.797m"  data-normal="0m 1m 0m"></button>
                   <button class="mv-dot" slot="hotspot-PSBooster" data-name="PSBooster" data-position="36.691m 0.25m -77.884m"         data-normal="0m 1m 0m"></button>
@@ -533,16 +350,15 @@
                   <button class="mv-dot" slot="hotspot-ALICE"     data-name="ALICE"     data-position="473m 0.25m 144.7m"              data-normal="0m 1m 0m"></button>
                   <button class="mv-dot" slot="hotspot-LHCb"      data-name="LHCb"      data-position="-518.19m 0.25m 178.78m"         data-normal="0m 1m 0m"></button>
                   <button class="mv-dot" slot="hotspot-CMS"       data-name="CMS"       data-position="-16.125m 0.25m 1762m"           data-normal="0m 1m 0m"></button>
-                
+
                 </model-viewer>
-                
+
                 <!-- Smooth focus/zoom controller -->
                 <script>
                 (function(){
                   const mv = document.getElementById('mv');
                   if(!mv) return;
-                
-                  // Utils
+
                   const parsePos = (s) => (s||'0m 0m 0m').split(' ').map(p => parseFloat(String(p).replace('m',''))||0);
                   const fmtPos   = (v) => `${v[0].toFixed(3)}m ${v[1].toFixed(3)}m ${v[2].toFixed(3)}m`;
                   const parseOrbit = (s) => {
@@ -552,7 +368,7 @@
                   };
                   const fmtOrbit = ({theta=null,phi=null,r=200}) => `${theta==null?'auto':theta+'deg'} ${phi==null?'auto':phi+'deg'} ${(+r).toFixed(3)}m`;
                   const easeInOutCubic=(t)=> t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
-                
+
                   function readPositions(){
                     const map={};
                     mv.querySelectorAll('button.mv-dot[data-name]').forEach(btn=>{
@@ -563,7 +379,7 @@
                   let POS = readPositions();
                   const mo = new MutationObserver(()=>{ POS = readPositions(); });
                   mo.observe(mv,{subtree:true, attributes:true, attributeFilter:['data-position']});
-                
+
                   const ORBIT_RADIUS = {
                     LINAC4:   20,
                     PSBooster:25,
@@ -575,13 +391,11 @@
                     ALICE:   20,
                     LHCb:    20
                   };
-  
-  
-                
+
                   let currTarget=null;
                   let currOrbit=null;
                   let animId=null;
-                
+
                   mv.addEventListener('load', ()=>{
                     const attrTarget = mv.getAttribute('camera-target');
                     currTarget = (attrTarget && !/auto/i.test(attrTarget)) ? parsePos(attrTarget)
@@ -591,37 +405,37 @@
                     mv.setAttribute('camera-target', fmtPos(currTarget));
                     mv.setAttribute('camera-orbit',  fmtOrbit(currOrbit));
                   }, {once:true});
-                
+
                   function stopAnim(){ if(animId){ cancelAnimationFrame(animId); animId=null; } }
-                
+
                   async function focusTo(name, duration=900){
                     const targetStr = POS[name];
                     if(!targetStr) return;
                     if(mv.updateComplete) await mv.updateComplete;
-                
+
                     const startPos   = currTarget || (mv.getAttribute('camera-target') ? parsePos(mv.getAttribute('camera-target')) : [0,0,0]);
                     const endPos     = parsePos(targetStr);
                     const startOrbit = currOrbit || parseOrbit(mv.getAttribute('camera-orbit'));
                     const desiredR   = ORBIT_RADIUS[name] ?? startOrbit.r ?? 200;
                     const endOrbit   = { theta:startOrbit.theta, phi:startOrbit.phi, r:desiredR };
-                
+
                     const t0 = performance.now();
                     stopAnim();
-                
+
                     const step = (now)=>{
                       const t = Math.min(1,(now - t0)/duration);
                       const k = easeInOutCubic(t);
-                
+
                       const pos = [
                         startPos[0] + (endPos[0]-startPos[0]) * k,
                         startPos[1] + (endPos[1]-startPos[1]) * k,
                         startPos[2] + (endPos[2]-startPos[2]) * k,
                       ];
                       const r = (startOrbit.r ?? 200) + ((endOrbit.r)-(startOrbit.r ?? 200)) * k;
-                
+
                       mv.setAttribute('camera-target', fmtPos(pos));
                       mv.setAttribute('camera-orbit',  fmtOrbit({theta:startOrbit.theta, phi:startOrbit.phi, r}));
-                
+
                       if(t<1){
                         animId = requestAnimationFrame(step);
                       }else{
@@ -632,18 +446,18 @@
                     };
                     animId = requestAnimationFrame(step);
                   }
-                
+
                   mv.addEventListener('click', (e)=>{
                     const btn = e.composedPath().find(n=> n?.classList?.contains?.('mv-dot'));
                     if(btn && btn.dataset?.name){
                       focusTo(btn.dataset.name, 800);
                     }
                   });
-                
+
                   window.__MV_FOCUS__ = { focusTo, get POS(){ return POS; } };
                 })();
                 </script>
-                
+
                 <!-- Control Panel (XY editor) -->
                 <div id="mv-hotspot-controls" class="card" style="margin-top:12px">
                   <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:end">
@@ -675,7 +489,7 @@
                     Hinweis: Z bleibt hier 0 m (kannst du im Script erweitern).
                   </div>
                 </div>
-                
+
                 <script>
                 (function(){
                   const mv = document.getElementById('mv');
@@ -699,10 +513,9 @@
                   load(sel.value);
                 })();
                 </script>
-  
               </div>
             </div>
-  
+
             <div class="flow-left">
               <p id="flow-text" class="flow-mini-text">
                 Der Linear Accelerator 4 (LINAC4) wurde 2020 offiziell in Betrieb genommen und ist der erste Schritt in der LHC-Beschleunigerkette. Er beschleunigt negativ geladene Wasserstoffionen (H⁻) auf eine Energie von 160 MeV, was etwa 0,43 % der Lichtgeschwindigkeit entspricht. Anschließend werden die Elektronen abgestreift, sodass reine Protonen entstehen. Der LINAC4 ersetzt den älteren LINAC2 und liefert einen dichteren und stärkeren Strahl. Er arbeitet als linearer Beschleuniger mit Radiofrequenz-Kavitäten. Die erzeugten Protonen werden anschließend in den Proton Synchrotron Booster eingespeist. LINAC4 bildet damit die Einspeisung für den gesamten weiteren Beschleunigerkomplex.
@@ -715,7 +528,7 @@
           </div>
         </div>
       </section>
-  
+
       <!-- ================= TEILCHENBESCHLEUNIGER (Bild-Hotspots) ================= -->
       <section class="section" id="ring-hotspots">
         <div class="container">
@@ -734,7 +547,7 @@
           </div>
         </div>
       </section>
-  
+
       <!-- ================= ATLAS ================= -->
       <section class="section" id="acceleration-chain">
         <div class="container">
@@ -751,24 +564,17 @@
                 <button id="btn-next" class="step-btn" type="button">Weiter ▶</button>
               </div>
             </div>
-        
+
             <div class="clip-right">
-              <!-- sichtbare Layer -->
               <video id="vidA" playsinline muted preload="auto"></video>
               <video id="vidB" playsinline muted preload="auto"></video>
-        
-              <!-- unsichtbarer Preloader -->
               <video id="vidPre" playsinline muted preload="auto" style="display:none"></video>
-        
               <div id="vfader"></div>
             </div>
           </div>
         </div>
-
-
-
       </section>
-  
+
       <!-- ================= KOLLISIONEN ================= -->
       <section class="section" id="collision-detector">
         <div class="container">
@@ -790,7 +596,7 @@
           </div>
         </div>
       </section>
-  
+
       <!-- ================= SICHERHEIT ================= -->
       <section class="section" id="safety">
         <div class="container">
@@ -802,7 +608,7 @@
           </div>
         </div>
       </section>
-  
+
       <!-- ================= QUELLEN ================= -->
       <section class="section" id="sources">
         <div class="container">
@@ -813,7 +619,7 @@
           </ul>
         </div>
       </section>
-  
+
       <!-- === PONG OVERLAY =================================== -->
       <div id="pong-overlay" role="dialog" aria-modal="true" aria-label="Pong" hidden>
         <div id="pong-stage">
@@ -827,7 +633,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- DVD-Bounce-Box -->
     <div id="dvd-wrap" aria-hidden="true">
       <div id="dvd-box">
@@ -842,10 +648,6 @@
       </div>
     </div>
 
-    
-
-
-
     <!-- ================= SCRIPTS ================= -->
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 
@@ -855,27 +657,30 @@
     </script>
 
     <script defer>
-      const hotspots = [...document.querySelectorAll('.hotspot')];
-      const facts = hotspots.map(h => h.nextElementSibling);
-      hotspots.forEach(h => {
-        const fact = h.nextElementSibling;
-        h.addEventListener('click', () => {
-          facts.forEach(x => x.classList.remove('show'));
-          fact.innerHTML = `<h3>${h.dataset.title}</h3><p>${h.dataset.text}</p>`;
-          fact.classList.add('show');
+      (function(){
+        const hotspots = [...document.querySelectorAll('.hotspot')];
+        const facts = hotspots.map(h => h.nextElementSibling);
+        hotspots.forEach(h => {
+          const fact = h.nextElementSibling;
+          h.addEventListener('click', () => {
+            facts.forEach(x => x.classList.remove('show'));
+            fact.innerHTML = `<h3>${h.dataset.title}</h3><p>${h.dataset.text}</p>`;
+            fact.classList.add('show');
+          });
         });
-      });
-      document.addEventListener('click', (ev) => {
-        if (!hotspots.some(h => h.contains(ev.target)) &&
-            !facts.some(f => f.contains(ev.target))) {
-          facts.forEach(f => f.classList.remove('show'));
-        }
-      });
+        document.addEventListener('click', (ev) => {
+          if (!hotspots.some(h => h.contains(ev.target)) &&
+              !facts.some(f => f.contains(ev.target))) {
+            facts.forEach(f => f.classList.remove('show'));
+          }
+        });
+      })();
     </script>
 
     <script defer>
       (function(){
         const stepsEl = document.getElementById('phys-steps');
+        if(!stepsEl) return; /* guard if that demo isn't present */
         const stepLis = stepsEl.querySelectorAll('li');
         const energy = document.getElementById('energy');
         const speed  = document.getElementById('speed');
@@ -909,7 +714,7 @@
           const large=ang>180?1:0;
           beam.setAttribute('d',`M ${startX} ${startY} A ${R} ${R} 0 ${large} 1 ${endX} ${endY}`);
         }
-        b.addEventListener('input',upd); upd();
+        if(b && bval && beam){ b.addEventListener('input',upd); upd(); }
       })();
     </script>
 
@@ -1038,7 +843,7 @@
       })();
     </script>
 
-    <!-- PONG omitted: unchanged from your version -->
+    <!-- PONG overlay wiring -->
     <script defer>
       (function(){
         const overlay = document.getElementById('pong-overlay');
@@ -1061,6 +866,7 @@
       })();
     </script>
 
+    <!-- PONG game -->
     <script defer>
       (function(){
         const { isOpen, ctx, canvas, scoreEl, bestEl, LS_KEY, resizeCanvas } = window.__PONG__;
@@ -1192,27 +998,17 @@
 
         let mode = 'protons';
         let i = 0;
-        const seq = () => (mode==='protons' ? protons : ions);
-       
+        const seq = () => (mode==='protons' ? protons : ions); /* ions optional later */
+
         function stepToHotspotName(stepKey){
           const s = String(stepKey).toLowerCase().trim();
-        
           if (s.includes('linac4')) return 'LINAC4';
-        
-          // Booster BEFORE generic PS
           if (s.includes('(psb') || s.includes('booster')) return 'PSBooster';
-        
-          // SPS BEFORE generic PS (catch both token and full name)
           if (/\bsps\b/.test(s) || s.includes('super proton synchrotron')) return 'SPS';
-        
-          // Generic PS last
           if (/\bps\b/.test(s) || s.includes(' proton synchrotron')) return 'PS';
-        
           if (/\blhc\b/.test(s)) return 'LHC';
-        
           return null;
         }
-
 
         function fade(el, text, dur=180){
           const RDM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1229,7 +1025,6 @@
           fade(elText,  step.text);
           prevBtn.disabled = (i===0);
           nextBtn.disabled = (i===seq().length-1);
-
           const hotspotName = stepToHotspotName(step.key);
           if(hotspotName && window.__MV_FOCUS__){
             await window.__MV_FOCUS__.focusTo(hotspotName, 900);
@@ -1239,8 +1034,8 @@
         function setMode(m){
           if(mode===m) return;
           mode = m; i = 0;
-          modePro.classList.toggle('active', mode==='protons');
-          modeIon.classList.toggle('active', mode==='ions');
+          if(modePro) modePro.classList.toggle('active', mode==='protons');
+          if(modeIon) modeIon.classList.toggle('active', mode==='ions');
           render();
         }
 
@@ -1257,266 +1052,65 @@
      (function(){
         const wrap    = document.getElementById('dvd-wrap');
         const box     = document.getElementById('dvd-box');
-        const content = document.getElementById('content-wrap'); // we'll blur this
-      
+        const content = document.getElementById('content-wrap');
+
         const IDLE_MS = 20000;
         let x = 40, y = 40;
         let vx = 1.1, vy = 0.85;
         let bw = 320, bh = 180;
         let raf = null, idleTimer = null, saverOn = false;
-      
+
         function step(){
           const W = window.innerWidth;
           const H = window.innerHeight;
           x += vx; y += vy;
-      
           if (x <= 0 || x + bw >= W) { vx *= -1; x = Math.max(0, Math.min(W - bw, x)); }
           if (y <= 0 || y + bh >= H) { vy *= -1; y = Math.max(0, Math.min(H - bh, y)); }
-      
           box.style.transform = `translate(${x}px, ${y}px)`;
           raf = requestAnimationFrame(step);
         }
-      
+
         function startSaver(){
           if (saverOn) return;
           saverOn = true;
-          wrap.classList.add('active');    
-          content.classList.add('blur');   
+          wrap.classList.add('active');
+          content.classList.add('blur');
           step();
         }
-      
+
         function stopSaver(){
           if (!saverOn) return;
           saverOn = false;
-          wrap.classList.remove('active'); // fade out overlay
-          content.classList.remove('blur');// unblur background
+          wrap.classList.remove('active');
+          content.classList.remove('blur');
           cancelAnimationFrame(raf);
         }
-      
+
         function resetIdleTimer(){
           stopSaver();
           if (idleTimer) clearTimeout(idleTimer);
           idleTimer = setTimeout(startSaver, IDLE_MS);
         }
-      
-        // mousemove intentionally NOT included
+
         const resetEvents = ['mousemove','mousedown','keydown','touchstart','scroll','pointerdown','wheel'];
         resetEvents.forEach(ev => window.addEventListener(ev, resetIdleTimer, { passive:true }));
-      
+
         wrap.addEventListener('click', stopSaver);
         window.addEventListener('keydown', stopSaver);
-      
+
         document.addEventListener('visibilitychange', () => {
           if (document.hidden) stopSaver();
           else resetIdleTimer();
         });
-      
+
         resetIdleTimer();
       })();
-
     </script>
 
-
+    <!-- Dual-layer segment player (keeps visuals identical) -->
     <script>
       (function(){
-        // ==== Stops (frames) ====
-        const STOPS = [0,130,230,320,440,600,760,830,930,1020,1100,1210,1310,1420];
-        // Segments are [startFrame, endFrame, title, text]
-        const FRAMES = STOPS.slice(0, -1).map((s, idx) => [
-          s, STOPS[idx + 1], `Segment ${idx + 1}`, `Beschreibung Segment ${idx + 1}`
-        ]);
-      
-        const FPS = 30;
-        const FRAME = 1 / FPS;
-        const EPS = 0.002; // tiny guard to avoid frame 0 quirks
-        const toT = f => f / FPS;
-      
-        // DOM
-        const v       = document.getElementById('clip-video');
-        const prevBtn = document.getElementById('btn-prev');
-        const nextBtn = document.getElementById('btn-next');
-        const titleEl = document.getElementById('clip-title');
-        const textEl  = document.getElementById('clip-text');
-        const fader   = document.getElementById('vfader');
-      
-        // State
-        let i = 0;
-        let busy = false;
-        let forwardTimer = null;
-        let reverseTimer = null;         // <— NEU
-        function clearTimers(){          // <— NEU
-          if (forwardTimer) { clearInterval(forwardTimer); forwardTimer = null; }
-          if (reverseTimer) { clearInterval(reverseTimer); reverseTimer = null; }
-        }
-
-        async function playThenFreezeNext(idx){
-        if (busy) return;
-        busy = true; setButtons();
-        clearTimers();                 // <— NEU
-
-        }
-
-
-        // Helpers
-        function fadeOn(){ fader.classList.add('fade'); }
-        function fadeOff(){ fader.classList.remove('fade'); }
-        const once = (el, ev) => new Promise(res => el.addEventListener(ev, res, { once:true }));
-      
-        async function seekTo(t){
-          fadeOn();
-          v.pause();
-          v.currentTime = Math.max(EPS, t);
-          // Wait just until browser says we're at that position
-          await once(v, 'seeked');
-          // Let a frame paint, then fade out
-          requestAnimationFrame(() => fadeOff());
-        }
-      
-        function setCopy(){ titleEl.textContent = FRAMES[i][2]; textEl.textContent = FRAMES[i][3]; }
-        function setButtons(){
-          prevBtn.disabled = (i === 0) || busy;
-          nextBtn.disabled = (i >= FRAMES.length - 1) || busy;
-        }
-      
-        async function freezeAtStart(idx){
-          await seekTo(toT(FRAMES[idx][0]) + EPS);
-        }
-      
-        // ------- Forward (play to endT precisely) -------
-        async function playThenFreezeNext(idx){
-          if (busy) return;
-          busy = true; setButtons();
-      
-          const startT = toT(FRAMES[idx][0]) + EPS;
-          const endT   = toT(FRAMES[idx][1]) - EPS;
-      
-          await seekTo(startT);
-      
-          // Use requestVideoFrameCallback if supported
-          if ('requestVideoFrameCallback' in v) {
-            let stop = false;
-            const onFrame = () => {
-              if (stop) return;
-              // Stop exactly at endT
-              if (v.currentTime >= endT) {
-                v.pause();
-                // snap to exact boundary to avoid “half frame”
-                v.currentTime = endT;
-                stop = true;
-                v.requestVideoFrameCallback(() => {
-                  // advance to next segment and freeze at its start
-                  if (idx < FRAMES.length - 1) {
-                    i = idx + 1;
-                    freezeAtStart(i).then(()=>{ setCopy(); busy = false; setButtons(); });
-                  } else {
-                    busy = false; setButtons();
-                  }
-                });
-                return;
-              }
-              v.requestVideoFrameCallback(onFrame);
-            };
-            // start playback then frame-watch
-            try { await v.play(); } catch {}
-            v.requestVideoFrameCallback(onFrame);
-          } else {
-            // Fallback: high-rate interval watcher
-            try { await v.play(); } catch {}
-            forwardTimer && clearInterval(forwardTimer);
-            forwardTimer = setInterval(() => {
-              if (v.currentTime >= endT) {
-                clearInterval(forwardTimer);
-                v.pause();
-                v.currentTime = endT;
-                // advance to next
-                if (idx < FRAMES.length - 1) {
-                  i = idx + 1;
-                  freezeAtStart(i).then(()=>{ setCopy(); busy = false; setButtons(); });
-                } else {
-                  busy = false; setButtons();
-                }
-              }
-            }, 16); // ~60Hz
-          }
-        }
-      
-  
-        // ------- Reverse (rAF-basiert + fastSeek) -------
-        async function reversePrev(){
-          if (busy || i === 0) return;
-          busy = true; setButtons();
-          clearTimers();
-        
-          const prevIdx = i - 1;
-          const startT = toT(FRAMES[prevIdx][0]) + EPS;
-          const endT   = toT(FRAMES[prevIdx][1]) - EPS;
-        
-          await seekTo(endT);
-          v.pause();
-        
-          let t = endT;
-          let running = true;
-        
-          const BASE_STEP = FRAME * 0.85; // vorsichtig kleiner als 1/FPS
-          let step = BASE_STEP;
-        
-          function stepBack() {
-            if (!running) return;
-        
-            // Adaptiv etwas größer/kleiner machen je nach readyState
-            // (wenn Decoder hinterherhinkt, kleinere Schritte)
-            if (v.readyState < 2 && step > FRAME * 0.5) step *= 0.9;
-            else if (v.readyState >= 3 && step < FRAME * 1.2) step *= 1.02;
-        
-            t -= step;
-            if (t <= startT + 0.0005) {
-              t = startT;
-              running = false;
-            }
-        
-            // Prefer fastSeek if supported
-            if (typeof v.fastSeek === 'function') {
-              try { v.fastSeek(t); } catch { v.currentTime = t; }
-            } else {
-              v.currentTime = t;
-            }
-        
-            if (running) {
-              requestAnimationFrame(stepBack);
-            } else {
-              // Am Start „einrasten“
-              requestAnimationFrame(() => {
-                v.currentTime = startT;
-                i = prevIdx;
-                busy = false;
-                setCopy(); setButtons();
-              });
-            }
-          }
-        
-          requestAnimationFrame(stepBack);
-        }
-
-
-      
-        // Wire up
-        nextBtn.addEventListener('click', () => playThenFreezeNext(i));
-        prevBtn.addEventListener('click', reversePrev);
-        window.addEventListener('keydown', e => {
-          if (e.key === 'ArrowLeft')  { e.preventDefault(); reversePrev(); }
-          if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); playThenFreezeNext(i); }
-        });
-      
-        // Init
-        v.addEventListener('loadedmetadata', () => freezeAtStart(i), { once:true });
-        v.load();
-        setCopy(); setButtons();
-      })();
-    </script>
-    <script>
-      (function(){
-        // ====== Pfad & Segmente ===================================================
-        const BASE = 'ATLAS/'; // <- dein Ordner
+        const BASE = 'ATLAS/';
         const SEGMENTS = Array.from({length:14}, (_,k) => {
           const n = k+1;
           return {
@@ -1526,26 +1120,24 @@
             rev:   `${BASE}${n}-${n}.mp4`
           };
         });
-      
-        // ====== DOM ===============================================================
+
         const titleEl = document.getElementById('clip-title');
         const textEl  = document.getElementById('clip-text');
         const btnPrev = document.getElementById('btn-prev');
         const btnNext = document.getElementById('btn-next');
-      
-        const A   = document.getElementById('vidA');   // sichtbarer Layer
-        const B   = document.getElementById('vidB');   // sichtbarer Layer
-        const PRE = document.getElementById('vidPre'); // unsichtbarer Preload-Buffer
+
+        const A   = document.getElementById('vidA');
+        const B   = document.getElementById('vidB');
+        const PRE = document.getElementById('vidPre');
         const fader = document.getElementById('vfader');
-      
-        let active = A; // aktuell sichtbares Video
-        let back   = B; // zweiter Layer
-        let i = 0;      // aktueller Segmentindex
+
+        let active = A;
+        let back   = B;
+        let i = 0;
         let busy = false;
-      
-        // ====== Helpers ===========================================================
+
         const once = (el, ev, opts={}) => new Promise(res => el.addEventListener(ev, res, { once:true, ...opts }));
-      
+
         function setCopy(idx){
           titleEl.textContent = SEGMENTS[idx].title;
           textEl.textContent  = SEGMENTS[idx].text;
@@ -1556,72 +1148,53 @@
         }
         function fadeOn(){ fader.classList.add('fade'); }
         function fadeOff(){ fader.classList.remove('fade'); }
-      
+
         function setSrc(videoEl, url){
-          // vorhandene <source>-Kinder leeren
           while(videoEl.firstChild) videoEl.removeChild(videoEl.firstChild);
-          videoEl.removeAttribute('src'); // sichergehen
-          // einfache Quelle (MP4). Falls du WebM mitliefern willst: hier 2 <source> anhängen.
+          videoEl.removeAttribute('src');
           videoEl.src = url;
         }
-      
+
         async function primeAtStart(videoEl){
-          // an den Anfang -> kurz anspielen -> pausieren (Decoder warm)
           try { videoEl.pause(); } catch{}
           videoEl.currentTime = 0;
-          // Warten bis wirklich seeked
           await Promise.race([ once(videoEl,'seeked'), new Promise(r=>setTimeout(r,120)) ]);
-          try { await videoEl.play(); } catch {} // muted+inline sollte gehen
-          // ein Frame „ziehen“
+          try { await videoEl.play(); } catch {}
           await Promise.race([ once(videoEl,'timeupdate'), new Promise(r=>setTimeout(r,80)) ]);
           try { videoEl.pause(); } catch {}
-          // zurück auf frame 0 „snappen“ (optisch identisch)
           try { videoEl.currentTime = 0; } catch{}
         }
-      
+
         function swapTo(el){
-          // el = der Layer, der sichtbar werden soll
           el.classList.add('active');
           active.classList.remove('active');
-        
-          const prev = active; // das war vorher sichtbar
-          active = el;         // jetzt ist el sichtbar
-          back   = prev;       // back ist nun der andere Layer (frei zum Vorladen)
+          const prev = active;
+          active = el;
+          back   = prev;
         }
 
-      
         async function prepareFreezeOf(idx){
-          // PRE lädt den Forward-Clip des Zielsegments auf Frame 0
           setSrc(PRE, SEGMENTS[idx].fwd);
-          // warten bis Daten da
           await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
-          await primeAtStart(PRE); // Decoder warm
+          await primeAtStart(PRE);
         }
-      
+
         function showPreOnActive(){
-          // PRE-Inhalt auf BACK kopieren (Quelle teilen) und sichtbar machen
-          // Direkt PRE sichtbar machen wäre auch ok, aber wir halten PRE unsichtbar.
           setSrc(back, PRE.currentSrc || PRE.src);
-          // Wir sind sicher: PRE ist bei 0; kopiere state
           try { back.currentTime = PRE.currentTime; } catch{}
           back.pause();
           swapTo(back);
         }
-      
-        // ====== Aktionen ==========================================================
-        // Weiter: akt. Forward abspielen; währenddessen nächsten Forward auf PRE einfrieren.
+
         async function playForward(){
           if (busy || i >= SEGMENTS.length-1) return;
           busy = true; setButtons();
-        
+
           const nextIdx = i + 1;
-        
-          // === letzter Index? ===
+
           if (nextIdx === SEGMENTS.length-1) {
-            // wir sind beim letzten Segment: einfach bis zum Ende spielen und stehenbleiben
             try { await active.play(); } catch {}
             active.onended = () => {
-              // am allerletzten Frame einfrieren
               try { active.pause(); } catch {}
               try { active.currentTime = active.duration; } catch {}
               i = nextIdx;
@@ -1630,15 +1203,14 @@
             };
             return;
           }
-        
-          // --- normaler Übergang mit PRE ---
+
           setSrc(back, SEGMENTS[i].fwd);
           await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
           try { await back.play(); } catch {}
           swapTo(back);
-        
+
           prepareFreezeOf(nextIdx).catch(()=>{});
-        
+
           active.onended = async () => {
             try { active.pause(); } catch{}
             showPreOnActive();
@@ -1648,45 +1220,37 @@
           };
         }
 
-        
         async function playBackward(){
           if (busy || i === 0) return;
           busy = true; setButtons();
-          // fadeOn();  <-- ENTFERNEN
-        
+
           const prevIdx = i - 1;
           setSrc(back, SEGMENTS[prevIdx].rev);
           await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
           try { await back.play(); } catch {}
           swapTo(back);
-        
+
           prepareFreezeOf(prevIdx).catch(()=>{});
-        
+
           active.onended = async () => {
             try { active.pause(); } catch{}
             showPreOnActive();
             i = prevIdx;
             setCopy(i);
-            // fadeOff(); <-- ENTFERNEN
             busy = false; setButtons();
           };
         }
 
-        // ====== Init ==============================================================
         (async function init(){
           setCopy(0);
-      
-          // Startframe von Segment 0 auf active anzeigen (ohne Blinken)
           setSrc(active, SEGMENTS[0].fwd);
           await Promise.race([ once(active,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
           await primeAtStart(active);
           active.classList.add('active');
           setButtons();
-      
-          // Preload direkt den Freeze für Segment 1 (falls vorhanden)
+
           if (SEGMENTS.length > 1) prepareFreezeOf(1).catch(()=>{});
-      
-          // Events
+
           btnNext.addEventListener('click', playForward);
           btnPrev.addEventListener('click', playBackward);
           window.addEventListener('keydown', (e) => {
@@ -1698,6 +1262,8 @@
     </script>
   </body>
 </html>
+
+
 
 
 
