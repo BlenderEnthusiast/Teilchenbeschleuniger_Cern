@@ -1348,231 +1348,99 @@
 
    
     <script>
-      (function () {
+      (function(){
         const BASE = 'ATLAS/';
       
-        // 14 segments (0..13); segment 13 is the last frame of 13.mp4
         const SEGMENTS = [
           { title:"", text:"Das hier ist der 1,65 Meter hohe Vasista.", fwd:`${BASE}1.mp4`,  rev:`${BASE}1-1.mp4` },
           { title:"", text:"Und das hier ist A Toroidal LHC Apparatus (ATLAS), einer der vier Kollisionsdetektoren des LHC-Ringes.", fwd:`${BASE}2.mp4`,  rev:`${BASE}2-2.mp4` },
-          { title:"", text:"100 Meter unter dem Boden steht dieser kolossale Detektor mit der 15-fachen Höhe Vasistas und wertet Kollisionen von Protonen und schweren Ionen aus.", fwd:`${BASE}3.mp4`,  rev:`${BASE}3-3.mp4` },
+          { title:"", text:"100 Meter unter dem Boden steht dieser kolossale Detektor mit der 15-fachen Höhe Vasistas.", fwd:`${BASE}3.mp4`,  rev:`${BASE}3-3.mp4` },
           { title:"", text:"Mit einer Länge von 46 Metern und rund 7 000 Tonnen Gewicht besteht ATLAS aus konzentrischen Detektorschichten, die wir im Folgenden kennenlernen.", fwd:`${BASE}4.mp4`,  rev:`${BASE}4-4.mp4` },
           { title:"", text:"", fwd:`${BASE}5.mp4`,  rev:`${BASE}5-5.mp4` },
           { title:"", text:"", fwd:`${BASE}6.mp4`,  rev:`${BASE}6-6.mp4` },
           { title:"", text:"", fwd:`${BASE}7.mp4`,  rev:`${BASE}7-7.mp4` },
           { title:"", text:"", fwd:`${BASE}8.mp4`,  rev:`${BASE}8-8.mp4` },
-          { title:"", text:"", fwd:`${BASE}9.mp4`,  rev:`${BASE}9-9.mp4` },
+          { title:"", text:"", fwd:`${BASE}9.mp4`,  rev:`${BASE}9-9.mp4` },         
           { title:"", text:"", fwd:`${BASE}10.mp4`, rev:`${BASE}10-10.mp4` },
           { title:"", text:"", fwd:`${BASE}11.mp4`, rev:`${BASE}11-11.mp4` },
           { title:"", text:"", fwd:`${BASE}12.mp4`, rev:`${BASE}12-12.mp4` },
           { title:"", text:"", fwd:`${BASE}13.mp4`, rev:`${BASE}13-13.mp4` }
+        ];
       
-        // DOM
         const titleEl = document.getElementById('clip-title');
         const textEl  = document.getElementById('clip-text');
         const btnPrev = document.getElementById('btn-prev');
         const btnNext = document.getElementById('btn-next');
       
-        const A = document.getElementById('vidA'); // visible layer (starts active)
-        const B = document.getElementById('vidB'); // transition layer
+        const A   = document.getElementById('vidA');
+        const B   = document.getElementById('vidB');
+        const PRE = document.getElementById('vidPre');
+        const fader = document.getElementById('vfader');
       
-        let freeze = A;  // holds the frozen frame on screen
-        let playV  = B;  // used to play transitions
-        let i = 0;       // current segment 0..13
-        let busy = false;
+        let active = A, back = B, i = 0, busy = false;
+        const once = (el, ev, opts={}) => new Promise(r => el.addEventListener(ev, r, { once:true, ...opts }));
       
-        // ---------- utils ----------
-        const once  = (el, ev, opts={}) => new Promise(res => el.addEventListener(ev, res, { once:true, ...opts }));
-        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-      
-        function setSrc(video, url){
-          while(video.firstChild) video.removeChild(video.firstChild);
-          video.removeAttribute('src');
-          video.src = url;
-          video.load();
-        }
-      
-        function waitCanPlay(video, timeout=2500){
-          return new Promise((resolve, reject) => {
-            const onErr = () => reject(new Error('media error'));
-            video.addEventListener('error', onErr, { once:true });
-            Promise.race([ once(video,'canplay'), once(video,'loadeddata'), sleep(timeout) ])
-              .then(() => { video.removeEventListener('error', onErr); resolve(); })
-              .catch((e) => { video.removeEventListener('error', onErr); reject(e); });
-          });
-        }
-      
-        async function seekSafely(video, t, timeout=1200){
-          try { video.pause(); } catch {}
-          try { video.currentTime = Math.max(0, t); } catch {}
-          await Promise.race([ once(video,'seeked'), sleep(timeout) ]);
-        }
-      
-        async function primeFirstFrame(video){
-          await waitCanPlay(video);
-          await seekSafely(video, 0);
-          try { await video.play(); } catch {}
-          await Promise.race([ once(video,'timeupdate'), sleep(120) ]);
-          try { video.pause(); } catch {}
-          await seekSafely(video, 0);
-        }
-      
-        // only used as a fallback now; final segment prefers keeping the ended frame
-        async function primeLastFrame(video){
-          await waitCanPlay(video);
-          const dur = isFinite(video.duration) ? video.duration : 0;
-          const eps = Math.min(0.12, Math.max(0.04, dur * 0.01));
-          const t = Math.max(0, dur - eps);
-          await seekSafely(video, t);
-          try { await video.play(); } catch {}
-          await Promise.race([ once(video,'timeupdate'), sleep(140) ]);
-          try { video.pause(); } catch {}
-        }
-      
-        function setButtons(){
-          btnPrev.disabled = busy || (i === 0);
-          btnNext.disabled = busy || (i === META.length - 1);
-        }
+        function setSrc(v, url){ while(v.firstChild) v.removeChild(v.firstChild); v.removeAttribute('src'); v.src = url; }
+        async function primeAtStart(v){ try{v.pause();}catch{} v.currentTime=0; await Promise.race([once(v,'seeked'),new Promise(r=>setTimeout(r,120))]); try{await v.play();}catch{} await Promise.race([once(v,'timeupdate'),new Promise(r=>setTimeout(r,80))]); try{v.pause();}catch{} try{v.currentTime=0;}catch{} }
+        function swapTo(el){ el.classList.add('active'); active.classList.remove('active'); const prev=active; active=el; back=prev; }
+        function setButtons(){ btnPrev.disabled = busy || (i===0); btnNext.disabled = busy || (i===SEGMENTS.length-1); }
       
         function updateCopy(idx){
-          titleEl.classList.add('text-fade');
-          textEl.classList.add('text-fade');
-          setTimeout(()=>{
-            const seg = META[idx] || {title:"", text:""};
-            if(!seg.title){
-              titleEl.style.display = 'none';
-              textEl.classList.add('no-title');
-            }else{
-              titleEl.style.display = '';
-              titleEl.textContent = seg.title;
-              textEl.classList.remove('no-title');
-            }
+          titleEl.classList.add('text-fade'); textEl.classList.add('text-fade');
+          setTimeout(()=>{ const seg=SEGMENTS[idx];
+            if(!seg.title){ titleEl.style.display='none'; textEl.classList.add('no-title'); }
+            else{ titleEl.style.display=''; titleEl.textContent=seg.title; textEl.classList.remove('no-title'); }
             textEl.textContent = seg.text || '';
-            titleEl.classList.remove('text-fade');
-            textEl.classList.remove('text-fade');
-          }, 200);
+            titleEl.classList.remove('text-fade'); textEl.classList.remove('text-fade');
+          },200);
         }
       
-        async function showFreezeForSegment(idx){
-          // 0..12 => first frame of (idx+1).mp4 ; 13 => last frame of 13.mp4 (fallback path)
-          const url = (idx < META.length - 1) ? `${BASE}${idx+1}.mp4` : `${BASE}13.mp4`;
-          try{
-            setSrc(freeze, url);
-            if (idx < META.length - 1) {
-              await primeFirstFrame(freeze);
-            } else {
-              await primeLastFrame(freeze); // usually unused now (see special-case below)
-            }
-            freeze.classList.add('active');
-            playV.classList.remove('active');
-            return true;
-          }catch(e){
-            console.error('[ATLAS] freeze load failed:', url, e);
-            return false;
-          }
+        async function prepareFreezeOf(idx){
+          setSrc(PRE, SEGMENTS[idx].fwd);
+          await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
+          await primeAtStart(PRE);
         }
+        function showPreOnActive(){ setSrc(back, PRE.currentSrc || PRE.src); try{ back.currentTime = PRE.currentTime; }catch{} back.pause(); swapTo(back); }
       
-        // ---------- navigation ----------
         async function playForward(){
-          if (busy || i >= META.length - 1) return;
-          busy = true; setButtons();
-      
-          const clipIdx = i + 1;     // 1..13
-          const nextSeg = i + 1;
-      
-          const url = `${BASE}${clipIdx}.mp4`;
-          try{
-            setSrc(playV, url);
-            await waitCanPlay(playV);
-          }catch(e){
-            console.error('[ATLAS] forward clip failed:', url, e);
-            busy = false; setButtons();
-            return; // keep current freeze on screen instead of going black
-          }
-      
-          playV.classList.add('active');
-          freeze.classList.remove('active');
-          try { await playV.play(); } catch {}
-      
-          const onEnd = async () => {
-            try { playV.pause(); } catch {}
-      
-            // SPECIAL CASE: final segment (13) must show the last frame of 13.mp4.
-            // The most robust way is to KEEP the ended frame that is already visible.
-            if (nextSeg === META.length - 1) {
-              const oldFreeze = freeze; // hidden
-              freeze = playV;           // keep ended frame on screen
-              playV  = oldFreeze;       // swap roles for future moves
-              i = nextSeg;
-              updateCopy(i);
-              busy = false; setButtons();
-              return;
-            }
-      
-            await showFreezeForSegment(nextSeg);
-            i = nextSeg;
-            updateCopy(i);
-            busy = false; setButtons();
-          };
-      
-          playV.addEventListener('ended', onEnd, { once:true });
-          if (playV.ended) onEnd(); // ultra-short guard
+          if(busy || i>=SEGMENTS.length-1) return; busy=true; setButtons();
+          const nextIdx=i+1;
+          setSrc(back, SEGMENTS[i].fwd);
+          await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
+          try{ await back.play(); }catch{} swapTo(back);
+          prepareFreezeOf(nextIdx).catch(()=>{});
+          active.onended = async ()=>{ try{active.pause();}catch{} showPreOnActive(); i=nextIdx; updateCopy(i); busy=false; setButtons(); };
         }
-      
         async function playBackward(){
-          if (busy || i <= 0) return;
-          busy = true; setButtons();
-      
-          const clipIdx = i; // 1..13 — expects files like "5-5.mp4"
-          const prevSeg = i - 1;
-      
-          const url = `${BASE}${clipIdx}-${clipIdx}.mp4`;
-          try{
-            setSrc(playV, url);
-            await waitCanPlay(playV);
-          }catch(e){
-            console.error('[ATLAS] reverse clip failed:', url, e);
-            busy = false; setButtons();
-            return; // keep current freeze on screen
-          }
-      
-          playV.classList.add('active');
-          freeze.classList.remove('active');
-          try { await playV.play(); } catch {}
-      
-          const onEnd = async () => {
-            try { playV.pause(); } catch {}
-            await showFreezeForSegment(prevSeg);
-            i = prevSeg;
-            updateCopy(i);
-            busy = false; setButtons();
-          };
-      
-          playV.addEventListener('ended', onEnd, { once:true });
-          if (playV.ended) onEnd();
+          if(busy || i===0) return; busy=true; setButtons();
+          const prevIdx=i-1;
+          setSrc(back, SEGMENTS[prevIdx].rev);
+          await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
+          try{ await back.play(); }catch{} swapTo(back);
+          prepareFreezeOf(prevIdx).catch(()=>{});
+          active.onended = async ()=>{ try{active.pause();}catch{} showPreOnActive(); i=prevIdx; updateCopy(i); busy=false; setButtons(); };
         }
       
-        // ---------- init ----------
         (async function init(){
           updateCopy(0);
-          setSrc(freeze, `${BASE}1.mp4`);
-          try { await primeFirstFrame(freeze); } catch(e){ console.error('[ATLAS] initial frame failed:', e); }
-          freeze.classList.add('active');
+          setSrc(active, SEGMENTS[0].fwd);
+          await Promise.race([ once(active,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
+          await primeAtStart(active);
+          active.classList.add('active');
           setButtons();
-      
+          if(SEGMENTS.length>1) prepareFreezeOf(1).catch(()=>{});
           btnNext.addEventListener('click', playForward);
           btnPrev.addEventListener('click', playBackward);
-          window.addEventListener('keydown', (e)=>{
-            if(e.key==='ArrowRight' || e.key==='Enter'){ e.preventDefault(); playForward(); }
-            if(e.key==='ArrowLeft'){ e.preventDefault(); playBackward(); }
-          });
+          window.addEventListener('keydown', e=>{ if(e.key==='ArrowRight'||e.key==='Enter'){ e.preventDefault(); playForward(); } if(e.key==='ArrowLeft'){ e.preventDefault(); playBackward(); } });
         })();
       })();
     </script>
 
 
+
   </body>
 </html>
+
 
 
 
