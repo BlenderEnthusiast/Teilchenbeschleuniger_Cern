@@ -397,6 +397,23 @@
         .text-fade {
           opacity: 0;
         }
+        #clip-text {
+          opacity: 1;
+          transition: opacity 0.4s ease;
+          font-size: 1rem;       /* normale Größe */
+          margin-top: 0.5rem;    /* Abstand unter Überschrift */
+        }
+        
+        #clip-text.text-fade {
+          opacity: 0;
+        }
+        
+        /* Wenn kein Titel da ist */
+        #clip-text.no-title {
+          font-size: 1.3rem;   /* größerer Text */
+          margin-top: 0;       /* direkt oben anschließen */
+        }
+
 
       </style>
     </head>
@@ -1383,29 +1400,29 @@
         }
       
         function setCopy(idx){
-          // Fade out
-          titleEl.classList.add("text-fade");
-          textEl.classList.add("text-fade");
-        
-          setTimeout(() => {
-            const seg = SEGMENTS[idx];
-        
-            // handle title
-            if (!seg.title) {
-              titleEl.style.display = "none";
-            } else {
-              titleEl.style.display = "";
-              titleEl.textContent = seg.title;
-            }
-        
-            // handle text
-            textEl.textContent = seg.text || "";
-        
-            // Fade in
-            titleEl.classList.remove("text-fade");
-            textEl.classList.remove("text-fade");
-          }, 200); // kleine Verzögerung, muss < transition-Dauer sein
-        }
+        // Fade out
+        titleEl.classList.add("text-fade");
+        textEl.classList.add("text-fade");
+      
+        setTimeout(() => {
+          const seg = SEGMENTS[idx];
+      
+          if (!seg.title) {
+            titleEl.style.display = "none";
+            textEl.classList.add("no-title");
+          } else {
+            titleEl.style.display = "";
+            titleEl.textContent = seg.title;
+            textEl.classList.remove("no-title");
+          }
+      
+          textEl.textContent = seg.text || "";
+      
+          // Fade in
+          titleEl.classList.remove("text-fade");
+          textEl.classList.remove("text-fade");
+        }, 200);
+      }
 
         function setButtons(){
           prevBtn.disabled = (i === 0) || busy;
@@ -1781,6 +1798,7 @@
     </script>
   </body>
 </html>
+
 
 
 
