@@ -212,6 +212,23 @@
       .clip-right video.active { opacity:1; }
       #vfader { position:absolute; inset:0; pointer-events:none; opacity:0; background:rgba(0,0,0,.35); }
       #vfader.fade { transition:opacity .35s ease; opacity:1; }
+      .mv-dot,
+      .hotspot{
+        opacity: 0 !important;
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+      }
+      
+      .mv-dot:focus,
+      .mv-dot:focus-visible,
+      .hotspot:focus,
+      .hotspot:focus-visible{
+        outline: none !important;
+        box-shadow: none !important;
+        -webkit-tap-highlight-color: transparent;
+      }
+
     </style>
   </head>
   <body>
@@ -1107,37 +1124,47 @@
       })();
     </script>
 
-    <!-- Dual-layer segment player (keeps visuals identical) -->
     <script>
       (function(){
         const BASE = 'ATLAS/';
-        const SEGMENTS = Array.from({length:14}, (_,k) => {
-          const n = k+1;
-          return {
-            title: `Segment ${n}`,
-            text:  `Beschreibung Segment ${n}`,
-            fwd:   `${BASE}${n}.mp4`,
-            rev:   `${BASE}${n}-${n}.mp4`
-          };
+        const meta = [
+          { title:'Was ist ATLAS?',     text:'Kurzüberblick über Aufbau und Ziele des Detektors.' },
+          { title:'Inner Detector',     text:'Pixel- & SCT-Layer für präzise Spurrekonstruktion.' },
+          { title:'Magnet-System',      text:'Toroid- und Solenoidmagnete biegen Spuren geladener Teilchen.' },
+          { title:'EM-Kalorimeter',     text:'Misst Photonen/Elektronen mit feiner lateraler Auflösung.' },
+          { title:'Hadron-Kalorimeter', text:'Stoppt Hadronen und misst deren Energieablage.' },
+          { title:'Muonensystem',       text:'Große Kammern erfassen Muonenspuren außerhalb der Kalorimeter.' },
+          { title:'Trigger',            text:'Echtzeit-Auswahl interessanter Ereignisse aus MHz-Kollisionen.' },
+          { title:'DAQ',                text:'Data Acquisition: liest, bündelt und speichert Events.' },
+          { title:'Rekonstruktion',     text:'Software rekonstruiert Spuren, Jets, Vertex & Objekte.' },
+          { title:'Kalibration',        text:'Kalibrierung/Alignment für präzise Energien & Positionen.' },
+          { title:'Physikobjekte',      text:'Elektronen, Myonen, Jets, b-Jets, Photonen, MET.' },
+          { title:'Signaturen',         text:'Beispiele: Higgs, Präzisionsmessungen, neue Physik-Suchen.' },
+          { title:'Run & Betrieb',      text:'Luminosität, Strahlbedingungen, Detektor-Operation.' },
+          { title:'Zusammenfassung',    text:'ATLAS im LHC-Kontext und Ausblick.' },
+        ];
+        const SEGMENTS = meta.map((m, idx) => {
+          const n = idx + 1;
+          return { ...m, fwd: `${BASE}${n}.mp4`, rev: `${BASE}${n}-${n}.mp4` };
         });
-
+    
         const titleEl = document.getElementById('clip-title');
         const textEl  = document.getElementById('clip-text');
         const btnPrev = document.getElementById('btn-prev');
         const btnNext = document.getElementById('btn-next');
-
+    
         const A   = document.getElementById('vidA');
         const B   = document.getElementById('vidB');
         const PRE = document.getElementById('vidPre');
         const fader = document.getElementById('vfader');
-
+    
         let active = A;
         let back   = B;
         let i = 0;
         let busy = false;
-
+    
         const once = (el, ev, opts={}) => new Promise(res => el.addEventListener(ev, res, { once:true, ...opts }));
-
+    
         function setCopy(idx){
           titleEl.textContent = SEGMENTS[idx].title;
           textEl.textContent  = SEGMENTS[idx].text;
@@ -1148,13 +1175,13 @@
         }
         function fadeOn(){ fader.classList.add('fade'); }
         function fadeOff(){ fader.classList.remove('fade'); }
-
+    
         function setSrc(videoEl, url){
           while(videoEl.firstChild) videoEl.removeChild(videoEl.firstChild);
           videoEl.removeAttribute('src');
           videoEl.src = url;
         }
-
+    
         async function primeAtStart(videoEl){
           try { videoEl.pause(); } catch{}
           videoEl.currentTime = 0;
@@ -1164,7 +1191,7 @@
           try { videoEl.pause(); } catch {}
           try { videoEl.currentTime = 0; } catch{}
         }
-
+    
         function swapTo(el){
           el.classList.add('active');
           active.classList.remove('active');
@@ -1172,26 +1199,26 @@
           active = el;
           back   = prev;
         }
-
+    
         async function prepareFreezeOf(idx){
           setSrc(PRE, SEGMENTS[idx].fwd);
           await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
           await primeAtStart(PRE);
         }
-
+    
         function showPreOnActive(){
           setSrc(back, PRE.currentSrc || PRE.src);
           try { back.currentTime = PRE.currentTime; } catch{}
           back.pause();
           swapTo(back);
         }
-
+    
         async function playForward(){
           if (busy || i >= SEGMENTS.length-1) return;
           busy = true; setButtons();
-
+    
           const nextIdx = i + 1;
-
+    
           if (nextIdx === SEGMENTS.length-1) {
             try { await active.play(); } catch {}
             active.onended = () => {
@@ -1203,14 +1230,14 @@
             };
             return;
           }
-
+    
           setSrc(back, SEGMENTS[i].fwd);
           await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
           try { await back.play(); } catch {}
           swapTo(back);
-
+    
           prepareFreezeOf(nextIdx).catch(()=>{});
-
+    
           active.onended = async () => {
             try { active.pause(); } catch{}
             showPreOnActive();
@@ -1219,19 +1246,19 @@
             busy = false; setButtons();
           };
         }
-
+    
         async function playBackward(){
           if (busy || i === 0) return;
           busy = true; setButtons();
-
+    
           const prevIdx = i - 1;
           setSrc(back, SEGMENTS[prevIdx].rev);
           await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
           try { await back.play(); } catch {}
           swapTo(back);
-
+    
           prepareFreezeOf(prevIdx).catch(()=>{});
-
+    
           active.onended = async () => {
             try { active.pause(); } catch{}
             showPreOnActive();
@@ -1240,7 +1267,7 @@
             busy = false; setButtons();
           };
         }
-
+    
         (async function init(){
           setCopy(0);
           setSrc(active, SEGMENTS[0].fwd);
@@ -1248,9 +1275,9 @@
           await primeAtStart(active);
           active.classList.add('active');
           setButtons();
-
+    
           if (SEGMENTS.length > 1) prepareFreezeOf(1).catch(()=>{});
-
+    
           btnNext.addEventListener('click', playForward);
           btnPrev.addEventListener('click', playBackward);
           window.addEventListener('keydown', (e) => {
@@ -1262,6 +1289,7 @@
     </script>
   </body>
 </html>
+
 
 
 
