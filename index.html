@@ -1517,8 +1517,38 @@
       (function(){
         // ====== Pfad & Segmente ===================================================
         const BASE = 'ATLAS/'; // <- dein Ordner
-        const SEGMENTS = Array.from({length:14}, (_,k) => {
-          const n = k+1;
+    
+        // Erst die 4 gewünschten Titel ohne Subtext:
+        const fixedFirstFour = [
+          {
+            title: "1. Das hier ist der 1,65 Meter hohe Vasista.",
+            text:  "",
+            fwd:   `${BASE}1.mp4`,
+            rev:   `${BASE}1-1.mp4`
+          },
+          {
+            title: "2. Und das hier ist A Toroidal LHC Apparatus (ATLAS), einer der vier Kollisionsdetektoren des LHC-Ringes.",
+            text:  "",
+            fwd:   `${BASE}2.mp4`,
+            rev:   `${BASE}2-2.mp4`
+          },
+          {
+            title: "3. 100 Meter unter dem Boden steht dieser riesige Detektor mit der 15-fachen Höhe Vasistas und wertet Kollisionen von Protonen und schweren Ionen aus.",
+            text:  "",
+            fwd:   `${BASE}3.mp4`,
+            rev:   `${BASE}3-3.mp4`
+          },
+          {
+            title: "4. Mit einer Länge von 46 Metern und rund 7 000 Tonnen Gewicht.",
+            text:  "",
+            fwd:   `${BASE}4.mp4`,
+            rev:   `${BASE}4-4.mp4`
+          }
+        ];
+    
+        // Danach die restlichen Segmente (5–14) wie gehabt automatisch:
+        const autoRest = Array.from({length: 10}, (_, k) => {
+          const n = k + 5; // beginnt bei 5
           return {
             title: `Segment ${n}`,
             text:  `Beschreibung Segment ${n}`,
@@ -1526,29 +1556,31 @@
             rev:   `${BASE}${n}-${n}.mp4`
           };
         });
-      
+    
+        const SEGMENTS = [...fixedFirstFour, ...autoRest];
+    
         // ====== DOM ===============================================================
         const titleEl = document.getElementById('clip-title');
         const textEl  = document.getElementById('clip-text');
         const btnPrev = document.getElementById('btn-prev');
         const btnNext = document.getElementById('btn-next');
-      
+    
         const A   = document.getElementById('vidA');   // sichtbarer Layer
-        const B   = document.getElementById('vidB');   // sichtbarer Layer
+        const B   = document.getElementById('vidB');   // zweiter Layer
         const PRE = document.getElementById('vidPre'); // unsichtbarer Preload-Buffer
         const fader = document.getElementById('vfader');
-      
-        let active = A; // aktuell sichtbares Video
-        let back   = B; // zweiter Layer
-        let i = 0;      // aktueller Segmentindex
+    
+        let active = A;
+        let back   = B;
+        let i = 0;
         let busy = false;
-      
+    
         // ====== Helpers ===========================================================
         const once = (el, ev, opts={}) => new Promise(res => el.addEventListener(ev, res, { once:true, ...opts }));
-      
+    
         function setCopy(idx){
           titleEl.textContent = SEGMENTS[idx].title;
-          textEl.textContent  = SEGMENTS[idx].text;
+          textEl.textContent  = SEGMENTS[idx].text; // leer = kein Subtext sichtbar
         }
         function setButtons(){
           btnPrev.disabled = busy || (i===0);
@@ -1556,89 +1588,58 @@
         }
         function fadeOn(){ fader.classList.add('fade'); }
         function fadeOff(){ fader.classList.remove('fade'); }
-      
+    
         function setSrc(videoEl, url){
-          // vorhandene <source>-Kinder leeren
           while(videoEl.firstChild) videoEl.removeChild(videoEl.firstChild);
-          videoEl.removeAttribute('src'); // sichergehen
-          // einfache Quelle (MP4). Falls du WebM mitliefern willst: hier 2 <source> anhängen.
+          videoEl.removeAttribute('src');
           videoEl.src = url;
         }
-      
+    
         async function primeAtStart(videoEl){
-          // an den Anfang -> kurz anspielen -> pausieren (Decoder warm)
           try { videoEl.pause(); } catch{}
           videoEl.currentTime = 0;
-          // Warten bis wirklich seeked
           await Promise.race([ once(videoEl,'seeked'), new Promise(r=>setTimeout(r,120)) ]);
-          try { await videoEl.play(); } catch {} // muted+inline sollte gehen
-          // ein Frame „ziehen“
+          try { await videoEl.play(); } catch {}
           await Promise.race([ once(videoEl,'timeupdate'), new Promise(r=>setTimeout(r,80)) ]);
           try { videoEl.pause(); } catch {}
-          // zurück auf frame 0 „snappen“ (optisch identisch)
           try { videoEl.currentTime = 0; } catch{}
         }
-      
+    
         function swapTo(el){
-          // el = der Layer, der sichtbar werden soll
           el.classList.add('active');
           active.classList.remove('active');
-        
-          const prev = active; // das war vorher sichtbar
-          active = el;         // jetzt ist el sichtbar
-          back   = prev;       // back ist nun der andere Layer (frei zum Vorladen)
+          const prev = active;
+          active = el;
+          back   = prev;
         }
-
-      
+    
         async function prepareFreezeOf(idx){
-          // PRE lädt den Forward-Clip des Zielsegments auf Frame 0
           setSrc(PRE, SEGMENTS[idx].fwd);
-          // warten bis Daten da
           await Promise.race([ once(PRE,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
-          await primeAtStart(PRE); // Decoder warm
+          await primeAtStart(PRE);
         }
-      
+    
         function showPreOnActive(){
-          // PRE-Inhalt auf BACK kopieren (Quelle teilen) und sichtbar machen
-          // Direkt PRE sichtbar machen wäre auch ok, aber wir halten PRE unsichtbar.
           setSrc(back, PRE.currentSrc || PRE.src);
-          // Wir sind sicher: PRE ist bei 0; kopiere state
           try { back.currentTime = PRE.currentTime; } catch{}
           back.pause();
           swapTo(back);
         }
-      
-        // ====== Aktionen ==========================================================
-        // Weiter: akt. Forward abspielen; währenddessen nächsten Forward auf PRE einfrieren.
+    
+        // Weiter
         async function playForward(){
           if (busy || i >= SEGMENTS.length-1) return;
           busy = true; setButtons();
-        
+    
           const nextIdx = i + 1;
-        
-          // === letzter Index? ===
-          if (nextIdx === SEGMENTS.length-1) {
-            // wir sind beim letzten Segment: einfach bis zum Ende spielen und stehenbleiben
-            try { await active.play(); } catch {}
-            active.onended = () => {
-              // am allerletzten Frame einfrieren
-              try { active.pause(); } catch {}
-              try { active.currentTime = active.duration; } catch {}
-              i = nextIdx;
-              setCopy(i);
-              busy = false; setButtons();
-            };
-            return;
-          }
-        
-          // --- normaler Übergang mit PRE ---
+    
           setSrc(back, SEGMENTS[i].fwd);
           await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
           try { await back.play(); } catch {}
           swapTo(back);
-        
+    
           prepareFreezeOf(nextIdx).catch(()=>{});
-        
+    
           active.onended = async () => {
             try { active.pause(); } catch{}
             showPreOnActive();
@@ -1647,46 +1648,40 @@
             busy = false; setButtons();
           };
         }
-
-        
+    
+        // Zurück
         async function playBackward(){
           if (busy || i === 0) return;
           busy = true; setButtons();
-          // fadeOn();  <-- ENTFERNEN
-        
+    
           const prevIdx = i - 1;
           setSrc(back, SEGMENTS[prevIdx].rev);
           await Promise.race([ once(back,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
           try { await back.play(); } catch {}
           swapTo(back);
-        
+    
           prepareFreezeOf(prevIdx).catch(()=>{});
-        
+    
           active.onended = async () => {
             try { active.pause(); } catch{}
             showPreOnActive();
             i = prevIdx;
             setCopy(i);
-            // fadeOff(); <-- ENTFERNEN
             busy = false; setButtons();
           };
         }
-
-        // ====== Init ==============================================================
+    
+        // Init
         (async function init(){
           setCopy(0);
-      
-          // Startframe von Segment 0 auf active anzeigen (ohne Blinken)
           setSrc(active, SEGMENTS[0].fwd);
           await Promise.race([ once(active,'loadeddata'), new Promise(r=>setTimeout(r,400)) ]);
           await primeAtStart(active);
           active.classList.add('active');
           setButtons();
-      
-          // Preload direkt den Freeze für Segment 1 (falls vorhanden)
+    
           if (SEGMENTS.length > 1) prepareFreezeOf(1).catch(()=>{});
-      
-          // Events
+    
           btnNext.addEventListener('click', playForward);
           btnPrev.addEventListener('click', playBackward);
           window.addEventListener('keydown', (e) => {
@@ -1698,6 +1693,7 @@
     </script>
   </body>
 </html>
+
 
 
 
