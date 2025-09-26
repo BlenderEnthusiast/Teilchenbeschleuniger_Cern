@@ -1,44 +1,59 @@
-name: LHC History (last 1h)
-
+name: mirror-vistars
 on:
-  schedule:
-    - cron: "*/1 * * * *"  # jede Minute
-  workflow_dispatch: {}     # manuell startbar
-
-permissions:
-  contents: write  # erlaubt commit/push mit GITHUB_TOKEN
-
-concurrency:
-  group: lhc-history
-  cancel-in-progress: false
-
+  schedule: [{ cron: "*/10 * * * *" }]  # alle 10 Minuten
+  workflow_dispatch:
 jobs:
-  update:
+  fetch-and-commit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install deps
+      - name: Pull Vistars
         run: |
-          mkdir -p scripts data
-          npm init -y >/dev/null 2>&1 || true
-          npm i --no-audit --no-fund --silent
-
-      - name: Update history file
-        run: node scripts/update_history.mjs
-
-      - name: Commit & push if changed
+          mkdir -p data
+          TS=$(date +%s)
+          curl -fsSL https://lhcstatus2.ovh/vistars.json -o data/vistars.json
+          # Robust extrahieren + an JSONL anhängen
+          node - <<'JS'
+          const fs=require('fs');
+          const p='data/vistars.json';
+          const out='data/lhc_history.jsonl';
+          try{
+            const j=JSON.parse(fs.readFileSync(p,'utf8'));
+            const num=x=>x==null?null:Number(String(x).replace(',','.'));
+            const pick=(rx)=>{
+              const q=[j];
+              while(q.length){
+                const o=q.shift();
+                if(o&&typeof o==='object'){
+                  for(const [k,v] of Object.entries(o)){
+                    if(rx.test(k)){
+                      if(typeof v==='number') return v;
+                      const n=num(v?.value ?? v);
+                      if(Number.isFinite(n)) return n;
+                    }
+                    if(v&&typeof v==='object') q.push(v);
+                  }
+                }
+              }
+              return null;
+            };
+            const energy=num(pick(/(^|_)energy($|_)|beam.?energy/i));
+            const ib1=num(pick(/(ib1|beam.?1.*(intensity|current))/i));
+            const ib2=num(pick(/(ib2|beam.?2.*(intensity|current))/i));
+            const lumi=num(pick(/lumi|luminosit/i));
+            const rec={ t: Math.floor(Date.now()/1000), energy, ib1, ib2, lumi };
+            fs.appendFileSync(out, JSON.stringify(rec)+"\n");
+            // Trim: nur letzte 6h behalten
+            const L=fs.readFileSync(out,'utf8').trim().split(/\r?\n/);
+            const cutoff=Math.floor(Date.now()/1000)-6*3600;
+            const kept=L.map(l=>JSON.parse(l)).filter(o=>o.t>=cutoff);
+            fs.writeFileSync(out, kept.map(o=>JSON.stringify(o)).join("\n")+"\n");
+          }catch(e){ console.error(e); process.exit(1); }
+          JS
+      - name: Commit
         run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No changes."
-          else
-            git commit -m "chore(history): append sample & trim to last hour"
-            git push
-          fi
+          git config user.name "gh-actions"
+          git config user.email "actions@github.com"
+          git add data/lhc_history.jsonl data/vistars.json
+          git commit -m "mirror: update vistars + prune history" || echo "nothing to commit"
+          git push
