@@ -1326,10 +1326,16 @@
         })();
       })();
     </script>
+
+
+
     <script>
-      /* === LIVE · TELEMETRIE · Config & State ================================= */
+      /* === LIVE · TELEMETRIE · History + Live ================================= */
       (function(){
         const INTERVAL_MS = 30000;
+        const STORAGE_WINDOW = 6*3600;         // wir behalten max. 6h im Speicher
+        const SEED_SECONDS   = 3600;           // beim Start 1h Historie vorfüllen
+        const SAMPLE_DT      = 30;             // Seed-Schrittweite (s)
       
         const METRICS = {
           speed:     { label:'Geschwindigkeit', unit:'% c',   fmt:v => (v*100).toFixed(3) },
@@ -1337,9 +1343,9 @@
           collisions:{ label:'Kollisionen/s',   unit:'Hz',    fmt:v => v.toFixed(2) },
         };
         const XUNITS = {
-          s:   { label:'Zeit [s]',   window: 5*60,  tick: 60 },     // letzte 5 min
-          min: { label:'Zeit [min]', window: 60*60, tick: 10*60 },  // letzte 60 min
-          h:   { label:'Zeit [h]',   window: 6*3600,tick: 3600 },   // letzte 6 h
+          s:   { label:'Zeit [s]',   window: 5*60,  tick: 60 },
+          min: { label:'Zeit [min]', window: 60*60, tick: 10*60 },
+          h:   { label:'Zeit [h]',   window: 6*3600,tick: 3600 },
         };
       
         const els = {
@@ -1353,39 +1359,57 @@
         };
       
         const dpr = () => Math.max(1, window.devicePixelRatio || 1);
-        let data = [];            // {t: epochSeconds, speed:0..~1, energy:GeV, collisions:Hz}
+        let data = [];            // {t, speed, energy, collisions}
         let timer = null;
         let yKey = els.ySel.value;
         let xKey = els.xSel.value;
       
-        /* === Data Source (Mock; hier später echte Werte einspeisen) ============ */
+        /* === Data · Seed + Live ================================================= */
+        function pushSample(sample){
+          data.push(sample);
+          const now = Math.floor(Date.now()/1000);
+          const cutoff = now - (STORAGE_WINDOW + 300);
+          if (data.length > 4) data = data.filter(d => d.t >= cutoff);
+        }
+      
+        function simulateStep(prev){
+          // smoother Drift um plausible Mittelwerte
+          const rnd = (v, spread) => v + (Math.random() - 0.5)*spread;
+          const speed = Math.min(0.999999, Math.max(0.92, rnd(prev?.speed ?? 0.995, 0.0006)));
+          const energy = Math.max(0, rnd(prev?.energy ?? 450.0, 6.0));
+          const baseCol = prev?.collisions ?? 0.0;
+          const eBoost = energy > 2000 ? 50 : energy > 1000 ? 10 : 2;
+          const collisions = Math.max(0, baseCol + (Math.random()-0.5)*2 + (eBoost-2)*0.02);
+          return { speed, energy, collisions };
+        }
+      
+        function seedHistory(seconds = SEED_SECONDS, dt = SAMPLE_DT){
+          const now = Math.floor(Date.now()/1000);
+          const tStart = now - seconds;
+          let prev = null;
+          for (let t = tStart; t <= now - dt; t += dt){
+            const s = simulateStep(prev);
+            pushSample({ t, ...s });
+            prev = s;
+          }
+          // finaler Punkt nahe "jetzt"
+          const sNow = simulateStep(prev);
+          pushSample({ t: now, ...sNow });
+          stamp(`geladen: letzte ${(seconds/60)|0} min`);
+        }
+      
         function simulateNext(){
           const t = Math.floor(Date.now()/1000);
           const last = data[data.length-1];
-          const dt = last ? (t - last.t) : 30;
-          const drift = (base, vol) => base + (Math.random() - 0.5) * vol;
-      
-          // simple, glatte Entwicklung um plausible Werte
-          const speed = Math.min(0.999999, Math.max(0.92, drift(last?.speed ?? 0.995, 0.0005)));
-          const energy = Math.max(0, drift(last?.energy ?? 450.0, 5.0));         // GeV (SPS/LHC-inj)
-          const collisions = Math.max(0, drift(last?.collisions ?? 0.0, 5.0));   // Hz
-      
-          // wenn „Energie“ hochgeht, lassen wir „Kollisionen“ moderat folgen
-          const eBoost = (energy > 2000) ? 50 : (energy > 1000 ? 10 : 2);
-          const col = collisions + (Math.random()-0.5)*2 + (eBoost-2)*0.02;
-      
-          data.push({ t, speed, energy, collisions: Math.max(0, col) });
-          // aufräumen (nur Sichtfenster + etwas Puffer)
-          const win = XUNITS[xKey].window;
-          const cutoff = t - (win + 300);
-          data = data.filter(d => d.t >= cutoff);
+          const s = simulateStep(last);
+          pushSample({ t, ...s });
           stamp();
         }
       
-        // hier könntest du echte Live-Werte einfüllen:
-        // async function fetchLiveSample(){ ...; data.push({t, speed, energy, collisions}); stamp(); }
+        // Hook für echte Daten:
+        // async function fetchHistoryAndStart(){ const arr = await fetch(...); data = arr; stamp('geladen: Live-Historie'); startTimer(); }
       
-        /* === Drawing Primitives ================================================= */
+        /* === Drawing ============================================================ */
         function setupCanvas(){
           const c = els.canvas;
           const r = els.wrap.getBoundingClientRect();
@@ -1411,7 +1435,6 @@
           return ticks;
         }
       
-        /* === Render ============================================================= */
         function render(){
           const ctx = setupCanvas();
           const W = ctx.canvas.width / dpr();
@@ -1440,49 +1463,28 @@
           const xToPx = t => m.l + ( (t - t0) / win ) * (W - m.l - m.r);
           const yToPx = v => H - m.b - ( (v - y0) / (y1 - y0) ) * (H - m.t - m.b);
       
-          // Grid + Axes
-          ctx.strokeStyle = '#2d2d32';
-          ctx.lineWidth = 1;
-      
+          // Grid
+          ctx.strokeStyle = '#2d2d32'; ctx.lineWidth = 1;
           const xtick = XUNITS[xKey].tick;
           const xTicks = [];
           const xStart = Math.ceil(t0 / xtick) * xtick;
           for(let t=xStart; t<=now; t+=xtick) xTicks.push(t);
+          xTicks.forEach(t=>{ const x=xToPx(t); ctx.beginPath(); ctx.moveTo(x, m.t); ctx.lineTo(x, H-m.b); ctx.stroke(); });
+          niceTicks(y0,y1,4).forEach(v=>{ const y=yToPx(v); ctx.beginPath(); ctx.moveTo(m.l,y); ctx.lineTo(W-m.r,y); ctx.stroke(); });
       
-          xTicks.forEach(t=>{
-            const x = xToPx(t);
-            ctx.beginPath(); ctx.moveTo(x, m.t); ctx.lineTo(x, H - m.b); ctx.stroke();
-          });
-      
-          niceTicks(y0, y1, 4).forEach(v=>{
-            const y = yToPx(v);
-            ctx.beginPath(); ctx.moveTo(m.l, y); ctx.lineTo(W - m.r, y); ctx.stroke();
-          });
-      
-          // Axis labels
-          ctx.fillStyle = 'var(--muted)';
-          ctx.font = '600 12px Inter, system-ui, sans-serif';
-          ctx.textAlign = 'left'; ctx.fillText(XUNITS[xKey].label, m.l, H - 8);
+          // Labels
+          ctx.fillStyle = 'var(--muted)'; ctx.font = '600 12px Inter, system-ui, sans-serif';
+          ctx.textAlign = 'left';  ctx.fillText(XUNITS[xKey].label, m.l, H - 8);
           ctx.textAlign = 'right'; ctx.fillText(`${METRICS[yKey].label} [${METRICS[yKey].unit}]`, W - m.r, m.t - 4);
       
           // Line
           ctx.beginPath();
-          vis.forEach((d, i)=>{
-            const x = xToPx(d.t), y = yToPx(d[yKey]);
-            if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-          });
-          ctx.strokeStyle = 'var(--accent)'; ctx.lineWidth = 2;
-          ctx.shadowColor = 'rgba(125,211,252,.25)'; ctx.shadowBlur = 8;
-          ctx.stroke(); ctx.shadowBlur = 0;
+          vis.forEach((d,i)=>{ const x=xToPx(d.t), y=yToPx(d[yKey]); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+          ctx.strokeStyle = 'var(--accent)'; ctx.lineWidth = 2; ctx.shadowColor='rgba(125,211,252,.25)'; ctx.shadowBlur=8; ctx.stroke(); ctx.shadowBlur=0;
       
-          // Points (subtle)
+          // Points
           ctx.fillStyle = 'rgba(125,211,252,.9)';
-          vis.forEach(d=>{
-            const x = xToPx(d.t), y = yToPx(d[yKey]);
-            ctx.beginPath(); ctx.arc(x,y,2.2,0,Math.PI*2); ctx.fill();
-          });
-      
-          // Crosshair on hover (computed in pointer handler)
+          vis.forEach(d=>{ const x=xToPx(d.t), y=yToPx(d[yKey]); ctx.beginPath(); ctx.arc(x,y,2.2,0,Math.PI*2); ctx.fill(); });
         }
       
         /* === Tooltip & Pointer ================================================== */
@@ -1495,33 +1497,23 @@
             const x = (clientX - rect.left);
             const W = rect.width, H = rect.height;
             const m = { l:56, r:16, t:18, b:36 };
-      
             const now = Math.floor(Date.now()/1000);
             const win = XUNITS[xKey].window;
             const t0  = now - win;
-      
             const pxToT = px => t0 + ( (px - m.l) / (W - m.l - m.r) ) * win;
             const t = Math.max(t0, Math.min(now, pxToT(x)));
-      
             const vis = data.filter(d => d.t >= t0);
             if(vis.length===0) return null;
-      
-            // binary search for nearest timestamp
-            let lo = 0, hi = vis.length - 1;
-            while(lo < hi){
-              const mid = (lo + hi) >> 1;
-              if(vis[mid].t < t) lo = mid + 1; else hi = mid;
-            }
-            const a = Math.max(0, lo-1), b = Math.min(vis.length-1, lo);
-            const da = Math.abs(vis[a].t - t), db = Math.abs(vis[b].t - t);
-            return (db < da) ? vis[b] : vis[a];
+            let lo=0, hi=vis.length-1;
+            while(lo<hi){ const mid=(lo+hi)>>1; if(vis[mid].t < t) lo=mid+1; else hi=mid; }
+            const a=Math.max(0,lo-1), b=Math.min(vis.length-1,lo);
+            return Math.abs(vis[b].t - t) < Math.abs(vis[a].t - t) ? vis[b] : vis[a];
           }
       
-          function onMove(e){
-            const n = nearestAt(e.clientX);
+          function onMoveBase(clientX){
+            const n = nearestAt(clientX);
             if(!n){ tip.style.display='none'; render(); return; }
       
-            // redraw to paint crosshair
             render();
             const ctx = c.getContext('2d');
             const rect = c.getBoundingClientRect();
@@ -1531,60 +1523,61 @@
             const now = Math.floor(Date.now()/1000);
             const win = XUNITS[xKey].window;
             const t0  = now - win;
-            const xToPx = t => m.l + ( (t - t0) / win ) * (W - m.l - m.r);
-            const yToPx = (v, y0, y1) => H - m.b - ( (v - y0) / (y1 - y0) ) * (H - m.t - m.b);
       
-            // recompute y range for visible
+            // y-Range für sichtbare Punkte
             const vis = data.filter(d => d.t >= t0);
-            const vals = vis.map(d=>d[yKey]); const ymin = Math.min(...vals), ymax = Math.max(...vals);
-            const pad = (ymax - ymin || 1)*0.12; const y0 = ymin - pad, y1 = ymax + pad;
+            const vals = vis.map(d=>d[yKey]);
+            const ymin=Math.min(...vals), ymax=Math.max(...vals);
+            const pad = (ymax - ymin || 1)*0.12; const y0=ymin-pad, y1=ymax+pad;
       
-            const x = xToPx(n.t);
-            const y = yToPx(n[yKey], y0, y1);
+            const xToPx = t => m.l + ( (t - t0) / win ) * (W - m.l - m.r);
+            const yToPx = v => H - m.b - ( (v - y0) / (y1 - y0) ) * (H - m.t - m.b);
       
-            ctx.save();
-            ctx.setTransform(1,0,0,1,0,0);
-            ctx.scale(k,k);
-            ctx.strokeStyle = 'rgba(255,255,255,.18)';
-            ctx.lineWidth = 1;
+            const x = xToPx(n.t), y = yToPx(n[yKey]);
+      
+            ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.scale(k,k);
+            ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1;
             ctx.beginPath(); ctx.moveTo(x, m.t); ctx.lineTo(x, H - m.b); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(m.l, y); ctx.lineTo(W - m.r, y); ctx.stroke();
             ctx.restore();
       
-            // tooltip content + position
             const metric = METRICS[yKey];
             const dx = now - n.t;
-            let xVal, xUnit = els.xSel.value;
-            if(xUnit==='s')   xVal = dx.toFixed(0);
-            if(xUnit==='min') xVal = (dx/60).toFixed(1);
-            if(xUnit==='h')   xVal = (dx/3600).toFixed(2);
+            const xu = els.xSel.value;
+            let xVal;
+            if(xu==='s')   xVal = dx.toFixed(0);
+            if(xu==='min') xVal = (dx/60).toFixed(1);
+            if(xu==='h')   xVal = (dx/3600).toFixed(2);
       
-            tip.innerHTML =
+            els.tip.innerHTML =
               `<b>${metric.label}</b><br>
-               <span class="muted">x:</span> ${xVal} ${XUNITS[xUnit].label.replace('Zeit [','').replace(']','')},
+               <span class="muted">x:</span> ${xVal} ${XUNITS[xu].label.replace('Zeit [','').replace(']','')},
                <span class="muted">y:</span> ${metric.fmt(n[yKey])} ${metric.unit}`;
-            tip.style.display = 'block';
+            els.tip.style.display='block';
           }
       
-          function onLeave(){ tip.style.display='none'; render(); }
-      
-          c.addEventListener('mousemove', onMove, { passive:true });
-          c.addEventListener('mouseleave', onLeave, { passive:true });
-          c.addEventListener('touchstart', e=>{ if(e.touches[0]) onMove(e.touches[0]); }, { passive:true });
-          c.addEventListener('touchmove',  e=>{ if(e.touches[0]) onMove(e.touches[0]); }, { passive:true });
-          c.addEventListener('touchend', onLeave, { passive:true });
+          c.addEventListener('mousemove', e=>onMoveBase(e.clientX), { passive:true });
+          c.addEventListener('mouseleave', ()=>{ els.tip.style.display='none'; render(); }, { passive:true });
+          c.addEventListener('touchstart', e=>{ if(e.touches[0]) onMoveBase(e.touches[0].clientX); }, { passive:true });
+          c.addEventListener('touchmove',  e=>{ if(e.touches[0]) onMoveBase(e.touches[0].clientX); }, { passive:true });
+          c.addEventListener('touchend',   ()=>{ els.tip.style.display='none'; render(); }, { passive:true });
         }
       
         /* === Controls & Lifecycle ============================================== */
-        function stamp(){
+        function stamp(msg){
           const d = new Date();
-          els.status.textContent = `aktualisiert: ${d.toLocaleTimeString()}`;
+          els.status.textContent = (msg ? msg + ' · ' : '') + `aktualisiert: ${d.toLocaleTimeString()}`;
           render();
         }
-        function start(){
+      
+        function startTimer(){
           if(timer) clearInterval(timer);
-          simulateNext(); // initial
           timer = setInterval(simulateNext, INTERVAL_MS);
+        }
+      
+        function start(){
+          seedHistory();          // 1h Historie sofort
+          startTimer();           // dann live weiter
         }
       
         bindPointer();
@@ -1596,8 +1589,10 @@
         start();
       })();
      </script>
+
   </body>
 </html>
+
 
 
 
