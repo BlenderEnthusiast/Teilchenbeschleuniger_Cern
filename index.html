@@ -1341,7 +1341,8 @@
         // — Quellen & Intervalle —
         const SRC = 'https://lhcstatus2.ovh/vistars.json';
         const MIN_INTERVAL_MS = 30000;
-        const HISTORY_URL = '/data/lhc_history.jsonl';
+        // IMPORTANT: relative path so it works on GitHub Pages repositories
+        const HISTORY_URL = 'data/lhc_history.jsonl';
       
         // — UI-Hooks —
         const els = {
@@ -1353,6 +1354,7 @@
           status:  document.getElementById('tg-status'),
           btnNow:  document.getElementById('tg-refresh'),
         };
+        if(!els.canvas) return;
       
         // — Achsen & Metriken —
         const METRICS = {
@@ -1371,8 +1373,8 @@
         // — State —
         let data = []; // {t, energy, speed, ib1, ib2, lumi?}
         let timer = null;
-        let yKey  = els.ySel.value;
-        let xKey  = els.xSel.value;
+        let yKey  = els.ySel.value || 'energy';
+        let xKey  = els.xSel.value || 'min';
       
         /* === Helpers: robustes Parsing, Physik, Ticks ========================== */
         const num = x => {
@@ -1392,6 +1394,7 @@
                   if (n!=null) return n;
                 }
                 if (v && typeof v==='object') q.push(v);
+                if (Array.isArray(v)) v.forEach(x=>q.push(x));
               }
             }
           }
@@ -1417,25 +1420,31 @@
       
         /* === Live-Fetch + Speicherung ========================================== */
         async function fetchLive(){
-          const r = await fetch(SRC, { cache:'no-store' });
-          if(!r.ok) throw new Error('HTTP '+r.status);
-          const j = await r.json();
+          try{
+            const r = await fetch(SRC, { cache:'no-store' });
+            if(!r.ok) throw new Error('HTTP '+r.status);
+            const j = await r.json();
       
-          const energyGeV = num(pickByRegex(j, /(^|_)energy($|_)|beam.?energy/i));
-          const IB1       = num(pickByRegex(j, /(ib1|beam.?1.*(intensity|current))/i));
-          const IB2       = num(pickByRegex(j, /(ib2|beam.?2.*(intensity|current))/i));
-          const lumi      = num(pickByRegex(j, /lumi|luminosit/i)); // optional
+            const energyGeV = num(pickByRegex(j, /(^|_)energy($|_)|beam.?energy/i));
+            const IB1       = num(pickByRegex(j, /(ib1|beam.?1.*(intensity|current))/i));
+            const IB2       = num(pickByRegex(j, /(ib2|beam.?2.*(intensity|current))/i));
+            const lumi      = num(pickByRegex(j, /lumi|luminosit/i)); // optional
       
-          const t = Math.floor(Date.now()/1000);
-          const speed = energyGeV!=null ? betaFromGeV(energyGeV) : null;
+            const t = Math.floor(Date.now()/1000);
+            const speed = energyGeV!=null ? betaFromGeV(energyGeV) : null;
       
-          data.push({ t, energy:energyGeV, speed, ib1:IB1, ib2:IB2, lumi });
-          const cutoff = t - (6*3600 + 300);
-          if (data.length>4) data = data.filter(d=>d.t>=cutoff);
+            data.push({ t, energy:energyGeV, speed, ib1:IB1, ib2:IB2, lumi });
+            const cutoff = t - (6*3600 + 300);
+            if (data.length>4) data = data.filter(d=>d.t>=cutoff);
       
-          const next = Math.max(MIN_INTERVAL_MS, (j?.next ?? MIN_INTERVAL_MS));
-          stamp(`aktualisiert · Δ${Math.round(next/1000)}s`);
-          schedule(next);
+            const next = Math.max(MIN_INTERVAL_MS, (j?.next ?? MIN_INTERVAL_MS));
+            stamp(`aktualisiert · Δ${Math.round(next/1000)}s`);
+            schedule(next);
+          }catch(err){
+            console.error('[Live fetch]', err);
+            stamp('Live-Quelle nicht erreichbar (CORS/Netz?)');
+            schedule(MIN_INTERVAL_MS);
+          }
         }
       
         /* === Canvas-Setup & Plot =============================================== */
@@ -1460,12 +1469,19 @@
       
           const vis = data.filter(d=>d.t>=t0);
           if(vis.length===0){
-            ctx.fillStyle='var(--muted)'; ctx.font='600 14px Inter, system-ui, sans-serif';
+            ctx.fillStyle='#a8a8ab'; ctx.font='600 14px Inter, system-ui, sans-serif';
             ctx.fillText('Warte auf Live-Daten …', m.l, H/2);
             return;
           }
       
           const yVals = vis.map(d=>d[yKey]).filter(v=>v!=null);
+          if(yVals.length===0){
+            // Keine Werte für die gewählte Metrik
+            ctx.fillStyle='#a8a8ab'; ctx.font='600 14px Inter, system-ui, sans-serif';
+            ctx.fillText('Keine Werte für diese Achsenwahl in diesem Zeitfenster.', m.l, H/2);
+            return;
+          }
+      
           const ymin = Math.min(...yVals), ymax = Math.max(...yVals);
           const pad  = (ymax-ymin || 1) * 0.12;
           const y0 = ymin - pad, y1 = ymax + pad;
@@ -1473,21 +1489,25 @@
           const xToPx = t => m.l + ((t - t0)/win) * (W - m.l - m.r);
           const yToPx = v => H - m.b - ((v - y0)/(y1 - y0)) * (H - m.t - m.b);
       
+          // Grid
           ctx.strokeStyle = '#2d2d32'; ctx.lineWidth = 1;
           const xtick=XUNITS[xKey].tick, xStart=Math.ceil(t0/xtick)*xtick;
           for(let t=xStart; t<=now; t+=xtick){ const x=xToPx(t); ctx.beginPath(); ctx.moveTo(x,m.t); ctx.lineTo(x,H-m.b); ctx.stroke(); }
           niceTicks(y0,y1,4).forEach(v=>{ const y=yToPx(v); ctx.beginPath(); ctx.moveTo(m.l,y); ctx.lineTo(W-m.r,y); ctx.stroke(); });
       
+          // Labels (use real colors, not CSS vars)
           const meta = METRICS[yKey] || METRICS.energy;
-          ctx.fillStyle='var(--muted)'; ctx.font='600 12px Inter, system-ui, sans-serif';
+          ctx.fillStyle='#a8a8ab'; ctx.font='600 12px Inter, system-ui, sans-serif';
           ctx.textAlign='left';  ctx.fillText(XUNITS[xKey].label, m.l, H-8);
           ctx.textAlign='right'; ctx.fillText(`${meta.label} [${meta.unit}]`, W-m.r, m.t-4);
       
+          // Line
           ctx.beginPath();
           vis.forEach((d,i)=>{ if(d[yKey]==null) return; const x=xToPx(d.t), y=yToPx(d[yKey]); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
-          ctx.strokeStyle='var(--accent)'; ctx.lineWidth=2;
+          ctx.strokeStyle='#7dd3fc'; ctx.lineWidth=2;
           ctx.shadowColor='rgba(125,211,252,.25)'; ctx.shadowBlur=8; ctx.stroke(); ctx.shadowBlur=0;
       
+          // Points
           ctx.fillStyle='rgba(125,211,252,.9)';
           vis.forEach(d=>{ if(d[yKey]==null) return; const x=xToPx(d.t), y=yToPx(d[yKey]); ctx.beginPath(); ctx.arc(x,y,2.2,0,Math.PI*2); ctx.fill(); });
         }
@@ -1521,6 +1541,7 @@
       
             const vis=data.filter(d=>d.t>=t0);
             const vals=vis.map(d=>d[yKey]).filter(v=>v!=null);
+            if(!vals.length){ tip.style.display='none'; return; }
             const ymin=Math.min(...vals), ymax=Math.max(...vals);
             const pad=(ymax-ymin||1)*0.12, y0=ymin-pad, y1=ymax+pad;
       
@@ -1528,6 +1549,7 @@
             const yToPx=v=>H-m.b-((v-y0)/(y1-y0))*(H-m.t-m.b);
             const x=xToPx(n.t), y=yToPx(n[yKey]);
       
+            // crosshair
             ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.scale(k,k);
             ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1;
             ctx.beginPath(); ctx.moveTo(x,m.t); ctx.lineTo(x,H-m.b); ctx.stroke();
@@ -1551,8 +1573,7 @@
         /* === Historie laden (JSONL) + Init ==================================== */
         async function loadHistory(){
           try{
-            const bust = Date.now();
-            const r = await fetch(`${HISTORY_URL}?b=${bust}`, { cache:'no-store' });
+            const r = await fetch(HISTORY_URL, { cache:'no-store' });
             if(!r.ok) throw new Error('HTTP '+r.status);
             const text = await r.text();
             const lines = text.split(/\r?\n/).filter(Boolean);
@@ -1568,6 +1589,7 @@
             stamp(`Historie: ${arr.length} Punkte`);
           }catch(e){
             console.warn('Historie nicht verfügbar:', e);
+            stamp('keine Historie gefunden');
           }
         }
       
@@ -1588,7 +1610,7 @@
           els.xSel.addEventListener('change', ()=>{ xKey = els.xSel.value; render(); });
           els.btnNow.addEventListener('click', ()=>fetchLive().catch(()=>{}));
       
-          await loadHistory();          // letzte Stunde aus Repo
+          await loadHistory();          // letzte Stunde aus Repo (optional)
           await fetchLive().catch(()=>{}); // direkt 1 Live-Sample nachlegen
         }
       
@@ -1596,10 +1618,9 @@
         initWithHistory();
       })();
     </script>
-
-
   </body>
 </html>
+
 
 
 
