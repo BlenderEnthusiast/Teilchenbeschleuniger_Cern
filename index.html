@@ -228,12 +228,12 @@
         box-shadow: none !important;
         -webkit-tap-highlight-color: transparent;
       }
-      /* === LIVE · TELEMETRIE · Styles ========================================= */
-      #tg-canvas{ touch-action:none; }
-      #tg-tip b{ font-weight:700 }
-      #tg-tip .muted{ color:var(--muted) }
-
-
+    </style>
+    <style>
+    /* === LIVE · Telemetrie · Styles ========================================== */
+    #tg-canvas{ touch-action:none; }
+    #tg-tip b{ font-weight:700 }
+    #tg-tip .muted{ color:var(--muted) }
     </style>
   </head>
   <body>
@@ -631,18 +631,20 @@
         </div>
       </section>
 
-      <!-- === LIVE · TELEMETRIE (SPS/LHC-kompatibel, drop-in) =================== -->
+      <!-- === LIVE · LHC Telemetrie (ohne Backend, nur index.html) ================= -->
       <section class="section" id="live-telemetry">
         <div class="container">
-          <h2>Live · Telemetrie</h2>
+          <h2>Live · LHC Telemetrie</h2>
       
           <div class="card" style="overflow:hidden">
             <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:10px">
               <label>Y-Achse&nbsp;
                 <select id="tg-y" style="background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:6px 8px">
-                  <option value="speed">Geschwindigkeit</option>
-                  <option value="energy">Energie</option>
-                  <option value="collisions">Kollisionen</option>
+                  <option value="energy" selected>Energie (GeV)</option>
+                  <option value="speed">Geschwindigkeit (% c)</option>
+                  <option value="ib1">IB1 (Intensität)</option>
+                  <option value="ib2">IB2 (Intensität)</option>
+                  <option value="lumi">Luminosität</option>
                 </select>
               </label>
               <label>X-Achse&nbsp;
@@ -660,6 +662,10 @@
               <canvas id="tg-canvas" style="width:100%; height:360px; display:block; border:1px solid var(--line); border-radius:12px; background:#0b0c10"></canvas>
               <div id="tg-tip" style="position:absolute; inset:auto auto 12px 12px; background:rgba(20,20,24,.9); border:1px solid var(--line); border-radius:10px; padding:6px 8px; font-size:12px; color:var(--fg); pointer-events:none; display:none"></div>
             </div>
+      
+            <p class="subtitle" style="margin-top:10px;color:var(--muted)">
+              Quelle: <code>lhcstatus2.ovh/vistars.json</code> (Datenbasis: CERN Vistars).
+            </p>
           </div>
         </div>
       </section>
@@ -1330,23 +1336,10 @@
 
 
     <script>
-      /* === LIVE · TELEMETRIE · History + Live ================================= */
+      /* === LIVE · Telemetrie · JSON-Fetch, Plot, Hover ========================= */
       (function(){
-        const INTERVAL_MS = 30000;
-        const STORAGE_WINDOW = 6*3600;         // wir behalten max. 6h im Speicher
-        const SEED_SECONDS   = 3600;           // beim Start 1h Historie vorfüllen
-        const SAMPLE_DT      = 30;             // Seed-Schrittweite (s)
-      
-        const METRICS = {
-          speed:     { label:'Geschwindigkeit', unit:'% c',   fmt:v => (v*100).toFixed(3) },
-          energy:    { label:'Energie',         unit:'GeV',   fmt:v => v.toFixed(1) },
-          collisions:{ label:'Kollisionen/s',   unit:'Hz',    fmt:v => v.toFixed(2) },
-        };
-        const XUNITS = {
-          s:   { label:'Zeit [s]',   window: 5*60,  tick: 60 },
-          min: { label:'Zeit [min]', window: 60*60, tick: 10*60 },
-          h:   { label:'Zeit [h]',   window: 6*3600,tick: 3600 },
-        };
+        const SRC = 'https://lhcstatus2.ovh/vistars.json';
+        const MIN_INTERVAL_MS = 30000;
       
         const els = {
           canvas:  document.getElementById('tg-canvas'),
@@ -1358,87 +1351,103 @@
           btnNow:  document.getElementById('tg-refresh'),
         };
       
-        const dpr = () => Math.max(1, window.devicePixelRatio || 1);
-        let data = [];            // {t, speed, energy, collisions}
+        const METRICS = {
+          energy: { label:'Energie',         unit:'GeV',      fmt:v=>v==null?'–':v.toFixed(1) },
+          speed:  { label:'Geschwindigkeit', unit:'% c',      fmt:v=>v==null?'–':(v*100).toFixed(6) },
+          ib1:    { label:'IB1 (Intensität)',unit:'p (B1)',   fmt:v=>v==null?'–':Number(v).toExponential(2) },
+          ib2:    { label:'IB2 (Intensität)',unit:'p (B2)',   fmt:v=>v==null?'–':Number(v).toExponential(2) },
+          lumi:   { label:'Luminosität',     unit:'cm⁻²s⁻¹',  fmt:v=>v==null?'–':Number(v).toExponential(2) },
+        };
+        const XUNITS = {
+          s:   { label:'Zeit [s]',   window: 5*60,  tick: 60 },
+          min: { label:'Zeit [min]', window: 60*60, tick: 10*60 },
+          h:   { label:'Zeit [h]',   window: 6*3600,tick: 3600 },
+        };
+      
+        let data = []; // {t, energy, speed, ib1, ib2, lumi?}
         let timer = null;
-        let yKey = els.ySel.value;
-        let xKey = els.xSel.value;
+        let yKey  = els.ySel.value;
+        let xKey  = els.xSel.value;
       
-        /* === Data · Seed + Live ================================================= */
-        function pushSample(sample){
-          data.push(sample);
-          const now = Math.floor(Date.now()/1000);
-          const cutoff = now - (STORAGE_WINDOW + 300);
-          if (data.length > 4) data = data.filter(d => d.t >= cutoff);
-        }
-      
-        function simulateStep(prev){
-          // smoother Drift um plausible Mittelwerte
-          const rnd = (v, spread) => v + (Math.random() - 0.5)*spread;
-          const speed = Math.min(0.999999, Math.max(0.92, rnd(prev?.speed ?? 0.995, 0.0006)));
-          const energy = Math.max(0, rnd(prev?.energy ?? 450.0, 6.0));
-          const baseCol = prev?.collisions ?? 0.0;
-          const eBoost = energy > 2000 ? 50 : energy > 1000 ? 10 : 2;
-          const collisions = Math.max(0, baseCol + (Math.random()-0.5)*2 + (eBoost-2)*0.02);
-          return { speed, energy, collisions };
-        }
-      
-        function seedHistory(seconds = SEED_SECONDS, dt = SAMPLE_DT){
-          const now = Math.floor(Date.now()/1000);
-          const tStart = now - seconds;
-          let prev = null;
-          for (let t = tStart; t <= now - dt; t += dt){
-            const s = simulateStep(prev);
-            pushSample({ t, ...s });
-            prev = s;
+        /* === Robustes JSON-Parsing ============================================= */
+        const num = x => {
+          if (x==null) return null;
+          const n = (typeof x==='number') ? x : parseFloat(String(x).replace(',','.'));
+          return Number.isFinite(n) ? n : null;
+        };
+        function pickByRegex(obj, rx){
+          const queue=[obj];
+          while(queue.length){
+            const o=queue.shift();
+            if(o && typeof o==='object'){
+              for(const [k,v] of Object.entries(o)){
+                if(rx.test(k)){
+                  if(typeof v==='number') return v;
+                  const n = num(v?.value ?? v);
+                  if(n!=null) return n;
+                }
+                if(v && typeof v==='object') queue.push(v);
+              }
+            }
           }
-          // finaler Punkt nahe "jetzt"
-          const sNow = simulateStep(prev);
-          pushSample({ t: now, ...sNow });
-          stamp(`geladen: letzte ${(seconds/60)|0} min`);
+          return null;
         }
       
-        function simulateNext(){
+        /* === Physik: v/c aus Beam-Energy (total, GeV) =========================== */
+        function betaFromGeV(E_total_GeV){
+          const m0 = 0.9382720813;              // Proton-Ruhenergie [GeV]
+          const gamma = (E_total_GeV!=null && E_total_GeV>0) ? (E_total_GeV / m0) : 1; // Beam energy = total
+          if (gamma<=1) return 0;
+          const b2 = 1 - 1/(gamma*gamma);
+          return Math.sqrt(Math.max(0, Math.min(1, b2)));
+        }
+      
+        /* === Live-Fetch + Speicherung ========================================== */
+        async function fetchLive(){
+          const r = await fetch(SRC, { cache:'no-store' });
+          if(!r.ok) throw new Error('HTTP '+r.status);
+          const j = await r.json();
+      
+          const energyGeV = num(pickByRegex(j, /(^|_)energy($|_)|beam.?energy/i));
+          const IB1       = num(pickByRegex(j, /(ib1|beam.?1.*(intensity|current))/i));
+          const IB2       = num(pickByRegex(j, /(ib2|beam.?2.*(intensity|current))/i));
+          const lumi      = num(pickByRegex(j, /lumi|luminosit/i)); // optional
+      
           const t = Math.floor(Date.now()/1000);
-          const last = data[data.length-1];
-          const s = simulateStep(last);
-          pushSample({ t, ...s });
-          stamp();
+          const speed = energyGeV!=null ? betaFromGeV(energyGeV) : null;
+      
+          data.push({ t, energy:energyGeV, speed, ib1:IB1, ib2:IB2, lumi });
+          const cutoff = t - (6*3600 + 300);
+          if(data.length>4) data = data.filter(d=>d.t>=cutoff);
+      
+          const next = Math.max(MIN_INTERVAL_MS, (j?.next ?? MIN_INTERVAL_MS));
+          stamp(`aktualisiert · Δ${Math.round(next/1000)}s`);
+          schedule(next);
         }
       
-        // Hook für echte Daten:
-        // async function fetchHistoryAndStart(){ const arr = await fetch(...); data = arr; stamp('geladen: Live-Historie'); startTimer(); }
-      
-        /* === Drawing ============================================================ */
+        /* === Canvas-Setup & Rendering ========================================== */
+        const dpr = () => Math.max(1, window.devicePixelRatio || 1);
         function setupCanvas(){
-          const c = els.canvas;
-          const r = els.wrap.getBoundingClientRect();
-          const k = dpr();
-          c.width  = Math.floor(r.width * k);
-          c.height = Math.floor(360 * k);
-          c.style.height = '360px';
-          c.style.width  = '100%';
+          const c = els.canvas, r = els.wrap.getBoundingClientRect(), k = dpr();
+          c.width = Math.floor(r.width * k);
+          c.height= Math.floor(360 * k);
+          c.style.height='360px'; c.style.width='100%';
           const ctx = c.getContext('2d');
           ctx.setTransform(k,0,0,k,0,0);
           return ctx;
         }
-      
-        function niceTicks(min, max, count){
-          const span = max - min || 1;
-          const step = Math.pow(10, Math.floor(Math.log10(span / Math.max(1,count))));
-          const err  = (span / (count*step));
-          const s = err >= 7.5 ? 5*step : err >= 3.5 ? 2*step : step;
-          const tmin = Math.floor(min / s) * s;
-          const tmax = Math.ceil (max / s) * s;
-          const ticks = [];
+        function niceTicks(min,max,count){
+          const span=max-min||1;
+          const step=Math.pow(10,Math.floor(Math.log10(span/Math.max(1,count))));
+          const err=span/(count*step);
+          const s= err>=7.5?5*step:err>=3.5?2*step:step;
+          const tmin=Math.floor(min/s)*s, tmax=Math.ceil(max/s)*s, ticks=[];
           for(let v=tmin; v<=tmax+1e-9; v+=s) ticks.push(v);
           return ticks;
         }
-      
         function render(){
           const ctx = setupCanvas();
-          const W = ctx.canvas.width / dpr();
-          const H = ctx.canvas.height / dpr();
+          const W = ctx.canvas.width/dpr(), H = ctx.canvas.height/dpr();
           const m = { l:56, r:16, t:18, b:36 };
           ctx.clearRect(0,0,W,H);
       
@@ -1446,66 +1455,54 @@
           const win = XUNITS[xKey].window;
           const t0  = now - win;
       
-          const vis = data.filter(d => d.t >= t0);
-          if(vis.length === 0){
-            ctx.fillStyle = 'var(--muted)';
-            ctx.font = '600 14px Inter, system-ui, sans-serif';
+          const vis = data.filter(d=>d.t>=t0);
+          if(vis.length===0){
+            ctx.fillStyle='var(--muted)'; ctx.font='600 14px Inter, system-ui, sans-serif';
             ctx.fillText('Warte auf Live-Daten …', m.l, H/2);
             return;
           }
       
-          const yVals = vis.map(d => d[yKey]);
-          const ymin = Math.min(...yVals);
-          const ymax = Math.max(...yVals);
-          const pad = (ymax - ymin || 1) * 0.12;
+          const yVals = vis.map(d=>d[yKey]).filter(v=>v!=null);
+          const ymin = Math.min(...yVals), ymax = Math.max(...yVals);
+          const pad  = (ymax-ymin || 1) * 0.12;
           const y0 = ymin - pad, y1 = ymax + pad;
       
-          const xToPx = t => m.l + ( (t - t0) / win ) * (W - m.l - m.r);
-          const yToPx = v => H - m.b - ( (v - y0) / (y1 - y0) ) * (H - m.t - m.b);
+          const xToPx = t => m.l + ((t - t0)/win) * (W - m.l - m.r);
+          const yToPx = v => H - m.b - ((v - y0)/(y1 - y0)) * (H - m.t - m.b);
       
-          // Grid
           ctx.strokeStyle = '#2d2d32'; ctx.lineWidth = 1;
-          const xtick = XUNITS[xKey].tick;
-          const xTicks = [];
-          const xStart = Math.ceil(t0 / xtick) * xtick;
-          for(let t=xStart; t<=now; t+=xtick) xTicks.push(t);
-          xTicks.forEach(t=>{ const x=xToPx(t); ctx.beginPath(); ctx.moveTo(x, m.t); ctx.lineTo(x, H-m.b); ctx.stroke(); });
+          const xtick=XUNITS[xKey].tick, xStart=Math.ceil(t0/xtick)*xtick;
+          for(let t=xStart; t<=now; t+=xtick){ const x=xToPx(t); ctx.beginPath(); ctx.moveTo(x,m.t); ctx.lineTo(x,H-m.b); ctx.stroke(); }
           niceTicks(y0,y1,4).forEach(v=>{ const y=yToPx(v); ctx.beginPath(); ctx.moveTo(m.l,y); ctx.lineTo(W-m.r,y); ctx.stroke(); });
       
-          // Labels
-          ctx.fillStyle = 'var(--muted)'; ctx.font = '600 12px Inter, system-ui, sans-serif';
-          ctx.textAlign = 'left';  ctx.fillText(XUNITS[xKey].label, m.l, H - 8);
-          ctx.textAlign = 'right'; ctx.fillText(`${METRICS[yKey].label} [${METRICS[yKey].unit}]`, W - m.r, m.t - 4);
+          const meta = METRICS[yKey] || METRICS.energy;
+          ctx.fillStyle='var(--muted)'; ctx.font='600 12px Inter, system-ui, sans-serif';
+          ctx.textAlign='left';  ctx.fillText(XUNITS[xKey].label, m.l, H-8);
+          ctx.textAlign='right'; ctx.fillText(`${meta.label} [${meta.unit}]`, W-m.r, m.t-4);
       
-          // Line
           ctx.beginPath();
-          vis.forEach((d,i)=>{ const x=xToPx(d.t), y=yToPx(d[yKey]); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
-          ctx.strokeStyle = 'var(--accent)'; ctx.lineWidth = 2; ctx.shadowColor='rgba(125,211,252,.25)'; ctx.shadowBlur=8; ctx.stroke(); ctx.shadowBlur=0;
+          vis.forEach((d,i)=>{ if(d[yKey]==null) return; const x=xToPx(d.t), y=yToPx(d[yKey]); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+          ctx.strokeStyle='var(--accent)'; ctx.lineWidth=2;
+          ctx.shadowColor='rgba(125,211,252,.25)'; ctx.shadowBlur=8; ctx.stroke(); ctx.shadowBlur=0;
       
-          // Points
-          ctx.fillStyle = 'rgba(125,211,252,.9)';
-          vis.forEach(d=>{ const x=xToPx(d.t), y=yToPx(d[yKey]); ctx.beginPath(); ctx.arc(x,y,2.2,0,Math.PI*2); ctx.fill(); });
+          ctx.fillStyle='rgba(125,211,252,.9)';
+          vis.forEach(d=>{ if(d[yKey]==null) return; const x=xToPx(d.t), y=yToPx(d[yKey]); ctx.beginPath(); ctx.arc(x,y,2.2,0,Math.PI*2); ctx.fill(); });
         }
       
-        /* === Tooltip & Pointer ================================================== */
+        /* === Hover · Tooltip & Crosshair ====================================== */
         function bindPointer(){
-          const c = els.canvas;
-          const tip = els.tip;
+          const c=els.canvas, tip=els.tip;
       
           function nearestAt(clientX){
-            const rect = c.getBoundingClientRect();
-            const x = (clientX - rect.left);
-            const W = rect.width, H = rect.height;
-            const m = { l:56, r:16, t:18, b:36 };
-            const now = Math.floor(Date.now()/1000);
-            const win = XUNITS[xKey].window;
-            const t0  = now - win;
-            const pxToT = px => t0 + ( (px - m.l) / (W - m.l - m.r) ) * win;
+            const rect=c.getBoundingClientRect(), x=(clientX-rect.left);
+            const W=rect.width, m={ l:56, r:16, t:18, b:36 };
+            const now=Math.floor(Date.now()/1000), win=XUNITS[xKey].window, t0=now-win;
+            const pxToT = px => t0 + ((px - m.l)/(W - m.l - m.r))*win;
             const t = Math.max(t0, Math.min(now, pxToT(x)));
-            const vis = data.filter(d => d.t >= t0);
+            const vis=data.filter(d=>d.t>=t0);
             if(vis.length===0) return null;
             let lo=0, hi=vis.length-1;
-            while(lo<hi){ const mid=(lo+hi)>>1; if(vis[mid].t < t) lo=mid+1; else hi=mid; }
+            while(lo<hi){ const mid=(lo+hi)>>1; (vis[mid].t<t)?(lo=mid+1):(hi=mid); }
             const a=Math.max(0,lo-1), b=Math.min(vis.length-1,lo);
             return Math.abs(vis[b].t - t) < Math.abs(vis[a].t - t) ? vis[b] : vis[a];
           }
@@ -1515,45 +1512,30 @@
             if(!n){ tip.style.display='none'; render(); return; }
       
             render();
-            const ctx = c.getContext('2d');
-            const rect = c.getBoundingClientRect();
-            const k = dpr();
-            const W = rect.width, H = rect.height;
-            const m = { l:56, r:16, t:18, b:36 };
-            const now = Math.floor(Date.now()/1000);
-            const win = XUNITS[xKey].window;
-            const t0  = now - win;
+            const ctx=c.getContext('2d'), rect=c.getBoundingClientRect(), k=dpr();
+            const W=rect.width, H=rect.height, m={ l:56, r:16, t:18, b:36 };
+            const now=Math.floor(Date.now()/1000), win=XUNITS[xKey].window, t0=now-win;
       
-            // y-Range für sichtbare Punkte
-            const vis = data.filter(d => d.t >= t0);
-            const vals = vis.map(d=>d[yKey]);
+            const vis=data.filter(d=>d.t>=t0);
+            const vals=vis.map(d=>d[yKey]).filter(v=>v!=null);
             const ymin=Math.min(...vals), ymax=Math.max(...vals);
-            const pad = (ymax - ymin || 1)*0.12; const y0=ymin-pad, y1=ymax+pad;
+            const pad=(ymax-ymin||1)*0.12, y0=ymin-pad, y1=ymax+pad;
       
-            const xToPx = t => m.l + ( (t - t0) / win ) * (W - m.l - m.r);
-            const yToPx = v => H - m.b - ( (v - y0) / (y1 - y0) ) * (H - m.t - m.b);
-      
-            const x = xToPx(n.t), y = yToPx(n[yKey]);
+            const xToPx=t=>m.l+((t-t0)/win)*(W-m.l-m.r);
+            const yToPx=v=>H-m.b-((v-y0)/(y1-y0))*(H-m.t-m.b);
+            const x=xToPx(n.t), y=yToPx(n[yKey]);
       
             ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.scale(k,k);
             ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1;
-            ctx.beginPath(); ctx.moveTo(x, m.t); ctx.lineTo(x, H - m.b); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(m.l, y); ctx.lineTo(W - m.r, y); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x,m.t); ctx.lineTo(x,H-m.b); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(m.l,y); ctx.lineTo(W-m.r,y); ctx.stroke();
             ctx.restore();
       
-            const metric = METRICS[yKey];
-            const dx = now - n.t;
-            const xu = els.xSel.value;
-            let xVal;
-            if(xu==='s')   xVal = dx.toFixed(0);
-            if(xu==='min') xVal = (dx/60).toFixed(1);
-            if(xu==='h')   xVal = (dx/3600).toFixed(2);
-      
-            els.tip.innerHTML =
-              `<b>${metric.label}</b><br>
-               <span class="muted">x:</span> ${xVal} ${XUNITS[xu].label.replace('Zeit [','').replace(']','')},
-               <span class="muted">y:</span> ${metric.fmt(n[yKey])} ${metric.unit}`;
-            els.tip.style.display='block';
+            const meta = METRICS[yKey] || METRICS.energy;
+            const dx = now - n.t, xu = els.xSel.value;
+            const xVal = xu==='s' ? dx.toFixed(0) : xu==='min' ? (dx/60).toFixed(1) : (dx/3600).toFixed(2);
+            tip.innerHTML = `<b>${meta.label}</b><br><span class="muted">x:</span> ${xVal} ${XUNITS[xu].label.replace('Zeit [','').replace(']','')}, <span class="muted">y:</span> ${meta.fmt(n[yKey])} ${meta.unit}`;
+            tip.style.display='block';
           }
       
           c.addEventListener('mousemove', e=>onMoveBase(e.clientX), { passive:true });
@@ -1565,33 +1547,31 @@
       
         /* === Controls & Lifecycle ============================================== */
         function stamp(msg){
-          const d = new Date();
-          els.status.textContent = (msg ? msg + ' · ' : '') + `aktualisiert: ${d.toLocaleTimeString()}`;
+          const d=new Date();
+          els.status.textContent = (msg? msg+' · ':'') + `aktualisiert: ${d.toLocaleTimeString()}`;
           render();
         }
-      
-        function startTimer(){
-          if(timer) clearInterval(timer);
-          timer = setInterval(simulateNext, INTERVAL_MS);
+        function schedule(ms){
+          if(timer) clearTimeout(timer);
+          timer = setTimeout(()=>{ fetchLive().catch(e=>{ console.error(e); schedule(MIN_INTERVAL_MS); }); }, Math.max(MIN_INTERVAL_MS, ms|0));
         }
       
         function start(){
-          seedHistory();          // 1h Historie sofort
-          startTimer();           // dann live weiter
+          bindPointer();
+          window.addEventListener('resize', render);
+          els.ySel.addEventListener('change', ()=>{ yKey = els.ySel.value; render(); });
+          els.xSel.addEventListener('change', ()=>{ xKey = els.xSel.value; render(); });
+          els.btnNow.addEventListener('click', ()=>fetchLive().catch(()=>{}));
+          fetchLive().catch(err=>{ stamp('Fehler beim Laden'); console.error(err); });
         }
-      
-        bindPointer();
-        window.addEventListener('resize', render);
-        els.ySel.addEventListener('change', ()=>{ yKey = els.ySel.value; render(); });
-        els.xSel.addEventListener('change', ()=>{ xKey = els.xSel.value; render(); });
-        els.btnNow.addEventListener('click', simulateNext);
       
         start();
       })();
-     </script>
+    </script>
 
   </body>
 </html>
+
 
 
 
