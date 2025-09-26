@@ -1336,11 +1336,14 @@
 
 
     <script>
-      /* === LIVE · Telemetrie · JSON-Fetch, Plot, Hover ========================= */
+      /* === LHC · Historie + Live · JSON-Quelle, Plot, Hover =================== */
       (function(){
+        // — Quellen & Intervalle —
         const SRC = 'https://lhcstatus2.ovh/vistars.json';
         const MIN_INTERVAL_MS = 30000;
+        const HISTORY_URL = '/data/lhc_history.jsonl';
       
+        // — UI-Hooks —
         const els = {
           canvas:  document.getElementById('tg-canvas'),
           wrap:    document.getElementById('tg-wrap'),
@@ -1351,6 +1354,7 @@
           btnNow:  document.getElementById('tg-refresh'),
         };
       
+        // — Achsen & Metriken —
         const METRICS = {
           energy: { label:'Energie',         unit:'GeV',      fmt:v=>v==null?'–':v.toFixed(1) },
           speed:  { label:'Geschwindigkeit', unit:'% c',      fmt:v=>v==null?'–':(v*100).toFixed(6) },
@@ -1364,42 +1368,51 @@
           h:   { label:'Zeit [h]',   window: 6*3600,tick: 3600 },
         };
       
+        // — State —
         let data = []; // {t, energy, speed, ib1, ib2, lumi?}
         let timer = null;
         let yKey  = els.ySel.value;
         let xKey  = els.xSel.value;
       
-        /* === Robustes JSON-Parsing ============================================= */
+        /* === Helpers: robustes Parsing, Physik, Ticks ========================== */
         const num = x => {
           if (x==null) return null;
           const n = (typeof x==='number') ? x : parseFloat(String(x).replace(',','.'));
           return Number.isFinite(n) ? n : null;
         };
         function pickByRegex(obj, rx){
-          const queue=[obj];
-          while(queue.length){
-            const o=queue.shift();
-            if(o && typeof o==='object'){
-              for(const [k,v] of Object.entries(o)){
-                if(rx.test(k)){
-                  if(typeof v==='number') return v;
+          const q=[obj];
+          while(q.length){
+            const o=q.shift();
+            if (o && typeof o==='object'){
+              for (const [k,v] of Object.entries(o)){
+                if (rx.test(k)){
+                  if (typeof v==='number') return v;
                   const n = num(v?.value ?? v);
-                  if(n!=null) return n;
+                  if (n!=null) return n;
                 }
-                if(v && typeof v==='object') queue.push(v);
+                if (v && typeof v==='object') q.push(v);
               }
             }
           }
           return null;
         }
-      
-        /* === Physik: v/c aus Beam-Energy (total, GeV) =========================== */
         function betaFromGeV(E_total_GeV){
-          const m0 = 0.9382720813;              // Proton-Ruhenergie [GeV]
-          const gamma = (E_total_GeV!=null && E_total_GeV>0) ? (E_total_GeV / m0) : 1; // Beam energy = total
+          const m0 = 0.9382720813;                 // GeV (Proton)
+          const gamma = (E_total_GeV && E_total_GeV>0) ? (E_total_GeV / m0) : 1;
           if (gamma<=1) return 0;
           const b2 = 1 - 1/(gamma*gamma);
           return Math.sqrt(Math.max(0, Math.min(1, b2)));
+        }
+        const dpr = () => Math.max(1, window.devicePixelRatio || 1);
+        function niceTicks(min,max,count){
+          const span=max-min||1;
+          const step=Math.pow(10,Math.floor(Math.log10(span/Math.max(1,count))));
+          const err=span/(count*step);
+          const s= err>=7.5?5*step:err>=3.5?2*step:step;
+          const tmin=Math.floor(min/s)*s, tmax=Math.ceil(max/s)*s, ticks=[];
+          for(let v=tmin; v<=tmax+1e-9; v+=s) ticks.push(v);
+          return ticks;
         }
       
         /* === Live-Fetch + Speicherung ========================================== */
@@ -1418,15 +1431,14 @@
       
           data.push({ t, energy:energyGeV, speed, ib1:IB1, ib2:IB2, lumi });
           const cutoff = t - (6*3600 + 300);
-          if(data.length>4) data = data.filter(d=>d.t>=cutoff);
+          if (data.length>4) data = data.filter(d=>d.t>=cutoff);
       
           const next = Math.max(MIN_INTERVAL_MS, (j?.next ?? MIN_INTERVAL_MS));
           stamp(`aktualisiert · Δ${Math.round(next/1000)}s`);
           schedule(next);
         }
       
-        /* === Canvas-Setup & Rendering ========================================== */
-        const dpr = () => Math.max(1, window.devicePixelRatio || 1);
+        /* === Canvas-Setup & Plot =============================================== */
         function setupCanvas(){
           const c = els.canvas, r = els.wrap.getBoundingClientRect(), k = dpr();
           c.width = Math.floor(r.width * k);
@@ -1435,15 +1447,6 @@
           const ctx = c.getContext('2d');
           ctx.setTransform(k,0,0,k,0,0);
           return ctx;
-        }
-        function niceTicks(min,max,count){
-          const span=max-min||1;
-          const step=Math.pow(10,Math.floor(Math.log10(span/Math.max(1,count))));
-          const err=span/(count*step);
-          const s= err>=7.5?5*step:err>=3.5?2*step:step;
-          const tmin=Math.floor(min/s)*s, tmax=Math.ceil(max/s)*s, ticks=[];
-          for(let v=tmin; v<=tmax+1e-9; v+=s) ticks.push(v);
-          return ticks;
         }
         function render(){
           const ctx = setupCanvas();
@@ -1489,7 +1492,7 @@
           vis.forEach(d=>{ if(d[yKey]==null) return; const x=xToPx(d.t), y=yToPx(d[yKey]); ctx.beginPath(); ctx.arc(x,y,2.2,0,Math.PI*2); ctx.fill(); });
         }
       
-        /* === Hover · Tooltip & Crosshair ====================================== */
+        /* === Hover: Crosshair + Tooltip ======================================= */
         function bindPointer(){
           const c=els.canvas, tip=els.tip;
       
@@ -1545,7 +1548,30 @@
           c.addEventListener('touchend',   ()=>{ els.tip.style.display='none'; render(); }, { passive:true });
         }
       
-        /* === Controls & Lifecycle ============================================== */
+        /* === Historie laden (JSONL) + Init ==================================== */
+        async function loadHistory(){
+          try{
+            const bust = Date.now();
+            const r = await fetch(`${HISTORY_URL}?b=${bust}`, { cache:'no-store' });
+            if(!r.ok) throw new Error('HTTP '+r.status);
+            const text = await r.text();
+            const lines = text.split(/\r?\n/).filter(Boolean);
+            const arr = lines.map(l => JSON.parse(l)).filter(o => o && typeof o.t === 'number');
+            data = arr.map(o => ({
+              t: o.t,
+              energy: o.energy ?? null,
+              speed:  o.speed  ?? (o.energy!=null ? betaFromGeV(o.energy) : null),
+              ib1:    o.ib1 ?? null,
+              ib2:    o.ib2 ?? null,
+              lumi:   o.lumi ?? null
+            }));
+            stamp(`Historie: ${arr.length} Punkte`);
+          }catch(e){
+            console.warn('Historie nicht verfügbar:', e);
+          }
+        }
+      
+        /* === Status + Timer + Start =========================================== */
         function stamp(msg){
           const d=new Date();
           els.status.textContent = (msg? msg+' · ':'') + `aktualisiert: ${d.toLocaleTimeString()}`;
@@ -1555,22 +1581,26 @@
           if(timer) clearTimeout(timer);
           timer = setTimeout(()=>{ fetchLive().catch(e=>{ console.error(e); schedule(MIN_INTERVAL_MS); }); }, Math.max(MIN_INTERVAL_MS, ms|0));
         }
-      
-        function start(){
+        async function initWithHistory(){
           bindPointer();
           window.addEventListener('resize', render);
           els.ySel.addEventListener('change', ()=>{ yKey = els.ySel.value; render(); });
           els.xSel.addEventListener('change', ()=>{ xKey = els.xSel.value; render(); });
           els.btnNow.addEventListener('click', ()=>fetchLive().catch(()=>{}));
-          fetchLive().catch(err=>{ stamp('Fehler beim Laden'); console.error(err); });
+      
+          await loadHistory();          // letzte Stunde aus Repo
+          await fetchLive().catch(()=>{}); // direkt 1 Live-Sample nachlegen
         }
       
-        start();
+        // — Start —
+        initWithHistory();
       })();
     </script>
 
+
   </body>
 </html>
+
 
 
 
