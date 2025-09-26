@@ -1335,25 +1335,10 @@
 
 
 
-    <script>
-      /* === LIVE · LHC Telemetrie (CORS-safe, GH Pages kompatibel) ================= */
+    <script defer>
+      /* === Live-Graph (Chart.js) – Zoom, Pan, Hover, Begriffs-Hilfen =============== */
       (function(){
-        // — Nur CORS-freundliche Proxys, kein Direkt-Fetch —
-        const PROXIES = [
-          // Jina Reader (liefert den Body mit permissiven CORS)
-          (u)=>`https://r.jina.ai/http://${u.replace(/^https?:\/\//,'')}`,
-          // AllOrigins RAW
-          (u)=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-          // isomorphic-git CORS passthrough
-          (u)=>`https://cors.isomorphic-git.org/${u}`
-        ];
-        const SRC = 'https://lhcstatus2.ovh/vistars.json';
-        const MIN_INTERVAL_MS = 30000;
-      
-        // WICHTIG: relativ, nicht /data/... (Projektseite!)
-        const HISTORY_URL = 'data/lhc_history.jsonl';
-      
-        // — UI —
+        // UI-Hooks (nutzt deine vorhandenen Controls/Canvas)
         const els = {
           canvas:  document.getElementById('tg-canvas'),
           wrap:    document.getElementById('tg-wrap'),
@@ -1364,269 +1349,292 @@
           btnNow:  document.getElementById('tg-refresh'),
         };
       
-        // — Achsen & Metriken —
+        // Zusatz-UI: Reset-Zoom + Schnellwahl-Chips + Hilfe-Tooltip
+        const bar = els.wrap.previousElementSibling; // die Leiste mit den Selects
+        const btnReset = document.createElement('button');
+        btnReset.className = 'step-btn';
+        btnReset.id = 'tg-reset';
+        btnReset.textContent = 'Zoom zurücksetzen';
+        bar.appendChild(btnReset);
+      
+        const chips = document.createElement('div');
+        chips.id = 'tg-chips';
+        chips.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-left:auto';
+        bar.appendChild(chips);
+      
+        const help = document.createElement('span');
+        help.id = 'tg-help';
+        help.style.cssText = 'margin-left:6px;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border:1px solid var(--line);border-radius:50%;cursor:default;background:var(--card)';
+        help.textContent = 'i';
+        els.ySel.parentElement.appendChild(help);
+      
+        const defTip = document.createElement('div');
+        defTip.id = 'tg-def';
+        defTip.style.cssText = 'position:absolute;display:none;background:rgba(20,20,24,.95);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:12px;color:var(--fg);max-width:280px;z-index:50';
+        els.wrap.appendChild(defTip);
+      
+        // Metriken, Labels, Einheiten, Definitionen
         const METRICS = {
-          energy: { label:'Energie',         unit:'GeV',      fmt:v=>v==null?'–':v.toFixed(1) },
-          speed:  { label:'Geschwindigkeit', unit:'% c',      fmt:v=>v==null?'–':(v*100).toFixed(6) },
-          ib1:    { label:'IB1 (Intensität)',unit:'p (B1)',   fmt:v=>v==null?'–':Number(v).toExponential(2) },
-          ib2:    { label:'IB2 (Intensität)',unit:'p (B2)',   fmt:v=>v==null?'–':Number(v).toExponential(2) },
-          lumi:   { label:'Luminosität',     unit:'cm⁻²s⁻¹',  fmt:v=>v==null?'–':Number(v).toExponential(2) },
+          energy: { label:'Energie', unit:'GeV',
+            fmt:v=>v==null?'–':v.toFixed(0),
+            desc:'Protonen-Strahlenergie pro Teilchen (Beam energy).'
+          },
+          speed:  { label:'Geschwindigkeit', unit:'% c',
+            fmt:v=>v==null?'–':(v*100).toFixed(6),
+            desc:'β = v/c aus Gesamtenergie (relativistische Näherung).'
+          },
+          ib1:    { label:'IB1 (Intensität)', unit:'Protonen',
+            fmt:v=>v==null?'–':Number(v).toExponential(2),
+            desc:'Strahlintensität von Beam 1 (Anzahl Protonen).'
+          },
+          ib2:    { label:'IB2 (Intensität)', unit:'Protonen',
+            fmt:v=>v==null?'–':Number(v).toExponential(2),
+            desc:'Strahlintensität von Beam 2 (Anzahl Protonen).'
+          },
+          lumi:   { label:'Luminosität', unit:'cm⁻²·s⁻¹',
+            fmt:v=>v==null?'–':Number(v).toExponential(2),
+            desc:'Instantane Leuchtkraft ~ Kollisionsrate pro Fläche.'
+          },
         };
+      
         const XUNITS = {
-          s:   { label:'Zeit [s]',   window: 5*60,  tick: 60 },
-          min: { label:'Zeit [min]', window: 60*60, tick: 10*60 },
-          h:   { label:'Zeit [h]',   window: 6*3600,tick: 3600 },
+          s:   { label:'s',   window:  5*60,   tick:  60 },
+          min: { label:'min', window: 60*60,   tick: 10*60 },
+          h:   { label:'h',   window:  6*3600, tick: 3600 }
         };
       
-        // — State —
-        let data = []; // {t, energy, speed, ib1, ib2, lumi?}
-        let timer = null;
-        let yKey  = els.ySel.value;
-        let xKey  = els.xSel.value;
+        // Datenpuffer (epoch seconds)
+        let samples = []; // {t, energy, speed, ib1, ib2, lumi}
+        let yKey = els.ySel.value;
+        let xKey = els.xSel.value;
       
-        /* === Helpers =============================================================== */
+        // Hilfen
         const num = x => {
           if (x==null) return null;
           const n = (typeof x==='number') ? x : parseFloat(String(x).replace(',','.'));
           return Number.isFinite(n) ? n : null;
         };
-        function pickByRegex(obj, rx){
-          const q=[obj];
-          while(q.length){
-            const o=q.shift();
-            if (o && typeof o==='object'){
-              for (const [k,v] of Object.entries(o)){
-                if (rx.test(k)){
-                  if (typeof v==='number') return v;
-                  const n = num(v?.value ?? v);
-                  if (n!=null) return n;
-                }
-                if (v && typeof v==='object') q.push(v);
-              }
-            }
-          }
-          return null;
-        }
         function betaFromGeV(E_total_GeV){
-          const m0 = 0.9382720813;                 // GeV (Proton)
+          const m0 = 0.9382720813; // GeV (Proton)
           const gamma = (E_total_GeV && E_total_GeV>0) ? (E_total_GeV / m0) : 1;
           if (gamma<=1) return 0;
           const b2 = 1 - 1/(gamma*gamma);
           return Math.sqrt(Math.max(0, Math.min(1, b2)));
         }
-        const dpr = () => Math.max(1, window.devicePixelRatio || 1);
-        function niceTicks(min,max,count){
-          const span=max-min||1;
-          const step=Math.pow(10,Math.floor(Math.log10(span/Math.max(1,count))));
-          const err=span/(count*step);
-          const s= err>=7.5?5*step:err>=3.5?2*step:step;
-          const tmin=Math.floor(min/s)*s, tmax=Math.ceil(max/s)*s, ticks=[];
-          for(let v=tmin; v<=tmax+1e-9; v+=s) ticks.push(v);
-          return ticks;
-        }
       
-        /* === CORS-fester JSON-Fetch mit Fallbacks ================================== */
-        async function fetchJSONWithFallback(url){
-          const errors = [];
-          for (const make of PROXIES){
-            const prox = make(url);
-            try{
-              const r = await fetch(prox, { cache:'no-store' });
-              if(!r.ok) { errors.push(`[${r.status}] ${prox}`); continue; }
-              const txt = await r.text();
-              try { return JSON.parse(txt); }
-              catch(e){ errors.push(`parse fail for ${prox}: ${e}`); continue; }
-            }catch(e){
-              errors.push(`net fail for ${prox}: ${e}`);
-              continue;
-            }
-          }
-          throw new Error('All proxies failed:\n' + errors.join('\n'));
-        }
-      
-        /* === Live-Fetch + Speicherung ============================================== */
-        async function fetchLive(){
-          const j = await fetchJSONWithFallback(SRC);
-      
-          const energyGeV = num(pickByRegex(j, /(^|_)energy($|_)|beam.?energy/i));
-          const IB1       = num(pickByRegex(j, /(ib1|beam.?1.*(intensity|current))/i));
-          const IB2       = num(pickByRegex(j, /(ib2|beam.?2.*(intensity|current))/i));
-          const lumi      = num(pickByRegex(j, /lumi|luminosit/i)); // optional
-      
-          const t = Math.floor(Date.now()/1000);
-          const speed = energyGeV!=null ? betaFromGeV(energyGeV) : null;
-      
-          data.push({ t, energy:energyGeV, speed, ib1:IB1, ib2:IB2, lumi });
-          const cutoff = t - (6*3600 + 300);
-          if (data.length>4) data = data.filter(d=>d.t>=cutoff);
-      
-          const next = Math.max(MIN_INTERVAL_MS, (j?.next ?? MIN_INTERVAL_MS));
-          stamp(`live · Δ${Math.round(next/1000)}s`);
-          schedule(next);
-        }
-      
-        /* === Canvas-Setup & Plot ==================================================== */
-        function setupCanvas(){
-          const c = els.canvas, r = els.wrap.getBoundingClientRect(), k = dpr();
-          c.width = Math.floor(r.width * k);
-          c.height= Math.floor(360 * k);
-          c.style.height='360px'; c.style.width='100%';
-          const ctx = c.getContext('2d');
-          ctx.setTransform(k,0,0,k,0,0);
-          return ctx;
-        }
-        function render(){
-          const ctx = setupCanvas();
-          const W = ctx.canvas.width/dpr(), H = ctx.canvas.height/dpr();
-          const m = { l:56, r:16, t:18, b:36 };
-          ctx.clearRect(0,0,W,H);
-      
-          const now = Math.floor(Date.now()/1000);
-          const win = XUNITS[xKey].window;
-          const t0  = now - win;
-      
-          const vis = data.filter(d=>d.t>=t0);
-          if(vis.length===0){
-            ctx.fillStyle='var(--muted)'; ctx.font='600 14px Inter, system-ui, sans-serif';
-            ctx.fillText('Warte auf Live-Daten …', m.l, H/2);
-            return;
-          }
-      
-          const yVals = vis.map(d=>d[yKey]).filter(v=>v!=null);
-          const ymin = Math.min(...yVals), ymax = Math.max(...yVals);
-          const pad  = (ymax-ymin || 1) * 0.12;
-          const y0 = ymin - pad, y1 = ymax + pad;
-      
-          const xToPx = t => m.l + ((t - t0)/win) * (W - m.l - m.r);
-          const yToPx = v => H - m.b - ((v - y0)/(y1 - y0)) * (H - m.t - m.b);
-      
-          ctx.strokeStyle = '#2d2d32'; ctx.lineWidth = 1;
-          const xtick=XUNITS[xKey].tick, xStart=Math.ceil(t0/xtick)*xtick;
-          for(let t=xStart; t<=now; t+=xtick){ const x=xToPx(t); ctx.beginPath(); ctx.moveTo(x,m.t); ctx.lineTo(x,H-m.b); ctx.stroke(); }
-          niceTicks(y0,y1,4).forEach(v=>{ const y=yToPx(v); ctx.beginPath(); ctx.moveTo(m.l,y); ctx.lineTo(W-m.r,y); ctx.stroke(); });
-      
-          const meta = METRICS[yKey] || METRICS.energy;
-          ctx.fillStyle='var(--muted)'; ctx.font='600 12px Inter, system-ui, sans-serif';
-          ctx.textAlign='left';  ctx.fillText(XUNITS[xKey].label, m.l, H-8);
-          ctx.textAlign='right'; ctx.fillText(`${meta.label} [${meta.unit}]`, W-m.r, m.t-4);
-      
-          ctx.beginPath();
-          vis.forEach((d,i)=>{ if(d[yKey]==null) return; const x=xToPx(d.t), y=yToPx(d[yKey]); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
-          ctx.strokeStyle='var(--accent)'; ctx.lineWidth=2;
-          ctx.shadowColor='rgba(125,211,252,.25)'; ctx.shadowBlur=8; ctx.stroke(); ctx.shadowBlur=0;
-      
-          ctx.fillStyle='rgba(125,211,252,.9)';
-          vis.forEach(d=>{ if(d[yKey]==null) return; const x=xToPx(d.t), y=yToPx(d[yKey]); ctx.beginPath(); ctx.arc(x,y,2.2,0,Math.PI*2); ctx.fill(); });
-        }
-      
-        /* === Hover: Crosshair + Tooltip =========================================== */
-        function bindPointer(){
-          const c=els.canvas, tip=els.tip;
-      
-          function nearestAt(clientX){
-            const rect=c.getBoundingClientRect(), x=(clientX-rect.left);
-            const W=rect.width, m={ l:56, r:16, t:18, b:36 };
-            const now=Math.floor(Date.now()/1000), win=XUNITS[xKey].window, t0=now-win;
-            const pxToT = px => t0 + ((px - m.l)/(W - m.l - m.r))*win;
-            const t = Math.max(t0, Math.min(now, pxToT(x)));
-            const vis=data.filter(d=>d.t>=t0);
-            if(vis.length===0) return null;
-            let lo=0, hi=vis.length-1;
-            while(lo<hi){ const mid=(lo+hi)>>1; (vis[mid].t<t)?(lo=mid+1):(hi=mid); }
-            const a=Math.max(0,lo-1), b=Math.min(vis.length-1,lo);
-            return Math.abs(vis[b].t - t) < Math.abs(vis[a].t - t) ? vis[b] : vis[a];
-          }
-      
-          function onMoveBase(clientX){
-            const n = nearestAt(clientX);
-            if(!n){ tip.style.display='none'; render(); return; }
-      
-            render();
-            const ctx=c.getContext('2d'), rect=c.getBoundingClientRect(), k=dpr();
-            const W=rect.width, H=rect.height, m={ l:56, r:16, t:18, b:36 };
-            const now=Math.floor(Date.now()/1000), win=XUNITS[xKey].window, t0=now-win;
-      
-            const vis=data.filter(d=>d.t>=t0);
-            const vals=vis.map(d=>d[yKey]).filter(v=>v!=null);
-            const ymin=Math.min(...vals), ymax=Math.max(...vals);
-            const pad=(ymax-ymin||1)*0.12, y0=ymin-pad, y1=ymax+pad;
-      
-            const xToPx=t=>m.l+((t-t0)/win)*(W-m.l-m.r);
-            const yToPx=v=>H-m.b-((v-y0)/(y1-y0))*(H-m.t-m.b);
-            const x=xToPx(n.t), y=yToPx(n[yKey]);
-      
-            ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.scale(k,k);
-            ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1;
-            ctx.beginPath(); ctx.moveTo(x,m.t); ctx.lineTo(x,H-m.b); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(m.l,y); ctx.lineTo(W-m.r,y); ctx.stroke();
-            ctx.restore();
-      
-            const meta = METRICS[yKey] || METRICS.energy;
-            const dx = now - n.t, xu = els.xSel.value;
-            const xVal = xu==='s' ? dx.toFixed(0) : xu==='min' ? (dx/60).toFixed(1) : (dx/3600).toFixed(2);
-            tip.innerHTML = `<b>${meta.label}</b><br><span class="muted">x:</span> ${xVal} ${XUNITS[xu].label.replace('Zeit [','').replace(']','')}, <span class="muted">y:</span> ${meta.fmt(n[yKey])} ${meta.unit}`;
-            tip.style.display='block';
-          }
-      
-          c.addEventListener('mousemove', e=>onMoveBase(e.clientX), { passive:true });
-          c.addEventListener('mouseleave', ()=>{ els.tip.style.display='none'; render(); }, { passive:true });
-          c.addEventListener('touchstart', e=>{ if(e.touches[0]) onMoveBase(e.touches[0].clientX); }, { passive:true });
-          c.addEventListener('touchmove',  e=>{ if(e.touches[0]) onMoveBase(e.touches[0].clientX); }, { passive:true });
-          c.addEventListener('touchend',   ()=>{ els.tip.style.display='none'; render(); }, { passive:true });
-        }
-      
-        /* === Historie (optional) + Init ============================================ */
+        // History laden (optional): /data/lhc_history.jsonl
         async function loadHistory(){
           try{
-            const bust = Date.now();
-            const r = await fetch(`${HISTORY_URL}?b=${bust}`, { cache:'no-store' });
+            const r = await fetch('/data/lhc_history.jsonl?b='+Date.now(), { cache:'no-store' });
             if(!r.ok) throw new Error('HTTP '+r.status);
             const text = await r.text();
             const lines = text.split(/\r?\n/).filter(Boolean);
             const arr = lines.map(l => JSON.parse(l)).filter(o => o && typeof o.t === 'number');
-            data = arr.map(o => ({
-              t: o.t,
+            samples = arr.map(o => ({
+              t:o.t,
               energy: o.energy ?? null,
               speed:  o.speed  ?? (o.energy!=null ? betaFromGeV(o.energy) : null),
               ib1:    o.ib1 ?? null,
               ib2:    o.ib2 ?? null,
               lumi:   o.lumi ?? null
             }));
-            stamp(`Historie: ${arr.length} Punkte`);
+            stamp(`Historie: ${samples.length} Punkte`);
           }catch(e){
-            console.warn('Historie nicht verfügbar:', e);
+            console.warn('Keine History vorhanden (ok):', e);
           }
         }
       
-        /* === Status + Timer + Start ================================================ */
+        // Chart.js Setup
+        const ctx = els.canvas.getContext('2d');
+        const crosshair = {
+          id:'crosshair',
+          afterDatasetsDraw(chart){
+            const ac = chart.getActiveElements?.();
+            if(!ac || !ac.length) return;
+            const {ctx, chartArea:{left,right,top,bottom}} = chart;
+            const x = ac[0].element.x, y = ac[0].element.y;
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255,255,255,.18)';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(x, top);    ctx.lineTo(x, bottom); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(left, y);   ctx.lineTo(right, y);  ctx.stroke();
+            ctx.restore();
+          }
+        };
+      
+        const chart = new Chart(ctx, {
+          type:'line',
+          data: { datasets:[{ label:'', data:[], borderWidth:2, pointRadius:0, tension:0.15 }] },
+          options:{
+            maintainAspectRatio:false,
+            parsing:false,
+            interaction:{ mode:'nearest', intersect:false },
+            animation:false,
+            scales:{
+              x: {
+                type:'time',
+                adapters: { date: {} },
+                ticks:{ color:'#a8a8ab' },
+                grid:{ color:'#2d2d32' },
+                time: { unit:'minute' }
+              },
+              y: {
+                ticks:{ color:'#a8a8ab' },
+                grid:{ color:'#2d2d32' }
+              }
+            },
+            plugins:{
+              legend:{ display:false },
+              tooltip:{
+                backgroundColor:'rgba(20,20,24,.95)',
+                borderColor:getComputedStyle(document.documentElement).getPropertyValue('--line') || '#242428',
+                borderWidth:1,
+                callbacks:{
+                  title(items){
+                    if(!items.length) return '';
+                    const ts = items[0].raw.x;
+                    const d = new Date(ts*1000);
+                    // relative Zeit
+                    const now = Math.floor(Date.now()/1000);
+                    const dx = Math.max(0, now - ts);
+                    const unit = XUNITS[xKey];
+                    const rel = xKey==='s' ? dx.toFixed(0)
+                              : xKey==='min'? (dx/60).toFixed(1)
+                              : (dx/3600).toFixed(2);
+                    return d.toLocaleTimeString() + `  (Δ ${rel} ${unit.label})`;
+                  },
+                  label(item){
+                    const meta = METRICS[yKey];
+                    return `${meta.label}: ${meta.fmt(item.raw.y)} ${meta.unit}`;
+                  }
+                }
+              },
+              zoom:{
+                pan:{ enabled:true, mode:'x' },
+                zoom:{
+                  wheel:{ enabled:true },
+                  pinch:{ enabled:true },
+                  mode:'x'
+                }
+              }
+            },
+            elements:{ line:{ borderColor:getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#7dd3fc' } }
+          },
+          plugins:[crosshair]
+        });
+      
+        function refreshDataset(){
+          const meta = METRICS[yKey];
+          // Sichtfenster gemäß X-Einheit
+          const now = Math.floor(Date.now()/1000);
+          const win = XUNITS[xKey].window;
+          const t0  = now - win;
+          const vis = samples.filter(d => d.t>=t0 && d[yKey]!=null);
+          chart.data.datasets[0].label = `${meta.label} [${meta.unit}]`;
+          chart.data.datasets[0].data = vis.map(d => ({ x:d.t, y:d[yKey] }));
+          // X Ticks
+          chart.options.scales.x.time.unit = (xKey==='s'?'second': xKey==='min'?'minute':'hour');
+          // Y Auto-Bereich mit kleinem Padding
+          if (vis.length){
+            const ys = vis.map(d=>d[yKey]);
+            const min = Math.min(...ys), max = Math.max(...ys);
+            const pad = (max-min||1)*0.12;
+            chart.options.scales.y.min = min - pad;
+            chart.options.scales.y.max = max + pad;
+          }else{
+            chart.options.scales.y.min = undefined;
+            chart.options.scales.y.max = undefined;
+          }
+          chart.update('none');
+        }
+      
         function stamp(msg){
           const d=new Date();
           els.status.textContent = (msg? msg+' · ':'') + `aktualisiert: ${d.toLocaleTimeString()}`;
-          render();
-        }
-        function schedule(ms){
-          if(timer) clearTimeout(timer);
-          timer = setTimeout(()=>{ fetchLive().catch(e=>{ console.error('[Live fetch]', e); schedule(MIN_INTERVAL_MS); }); }, Math.max(MIN_INTERVAL_MS, ms|0));
-        }
-        async function initWithHistory(){
-          bindPointer();
-          window.addEventListener('resize', render);
-          els.ySel.addEventListener('change', ()=>{ yKey = els.ySel.value; render(); });
-          els.xSel.addEventListener('change', ()=>{ xKey = els.xSel.value; render(); });
-          els.btnNow.addEventListener('click', ()=>fetchLive().catch(()=>{}));
-      
-          await loadHistory();          // letzte Stunde (wenn Datei existiert)
-          await fetchLive().catch(e=>console.error('[Live fetch]', e));
         }
       
-        // Start
-        initWithHistory();
+        // Begriffs-Hilfen
+        function showDef(target, key){
+          const m = METRICS[key]; if(!m) return;
+          defTip.innerHTML = `<b>${m.label}</b><div style="margin-top:2px;color:var(--muted)">${m.desc} <span style="opacity:.7">[${m.unit}]</span></div>`;
+          const rect = (target.getBoundingClientRect ? target : els.wrap).getBoundingClientRect();
+          const host = els.wrap.getBoundingClientRect();
+          defTip.style.left = Math.min(host.width-280, rect.left-host.left) + 'px';
+          defTip.style.bottom = '12px';
+          defTip.style.display = 'block';
+        }
+        function hideDef(){ defTip.style.display='none'; }
+      
+        help.addEventListener('mouseenter', ()=>showDef(help, yKey));
+        help.addEventListener('mouseleave', hideDef);
+      
+        // Schnellwahl-Chips (Hover zeigt Definition, Klick wählt Metrik)
+        const order = ['energy','speed','ib1','ib2','lumi'];
+        order.forEach(k=>{
+          const span = document.createElement('span');
+          span.textContent = METRICS[k].label;
+          span.dataset.key = k;
+          span.style.cssText = 'border:1px solid var(--line);border-radius:9999px;padding:6px 10px;font-size:12px;cursor:pointer;background:var(--card)';
+          span.addEventListener('mouseenter', ()=>showDef(span, k));
+          span.addEventListener('mouseleave', hideDef);
+          span.addEventListener('click', ()=>{
+            els.ySel.value = k;
+            yKey = k;
+            refreshDataset();
+          });
+          chips.appendChild(span);
+        });
+      
+        // Select-Änderungen
+        els.ySel.addEventListener('change', ()=>{ yKey = els.ySel.value; refreshDataset(); });
+        els.xSel.addEventListener('change', ()=>{ xKey = els.xSel.value; refreshDataset(); });
+      
+        // Buttons
+        btnReset.addEventListener('click', ()=>{ chart.resetZoom(); });
+        els.btnNow.addEventListener('click', ()=>{ // nur Re-Render, da kein Live-Fetch hier
+          refreshDataset(); stamp('manuell');
+        });
+      
+        // Pointer-Tooltip vom alten Canvas-Overlay ausblenden (Chart.js macht Tooltip)
+        if (els.tip) els.tip.style.display = 'none';
+      
+        // Public API zum Füttern: window.LHC_PUSH({t, energy, ib1, ib2, lumi})
+        window.LHC_PUSH = function(sample){
+          // erwartet epoch seconds in sample.t
+          const s = {
+            t: num(sample.t),
+            energy: num(sample.energy),
+            ib1: num(sample.ib1),
+            ib2: num(sample.ib2),
+            lumi: num(sample.lumi),
+          };
+          s.speed = s.energy!=null ? betaFromGeV(s.energy) : null;
+          if (!s.t) s.t = Math.floor(Date.now()/1000);
+          samples.push(s);
+          // nur letzten 6h puffern
+          const cutoff = Math.floor(Date.now()/1000) - (6*3600 + 300);
+          if (samples.length>4) samples = samples.filter(d=>d.t>=cutoff);
+          refreshDataset(); stamp('live');
+        };
+      
+        // Init
+        (async function init(){
+          // History (optional)
+          await loadHistory().catch(()=>{});
+          refreshDataset();
+          // Fenstergröße -> Reflow
+          new ResizeObserver(()=>chart.resize()).observe(els.wrap);
+        })();
       })();
     </script>
 
-
+  
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
   </body>
 </html>
+
 
 
 
