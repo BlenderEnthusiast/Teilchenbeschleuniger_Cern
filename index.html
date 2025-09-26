@@ -1336,15 +1336,19 @@
 
 
     <script>
-      /* === LHC · Historie + Live · JSON-Quelle, Plot, Hover =================== */
+      /* === LHC · Historie + Live · JSON-Quelle, Plot, Hover (CORS-safe) ========== */
       (function(){
-
-        const SRC = 'https://lhcstatus2.ovh/vistars.json';
+        // — Quellen & Intervalle —
+        const ORIGIN = 'https://lhcstatus2.ovh/vistars.json';
+        const PROXIES = [
+          u => 'https://r.jina.ai/http://' + u.replace(/^https?:\/\//,''),
+          u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+          u => 'https://cors.isomorphic-git.org/' + u
+        ];
         const MIN_INTERVAL_MS = 30000;
-       
-        const HISTORY_URL = 'data/lhc_history.jsonl';
-
+        const HISTORY_URL = 'data/lhc_history.jsonl'; // relativ! (GitHub Pages)
       
+        // — UI-Hooks —
         const els = {
           canvas:  document.getElementById('tg-canvas'),
           wrap:    document.getElementById('tg-wrap'),
@@ -1354,7 +1358,18 @@
           status:  document.getElementById('tg-status'),
           btnNow:  document.getElementById('tg-refresh'),
         };
-        if(!els.canvas) return;
+      
+        // — Festfarben für Canvas (keine CSS-Variablen im Canvas!)
+        const COLORS = {
+          grid:   '#2d2d32',
+          accent: '#7dd3fc',
+          accentGlow: 'rgba(125,211,252,.25)',
+          muted:  '#a8a8ab',
+          fg:     '#fafafa',
+          bg:     '#0b0c10',
+          pts:    'rgba(125,211,252,.9)',
+          cross:  'rgba(255,255,255,.18)'
+        };
       
         // — Achsen & Metriken —
         const METRICS = {
@@ -1373,10 +1388,11 @@
         // — State —
         let data = []; // {t, energy, speed, ib1, ib2, lumi?}
         let timer = null;
-        let yKey  = els.ySel.value || 'energy';
-        let xKey  = els.xSel.value || 'min';
+        let yKey  = els.ySel.value;
+        let xKey  = els.xSel.value;
       
-        /* === Helpers: robustes Parsing, Physik, Ticks ========================== */
+        /* === Helpers =============================================================== */
+        const dpr = () => Math.max(1, window.devicePixelRatio || 1);
         const num = x => {
           if (x==null) return null;
           const n = (typeof x==='number') ? x : parseFloat(String(x).replace(',','.'));
@@ -1394,20 +1410,18 @@
                   if (n!=null) return n;
                 }
                 if (v && typeof v==='object') q.push(v);
-                if (Array.isArray(v)) v.forEach(x=>q.push(x));
               }
             }
           }
           return null;
         }
         function betaFromGeV(E_total_GeV){
-          const m0 = 0.9382720813;                 // GeV (Proton)
+          const m0 = 0.9382720813; // GeV (Proton)
           const gamma = (E_total_GeV && E_total_GeV>0) ? (E_total_GeV / m0) : 1;
           if (gamma<=1) return 0;
           const b2 = 1 - 1/(gamma*gamma);
           return Math.sqrt(Math.max(0, Math.min(1, b2)));
         }
-        const dpr = () => Math.max(1, window.devicePixelRatio || 1);
         function niceTicks(min,max,count){
           const span=max-min||1;
           const step=Math.pow(10,Math.floor(Math.log10(span/Math.max(1,count))));
@@ -1418,12 +1432,34 @@
           return ticks;
         }
       
-        /* === Live-Fetch + Speicherung ========================================== */
+        /* === Fetch mit Fallback (CORS) ============================================= */
+        async function fetchJSONWithFallback(url){
+          // 1) Direkt versuchen
+          try{
+            const r = await fetch(url, {cache:'no-store'});
+            if(r.ok) return await r.json();
+            throw new Error('HTTP '+r.status);
+          }catch(e){ /* continue */ }
+      
+          // 2) Proxies nacheinander
+          for(const make of PROXIES){
+            const prox = make(url);
+            try{
+              const r = await fetch(prox, {cache:'no-store'});
+              if(!r.ok) continue;
+              // einige Proxys liefern text/plain
+              const ct = r.headers.get('content-type')||'';
+              if (ct.includes('application/json')) return await r.json();
+              const txt = await r.text();
+              try { return JSON.parse(txt); } catch{ /* next proxy */ }
+            }catch(e){ /* next proxy */ }
+          }
+          throw new Error('Alle Fetch-Versuche (inkl. Proxys) fehlgeschlagen');
+        }
+      
         async function fetchLive(){
           try{
-            const r = await fetch(SRC, { cache:'no-store' });
-            if(!r.ok) throw new Error('HTTP '+r.status);
-            const j = await r.json();
+            const j = await fetchJSONWithFallback(ORIGIN);
       
             const energyGeV = num(pickByRegex(j, /(^|_)energy($|_)|beam.?energy/i));
             const IB1       = num(pickByRegex(j, /(ib1|beam.?1.*(intensity|current))/i));
@@ -1438,16 +1474,16 @@
             if (data.length>4) data = data.filter(d=>d.t>=cutoff);
       
             const next = Math.max(MIN_INTERVAL_MS, (j?.next ?? MIN_INTERVAL_MS));
-            stamp(`aktualisiert · Δ${Math.round(next/1000)}s`);
+            stamp(`live ok · Δ${Math.round(next/1000)}s`);
             schedule(next);
           }catch(err){
             console.error('[Live fetch]', err);
-            stamp('Live-Quelle nicht erreichbar (CORS/Netz?)');
+            stamp('live: Fehler – retry 30s');
             schedule(MIN_INTERVAL_MS);
           }
         }
       
-        /* === Canvas-Setup & Plot =============================================== */
+        /* === Canvas-Setup & Plot ==================================================== */
         function setupCanvas(){
           const c = els.canvas, r = els.wrap.getBoundingClientRect(), k = dpr();
           c.width = Math.floor(r.width * k);
@@ -1457,27 +1493,33 @@
           ctx.setTransform(k,0,0,k,0,0);
           return ctx;
         }
+      
         function render(){
           const ctx = setupCanvas();
           const W = ctx.canvas.width/dpr(), H = ctx.canvas.height/dpr();
           const m = { l:56, r:16, t:18, b:36 };
           ctx.clearRect(0,0,W,H);
       
+          // Hintergrund (leicht)
+          ctx.fillStyle = COLORS.bg;
+          ctx.fillRect(0,0,W,H);
+      
           const now = Math.floor(Date.now()/1000);
           const win = XUNITS[xKey].window;
           const t0  = now - win;
-      
           const vis = data.filter(d=>d.t>=t0);
+      
           if(vis.length===0){
-            ctx.fillStyle='#a8a8ab'; ctx.font='600 14px Inter, system-ui, sans-serif';
+            ctx.fillStyle=COLORS.muted;
+            ctx.font='600 14px Inter, system-ui, sans-serif';
             ctx.fillText('Warte auf Live-Daten …', m.l, H/2);
             return;
           }
       
           const yVals = vis.map(d=>d[yKey]).filter(v=>v!=null);
           if(yVals.length===0){
-            // Keine Werte für die gewählte Metrik
-            ctx.fillStyle='#a8a8ab'; ctx.font='600 14px Inter, system-ui, sans-serif';
+            ctx.fillStyle=COLORS.muted;
+            ctx.font='600 14px Inter, system-ui, sans-serif';
             ctx.fillText('Keine Werte für diese Achsenwahl in diesem Zeitfenster.', m.l, H/2);
             return;
           }
@@ -1490,29 +1532,29 @@
           const yToPx = v => H - m.b - ((v - y0)/(y1 - y0)) * (H - m.t - m.b);
       
           // Grid
-          ctx.strokeStyle = '#2d2d32'; ctx.lineWidth = 1;
+          ctx.strokeStyle = COLORS.grid; ctx.lineWidth = 1;
           const xtick=XUNITS[xKey].tick, xStart=Math.ceil(t0/xtick)*xtick;
           for(let t=xStart; t<=now; t+=xtick){ const x=xToPx(t); ctx.beginPath(); ctx.moveTo(x,m.t); ctx.lineTo(x,H-m.b); ctx.stroke(); }
           niceTicks(y0,y1,4).forEach(v=>{ const y=yToPx(v); ctx.beginPath(); ctx.moveTo(m.l,y); ctx.lineTo(W-m.r,y); ctx.stroke(); });
       
-          // Labels (use real colors, not CSS vars)
+          // Labels
           const meta = METRICS[yKey] || METRICS.energy;
-          ctx.fillStyle='#a8a8ab'; ctx.font='600 12px Inter, system-ui, sans-serif';
+          ctx.fillStyle=COLORS.muted; ctx.font='600 12px Inter, system-ui, sans-serif';
           ctx.textAlign='left';  ctx.fillText(XUNITS[xKey].label, m.l, H-8);
           ctx.textAlign='right'; ctx.fillText(`${meta.label} [${meta.unit}]`, W-m.r, m.t-4);
       
-          // Line
+          // Linie
           ctx.beginPath();
           vis.forEach((d,i)=>{ if(d[yKey]==null) return; const x=xToPx(d.t), y=yToPx(d[yKey]); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
-          ctx.strokeStyle='#7dd3fc'; ctx.lineWidth=2;
-          ctx.shadowColor='rgba(125,211,252,.25)'; ctx.shadowBlur=8; ctx.stroke(); ctx.shadowBlur=0;
+          ctx.strokeStyle=COLORS.accent; ctx.lineWidth=2;
+          ctx.shadowColor=COLORS.accentGlow; ctx.shadowBlur=8; ctx.stroke(); ctx.shadowBlur=0;
       
-          // Points
-          ctx.fillStyle='rgba(125,211,252,.9)';
+          // Punkte
+          ctx.fillStyle=COLORS.pts;
           vis.forEach(d=>{ if(d[yKey]==null) return; const x=xToPx(d.t), y=yToPx(d[yKey]); ctx.beginPath(); ctx.arc(x,y,2.2,0,Math.PI*2); ctx.fill(); });
         }
       
-        /* === Hover: Crosshair + Tooltip ======================================= */
+        /* === Hover: Crosshair + Tooltip =========================================== */
         function bindPointer(){
           const c=els.canvas, tip=els.tip;
       
@@ -1534,14 +1576,13 @@
             const n = nearestAt(clientX);
             if(!n){ tip.style.display='none'; render(); return; }
       
-            render();
+            render(); // frisch zeichnen, dann Crosshair drüber
             const ctx=c.getContext('2d'), rect=c.getBoundingClientRect(), k=dpr();
             const W=rect.width, H=rect.height, m={ l:56, r:16, t:18, b:36 };
             const now=Math.floor(Date.now()/1000), win=XUNITS[xKey].window, t0=now-win;
       
             const vis=data.filter(d=>d.t>=t0);
             const vals=vis.map(d=>d[yKey]).filter(v=>v!=null);
-            if(!vals.length){ tip.style.display='none'; return; }
             const ymin=Math.min(...vals), ymax=Math.max(...vals);
             const pad=(ymax-ymin||1)*0.12, y0=ymin-pad, y1=ymax+pad;
       
@@ -1549,17 +1590,17 @@
             const yToPx=v=>H-m.b-((v-y0)/(y1-y0))*(H-m.t-m.b);
             const x=xToPx(n.t), y=yToPx(n[yKey]);
       
-            // crosshair
             ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.scale(k,k);
-            ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1;
+            ctx.strokeStyle=COLORS.cross; ctx.lineWidth=1;
             ctx.beginPath(); ctx.moveTo(x,m.t); ctx.lineTo(x,H-m.b); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(m.l,y); ctx.lineTo(W-m.r,y); ctx.stroke();
             ctx.restore();
       
             const meta = METRICS[yKey] || METRICS.energy;
             const dx = now - n.t, xu = els.xSel.value;
+            const unitTxt = XUNITS[xu].label.replace('Zeit [','').replace(']','');
             const xVal = xu==='s' ? dx.toFixed(0) : xu==='min' ? (dx/60).toFixed(1) : (dx/3600).toFixed(2);
-            tip.innerHTML = `<b>${meta.label}</b><br><span class="muted">x:</span> ${xVal} ${XUNITS[xu].label.replace('Zeit [','').replace(']','')}, <span class="muted">y:</span> ${meta.fmt(n[yKey])} ${meta.unit}`;
+            tip.innerHTML = `<b>${meta.label}</b><br><span class="muted">x:</span> ${xVal} ${unitTxt}, <span class="muted">y:</span> ${meta.fmt(n[yKey])} ${meta.unit}`;
             tip.style.display='block';
           }
       
@@ -1570,10 +1611,11 @@
           c.addEventListener('touchend',   ()=>{ els.tip.style.display='none'; render(); }, { passive:true });
         }
       
-        /* === Historie laden (JSONL) + Init ==================================== */
+        /* === Historie laden (JSONL) + Init ======================================== */
         async function loadHistory(){
           try{
-            const r = await fetch(HISTORY_URL, { cache:'no-store' });
+            const bust = Date.now();
+            const r = await fetch(`${HISTORY_URL}?b=${bust}`, { cache:'no-store' });
             if(!r.ok) throw new Error('HTTP '+r.status);
             const text = await r.text();
             const lines = text.split(/\r?\n/).filter(Boolean);
@@ -1589,11 +1631,10 @@
             stamp(`Historie: ${arr.length} Punkte`);
           }catch(e){
             console.warn('Historie nicht verfügbar:', e);
-            stamp('keine Historie gefunden');
           }
         }
       
-        /* === Status + Timer + Start =========================================== */
+        /* === Status + Timer + Start =============================================== */
         function stamp(msg){
           const d=new Date();
           els.status.textContent = (msg? msg+' · ':'') + `aktualisiert: ${d.toLocaleTimeString()}`;
@@ -1601,7 +1642,7 @@
         }
         function schedule(ms){
           if(timer) clearTimeout(timer);
-          timer = setTimeout(()=>{ fetchLive().catch(e=>{ console.error(e); schedule(MIN_INTERVAL_MS); }); }, Math.max(MIN_INTERVAL_MS, ms|0));
+          timer = setTimeout(()=>{ fetchLive().catch(()=>{}); }, Math.max(MIN_INTERVAL_MS, ms|0));
         }
         async function initWithHistory(){
           bindPointer();
@@ -1610,16 +1651,18 @@
           els.xSel.addEventListener('change', ()=>{ xKey = els.xSel.value; render(); });
           els.btnNow.addEventListener('click', ()=>fetchLive().catch(()=>{}));
       
-          await loadHistory();          // letzte Stunde aus Repo (optional)
-          await fetchLive().catch(()=>{}); // direkt 1 Live-Sample nachlegen
+          await loadHistory();           // ggf. letzte Stunde aus Repo
+          await fetchLive().catch(()=>{}); // direkt 1 Live-Sample
         }
       
         // — Start —
         initWithHistory();
       })();
     </script>
+
   </body>
 </html>
+
 
 
 
