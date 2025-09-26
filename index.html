@@ -1338,13 +1338,13 @@
     <script>
       /* === LHC · Historie + Live · JSON-Quelle, Plot, Hover =================== */
       (function(){
-        // — Quellen & Intervalle —
+
         const SRC = 'https://lhcstatus2.ovh/vistars.json';
         const MIN_INTERVAL_MS = 30000;
-        // IMPORTANT: relative path so it works on GitHub Pages repositories
+       
         const HISTORY_URL = 'data/lhc_history.jsonl';
+
       
-        // — UI-Hooks —
         const els = {
           canvas:  document.getElementById('tg-canvas'),
           wrap:    document.getElementById('tg-wrap'),
@@ -1620,6 +1620,7 @@
     </script>
   </body>
 </html>
+
 
 
 
