@@ -1544,12 +1544,16 @@
           return Math.sqrt(Math.max(0, Math.min(1, b2)));
         }
         function fmtClock(ts, winSec){
-          const showSec = (winSec <= 15*60);
-          const opts = showSec
-            ? { hour:'2-digit', minute:'2-digit', second:'2-digit' }
-            : { hour:'2-digit', minute:'2-digit' };
-          return new Date(ts*1000).toLocaleTimeString(undefined, opts);
+          const d = new Date(ts * 1000);
+          const dd = String(d.getDate()).padStart(2,'0');
+          const mm = String(d.getMonth()+1).padStart(2,'0');
+          const HH = String(d.getHours()).padStart(2,'0');
+          const MM = String(d.getMinutes()).padStart(2,'0');
+          const SS = String(d.getSeconds()).padStart(2,'0');
+          const showSec = (winSec <= 15 * 60); // Sekunden nur bei kleinen Zeitfenstern
+          return `${dd}.${mm} ${HH}:${MM}${showSec ? `:${SS}` : ''}`;
         }
+
         function yTicks(min,max,count){
           const span=max-min||1;
           const step=Math.pow(10,Math.floor(Math.log10(span/Math.max(1,count))));
@@ -1859,10 +1863,17 @@
       
         // ---- Status & scheduling ---------------------------------------------------
         function stamp(msg){
-          const d=new Date();
-          els.status.textContent = (msg? msg+' · ':'') + `aktualisiert: ${d.toLocaleTimeString()}`;
+          const d  = new Date();
+          const dd = String(d.getDate()).padStart(2,'0');
+          const mm = String(d.getMonth()+1).padStart(2,'0');
+          const HH = String(d.getHours()).padStart(2,'0');
+          const MM = String(d.getMinutes()).padStart(2,'0');
+          const SS = String(d.getSeconds()).padStart(2,'0');
+          const ts = `${dd}.${mm} ${HH}:${MM}:${SS}`;
+          els.status.textContent = (msg ? msg + ' · ' : '') + `aktualisiert: ${ts}`;
           render();
         }
+
         function schedule(ms){
           if(timer) clearTimeout(timer);
           timer = setTimeout(()=>{ fetchLatest().catch(e=>{ console.error('[latest]',e); schedule(MIN_INTERVAL_MS); }); }, Math.max(10_000, ms|0));
@@ -1933,6 +1944,7 @@
 
   </body>
 </html>
+
 
 
 
