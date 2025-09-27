@@ -1,1 +1,248 @@
-{"fill":11114,"energy":6799,"ions":false,"time":{"page1":"2025-09-27T22:24:48+0200","cryo":"2025-09-27T22:24:55+0200","lhc3":"2025-09-27T22:24:52+0200","config":"2025-09-27T21:27:51+0200"},"comments":{"time":"2025-09-27T21:15:19+0200","text":"*** STABLE BEAMS ***\nAll IPs on target\nXRPs IN"},"flags":{"link_status":[true,true],"global_beam_permit":[true,true],"setup_beam":[false,false],"beam_presence":[true,true],"moveable_devices":[true,true],"stable_beams":[true,true]},"tsb":"PT1H24M23S","postmortem":null,"intensity":["3.97e+14","3.95e+14"],"accmode":"PROTON PHYSICS","beammode":"STABLE BEAMS","fillscheme":"25ns_2460b_2448_2089_2227_144bpi_20inj","hypercycle":"6.8TeV_2025","experiment":[{"name":"ATLAS","operation":{"status":"PHYSICS","inst_lumi":21935.717,"bran_lumi":24787.9,"fill_lumi":105558.359,"b1_bkgd":1.357,"b2_bkgd":1.938},"config":{"beta_star":"0.73 m","cross_angle":"160.0 (H)","spectro_angle":null,"separation":"0(H)","coll_per_turn":"2448","delta_t":"-0.06 ns"}},{"name":"ALICE","operation":{"status":"PHYSICS","inst_lumi":8.901,"bran_lumi":0.1,"fill_lumi":43.65,"b1_bkgd":2.394,"b2_bkgd":4.132},"config":{"beta_star":"10.00 m","cross_angle":"200.0 (V)","spectro_angle":"no_value(V)","separation":"-.14(H)","coll_per_turn":"2089","delta_t":"-0.03 ns"}},{"name":"CMS","operation":{"status":"PHYSICS","inst_lumi":22227.541,"bran_lumi":25817.8,"fill_lumi":106963.313,"b1_bkgd":0.252,"b2_bkgd":0.809},"config":{"beta_star":"0.73 m","cross_angle":"-160.0 (V)","spectro_angle":null,"separation":"0(V)","coll_per_turn":"2448","delta_t":"-0.08 ns"}},{"name":"LHCb","operation":{"status":"PHYSICS","inst_lumi":2146.43,"bran_lumi":0.5,"fill_lumi":10368.869,"b1_bkgd":0.348,"b2_bkgd":3.941},"config":{"beta_star":"2.00 m","cross_angle":"200.0 (V)","spectro_angle":"no_value(H)","separation":"0(V)","coll_per_turn":"2227","delta_t":"0.03 ns"}}],"velo":{"position":"IN","gap":0.0},"bcm":"OPERATIONAL","totem":"STANDBY","cryo":{"max_t":[2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0],"lost_count":0,"state":[[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0]]},"next":"2025-09-27T20:25:27+0000"}
+{
+  "fill": 11114,
+  "energy": 6799,
+  "ions": false,
+  "time": {
+    "page1": "2025-09-27T22:27:49+0200",
+    "cryo": "2025-09-27T22:27:50+0200",
+    "lhc3": "2025-09-27T22:27:47+0200",
+    "config": "2025-09-27T21:27:51+0200"
+  },
+  "comments": {
+    "time": "2025-09-27T21:15:19+0200",
+    "text": "*** STABLE BEAMS ***\nAll IPs on target\nXRPs IN"
+  },
+  "flags": {
+    "link_status": [
+      true,
+      true
+    ],
+    "global_beam_permit": [
+      true,
+      true
+    ],
+    "setup_beam": [
+      false,
+      false
+    ],
+    "beam_presence": [
+      true,
+      true
+    ],
+    "moveable_devices": [
+      true,
+      true
+    ],
+    "stable_beams": [
+      true,
+      true
+    ]
+  },
+  "tsb": "PT1H27M17S",
+  "postmortem": null,
+  "intensity": [
+    "3.97e+14",
+    "3.95e+14"
+  ],
+  "accmode": "PROTON PHYSICS",
+  "beammode": "STABLE BEAMS",
+  "fillscheme": "25ns_2460b_2448_2089_2227_144bpi_20inj",
+  "hypercycle": "6.8TeV_2025",
+  "experiment": [
+    {
+      "name": "ATLAS",
+      "operation": {
+        "status": "PHYSICS",
+        "inst_lumi": 21935.146,
+        "bran_lumi": 24758.7,
+        "fill_lumi": 109344.805,
+        "b1_bkgd": 1.377,
+        "b2_bkgd": 1.744
+      },
+      "config": {
+        "beta_star": "0.73 m",
+        "cross_angle": "160.0 (H)",
+        "spectro_angle": null,
+        "separation": "0(H)",
+        "coll_per_turn": "2448",
+        "delta_t": "-0.06 ns"
+      }
+    },
+    {
+      "name": "ALICE",
+      "operation": {
+        "status": "PHYSICS",
+        "inst_lumi": 8.574,
+        "bran_lumi": 0.1,
+        "fill_lumi": 45.22,
+        "b1_bkgd": 2.352,
+        "b2_bkgd": 4.131
+      },
+      "config": {
+        "beta_star": "10.00 m",
+        "cross_angle": "200.0 (V)",
+        "spectro_angle": "no_value(V)",
+        "separation": "-.14(H)",
+        "coll_per_turn": "2089",
+        "delta_t": "-0.03 ns"
+      }
+    },
+    {
+      "name": "CMS",
+      "operation": {
+        "status": "PHYSICS",
+        "inst_lumi": 21886.053,
+        "bran_lumi": 25388.9,
+        "fill_lumi": 110778.164,
+        "b1_bkgd": 0.225,
+        "b2_bkgd": 1.476
+      },
+      "config": {
+        "beta_star": "0.73 m",
+        "cross_angle": "-160.0 (V)",
+        "spectro_angle": null,
+        "separation": "0(V)",
+        "coll_per_turn": "2448",
+        "delta_t": "-0.08 ns"
+      }
+    },
+    {
+      "name": "LHCb",
+      "operation": {
+        "status": "PHYSICS",
+        "inst_lumi": 2160.522,
+        "bran_lumi": 0.5,
+        "fill_lumi": 10733.009,
+        "b1_bkgd": 0.336,
+        "b2_bkgd": 3.92
+      },
+      "config": {
+        "beta_star": "2.00 m",
+        "cross_angle": "200.0 (V)",
+        "spectro_angle": "no_value(H)",
+        "separation": "0(V)",
+        "coll_per_turn": "2227",
+        "delta_t": "0.03 ns"
+      }
+    }
+  ],
+  "velo": {
+    "position": "IN",
+    "gap": 0
+  },
+  "bcm": "OPERATIONAL",
+  "totem": "STANDBY",
+  "cryo": {
+    "max_t": [
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2
+    ],
+    "lost_count": 0,
+    "state": [
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ]
+    ]
+  },
+  "next": "2025-09-27T20:28:23+0000"
+}
