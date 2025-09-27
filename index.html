@@ -1338,13 +1338,9 @@
     <script>
       /* === LHC · Historie + Live · JSON-Quelle, Plot, Hover (X=Uhrzeit) ======= */
       (function(){
-        // — Quelle über deinen Cloudflare-Worker —
-        const VISTARS_BASE = 'https://lhc-proxy.leogad-59e.workers.dev';
-        const SRC = `${VISTARS_BASE}/vistars.json`;
-    
-        // — Intervalle & optionale Historie-Datei aus dem Repo —
-        const MIN_INTERVAL_MS = 30000;
-        const HISTORY_URL = '/data/lhc_history.jsonl'; // optional; wenn fehlt -> still
+        const SRC = '/data/latest.json';
+        const HISTORY_URL = '/data/lhc_history.jsonl';
+        const MIN_INTERVAL_MS = 120000; // 2 min – Fallback/Poll-Intervall im Frontend
     
         // — UI-Hooks —
         const els = {
@@ -1359,11 +1355,12 @@
     
         // — Y-Metriken —
         const METRICS = {
-          energy: { label:'Energie',         unit:'GeV',      fmt:v=>v==null?'–':v.toFixed(1) },
-          speed:  { label:'Geschwindigkeit', unit:'% c',      fmt:v=>v==null?'–':(v*100).toFixed(6) },
-          ib1:    { label:'IB1 (Intensität)',unit:'p (B1)',   fmt:v=>v==null?'–':Number(v).toExponential(2) },
-          ib2:    { label:'IB2 (Intensität)',unit:'p (B2)',   fmt:v=>v==null?'–':Number(v).toExponential(2) },
-          lumi:   { label:'Luminosität',     unit:'cm⁻²s⁻¹',  fmt:v=>v==null?'–':Number(v).toExponential(2) },
+          energy: { label:'Energie',            unit:'GeV',      fmt:v=>v==null?'–':v.toFixed(1) },
+          // WICHTIG: wir plotteten β (0..1), daher label+unit als v/c
+          speed:  { label:'Geschwindigkeit β',  unit:'v/c',      fmt:v=>v==null?'–':v.toFixed(6) },
+          ib1:    { label:'IB1 (Intensität)',   unit:'p (B1)',   fmt:v=>v==null?'–':Number(v).toExponential(2) },
+          ib2:    { label:'IB2 (Intensität)',   unit:'p (B2)',   fmt:v=>v==null?'–':Number(v).toExponential(2) },
+          lumi:   { label:'Luminosität',        unit:'cm⁻²·s⁻¹', fmt:v=>v==null?'–':Number(v).toExponential(2) },
         };
     
         // — X-Fenster (die Auswahl steuert NUR die Fensterbreite; Anzeige = Uhrzeit) —
@@ -1419,9 +1416,16 @@
           for(let v=tmin; v<=tmax+1e-9; v+=s) ticks.push(v);
           return ticks;
         }
-        // Uhrzeit-Formatter (lokal). Sekundengenau bei kurzen Fenstern.
+        // Y-Tick-Format dynamisch (β fein; große Zahlen exponentiell)
+        function fmtYTick(v){
+          if (yKey === 'speed') return v.toFixed(6);
+          const av = Math.abs(v);
+          if (av >= 1e4 || (av>0 && av<1e-3)) return v.toExponential(1);
+          return v.toFixed(2);
+        }
+        // Uhrzeit-Formatter (lokal). Sekunden bis 15-min Fenster.
         function fmtClock(ts, winSec){
-          const showSeconds = winSec <= 15*60; // bis 15 min inkl. Sekunden
+          const showSeconds = winSec <= 15*60;
           const opts = showSeconds
             ? { hour:'2-digit', minute:'2-digit', second:'2-digit' }
             : { hour:'2-digit', minute:'2-digit' };
@@ -1430,7 +1434,7 @@
     
         /* === Live-Fetch + Speicherung =========================================== */
         async function fetchLive(){
-          const r = await fetch(SRC, { cache:'no-store' });
+          const r = await fetch(`${SRC}?b=${Date.now()}`, { cache:'no-store' });
           if(!r.ok) throw new Error('HTTP '+r.status);
           const j = await r.json();
     
@@ -1446,6 +1450,7 @@
           const cutoff = t - (6*3600 + 300);
           if (data.length>4) data = data.filter(d=>d.t>=cutoff);
     
+          // GitHub-Action-Snapshots haben i.d.R. kein "next" → Fallback
           const next = Math.max(MIN_INTERVAL_MS, (j?.next ?? MIN_INTERVAL_MS));
           stamp(`aktualisiert · Δ${Math.round(next/1000)}s`);
           schedule(next);
@@ -1491,7 +1496,7 @@
           const xToPx = t => m.l + ((t - t0)/win) * (W - m.l - m.r);
           const yToPx = v => H - m.b - ((v - y0)/(y1 - y0)) * (H - m.t - m.b);
     
-          // Gitter + Ticks
+          // Gitter + X-Ticks (Uhrzeit)
           ctx.strokeStyle = '#2d2d32'; ctx.lineWidth = 1;
           ctx.fillStyle = 'var(--muted)'; ctx.font='600 11px Inter, system-ui, sans-serif';
           ctx.textAlign='center';
@@ -1499,15 +1504,15 @@
           for(let t=xStart; t<=now; t+=xtick){
             const x=xToPx(t);
             ctx.beginPath(); ctx.moveTo(x,m.t); ctx.lineTo(x,H-m.b); ctx.stroke();
-            // Tick-Label (Uhrzeit)
             const label = fmtClock(t, win);
             ctx.fillText(label, x, H-4);
           }
+          // Y-Ticks
           ctx.textAlign='right';
           niceTicks(y0,y1,4).forEach(v=>{
             const y=yToPx(v);
             ctx.beginPath(); ctx.moveTo(m.l,y); ctx.lineTo(W-m.r,y); ctx.stroke();
-            ctx.fillText(v.toFixed(2), m.l-6, y+3);
+            ctx.fillText(fmtYTick(v), m.l-6, y+3);
           });
     
           // Achsentitel
@@ -1625,7 +1630,7 @@
           els.xSel.addEventListener('change', ()=>{ xKey = els.xSel.value; render(); });
           els.btnNow.addEventListener('click', ()=>fetchLive().catch(()=>{}));
     
-          await loadHistory();          // letzte Stunde (falls Datei vorhanden)
+          await loadHistory();          // letzte 24h (falls Datei vorhanden)
           await fetchLive().catch(()=>{}); // sofort 1 Live-Sample
         }
     
@@ -1636,12 +1641,14 @@
 
 
 
+
   
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
   </body>
 </html>
+
 
 
 
