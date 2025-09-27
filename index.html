@@ -25,11 +25,14 @@
 
       .container { max-width:1100px; margin:0 auto; padding:0 20px; }
       .header { position:sticky; top:0; z-index:40; backdrop-filter:saturate(120%) blur(10px); background:rgba(11,11,12,.6); border-bottom:1px solid var(--line); }
-      .nav { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; }
       .nav a { color:var(--muted); text-decoration:none; font-size:14px; margin-left:18px; }
       .nav a:hover { color:var(--fg); }
     
-      .nav { display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+      .nav{
+        display:flex; align-items:center; justify-content:space-between;
+        padding:14px 20px; gap:18px; flex-wrap:wrap;
+      }
+
       .nav-sources{
         display:inline-flex; align-items:center; gap:10px;
         margin-left:6px; 
@@ -312,9 +315,8 @@
       .sources-list{ margin:0; padding-left:18px; }
       .sources-list li{ margin:6px 0; line-height:1.5; }
       
-   
-      body.show-sources .sources-block{ display:block; }
-      body:not(.show-sources) .sources-toggleable{ display:none; }
+      body:not([data-show-sources="true"]) .sources-toggleable{ display:none; }
+
     </style>
   </head>
   <body>
@@ -1925,6 +1927,7 @@
     </script>
   </body>
 </html>
+
 
 
 
