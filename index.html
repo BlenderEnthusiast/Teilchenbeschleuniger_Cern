@@ -1398,8 +1398,7 @@
         // current view window [v.t0, v.t1] in seconds (unix time)
         const v = { t0: 0, t1: 0 };
       
-        // poll interval for re-reading latest.json (not the upstream!)
-        const MIN_INTERVAL_MS = 60_000;
+
       
         // ---- Helpers ---------------------------------------------------------------
         const dpr = () => Math.max(1, window.devicePixelRatio || 1);
@@ -1797,6 +1796,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
   </body>
 </html>
+
 
 
 
