@@ -1339,9 +1339,10 @@
       /* === LHC · Historie + Live · JSON (GitHub only) · Uhrzeit · Zoom & Pan ===== */
       (function(){
         // ---- Files written by your GitHub Action ----------------------------------
+        const MIN_INTERVAL_MS = 30000;            
         const SRC         = 'data/latest.json';    
         const HISTORY_URL = 'data/lhc_history.jsonl'; 
-        const MIN_INTERVAL_MS = 30000;              
+  
 
 
       
@@ -1796,6 +1797,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
   </body>
 </html>
+
 
 
 
