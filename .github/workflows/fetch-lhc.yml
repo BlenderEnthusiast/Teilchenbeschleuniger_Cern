@@ -1,0 +1,86 @@
+name: Fetch LHC telemetry (GitHub-only)
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # alle 5 Minuten (minimales GitHub-Intervall)
+  workflow_dispatch:        # manuell auslösbar
+
+permissions:
+  contents: write           # damit wir in data/ committen dürfen
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure data directory
+        run: mkdir -p data
+
+      - name: Fetch latest JSON (CERN Vistars mirror)
+        run: |
+          set -euo pipefail
+          curl -fsSL 'https://lhcstatus2.ovh/vistars.json' \
+            -H 'User-Agent: lhc-snapshot-bot (+https://github.com/${{ github.repository }})' \
+            -o data/latest.json.tmp
+          mv data/latest.json.tmp data/latest.json
+
+      - name: Update history (JSONL, keep last 24h)
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const pathLatest = 'data/latest.json';
+          const pathHist   = 'data/lhc_history.jsonl';
+
+          const raw = JSON.parse(fs.readFileSync(pathLatest,'utf8'));
+          const num = x => x==null ? null : (typeof x==='number'? x : (n=>isFinite(n)?n:null)(parseFloat(String(x).replace(',','.'))));
+          const pick = (o, rx) => {
+            const q=[o];
+            while(q.length){
+              const v=q.shift();
+              if (v && typeof v==='object'){
+                for(const [k,val] of Object.entries(v)){
+                  if(rx.test(k)){
+                    const maybe = typeof val==='number'? val : num(val?.value ?? val);
+                    if(maybe!=null) return maybe;
+                  }
+                  if (val && typeof val==='object') q.push(val);
+                }
+              }
+            }
+            return null;
+          };
+
+          const energy = num(pick(raw, /(^|_)energy($|_)|beam.?energy/i));
+          const ib1    = num(pick(raw, /(ib1|beam.?1.*(intensity|current))/i));
+          const ib2    = num(pick(raw, /(ib2|beam.?2.*(intensity|current))/i));
+          const lumi   = num(pick(raw, /lumi|luminosit/i));
+          const t      = Math.floor(Date.now()/1000);
+
+          // anhängen
+          const line = JSON.stringify({ t, energy, ib1, ib2, lumi }) + '\n';
+          try { fs.appendFileSync(pathHist, line); } catch {}
+
+          // auf letzte 24h trimmen
+          try {
+            const now   = t;
+            const lines = fs.readFileSync(pathHist,'utf8').split(/\r?\n/).filter(Boolean);
+            const kept  = lines.map(L=>JSON.parse(L))
+                               .filter(o => o && typeof o.t==='number' && o.t >= now - 24*3600);
+            fs.writeFileSync(pathHist, kept.map(o=>JSON.stringify(o)).join('\n') + '\n');
+          } catch(e) { /* ok wenn Datei noch nicht existiert */ }
+          NODE
+
+      - name: Commit & push if changed
+        run: |
+          if git diff --quiet -- data/; then
+            echo "No changes in data/"
+          else
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add data/latest.json data/lhc_history.jsonl
+            git commit -m "chore(data): update LHC snapshot [skip ci]"
+            git push
+          fi
