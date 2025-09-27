@@ -1336,16 +1336,16 @@
 
 
     <script>
-      /* === LHC · Live (X=lokale Uhrzeit, Tooltip mit Zeitpunkt, Pin on Click) === */
+      /* === LHC · Historie + Live · JSON-Quelle, Plot, Hover (X=Uhrzeit) ======= */
       (function(){
         // — Quelle über deinen Cloudflare-Worker —
         const VISTARS_BASE = 'https://lhc-proxy.leogad-59e.workers.dev';
         const SRC = `${VISTARS_BASE}/vistars.json`;
-      
+    
         // — Intervalle & optionale Historie-Datei aus dem Repo —
         const MIN_INTERVAL_MS = 30000;
-        const HISTORY_URL = '/data/lhc_history.jsonl'; // optional
-      
+        const HISTORY_URL = '/data/lhc_history.jsonl'; // optional; wenn fehlt -> still
+    
         // — UI-Hooks —
         const els = {
           canvas:  document.getElementById('tg-canvas'),
@@ -1356,16 +1356,7 @@
           status:  document.getElementById('tg-status'),
           btnNow:  document.getElementById('tg-refresh'),
         };
-      
-        // Einen kleinen „Pin“-Readout unter dem Chart anlegen (falls nicht vorhanden)
-        let pinEl = document.getElementById('tg-pin');
-        if (!pinEl) {
-          pinEl = document.createElement('div');
-          pinEl.id = 'tg-pin';
-          pinEl.style.cssText = 'margin:8px 0 4px; font:600 12px Inter,system-ui,sans-serif; color:var(--muted)';
-          els.wrap.insertAdjacentElement('afterend', pinEl);
-        }
-      
+    
         // — Y-Metriken —
         const METRICS = {
           energy: { label:'Energie',         unit:'GeV',      fmt:v=>v==null?'–':v.toFixed(1) },
@@ -1374,21 +1365,20 @@
           ib2:    { label:'IB2 (Intensität)',unit:'p (B2)',   fmt:v=>v==null?'–':Number(v).toExponential(2) },
           lumi:   { label:'Luminosität',     unit:'cm⁻²s⁻¹',  fmt:v=>v==null?'–':Number(v).toExponential(2) },
         };
-      
-        // — Fensterbreite (Anzeige bleibt Uhrzeit) —
+    
+        // — X-Fenster (die Auswahl steuert NUR die Fensterbreite; Anzeige = Uhrzeit) —
         const WINDOWS = {
           s:   { window: 5*60,  tick: 60 },     // 5 min
           min: { window: 60*60, tick: 10*60 },  // 60 min
           h:   { window: 6*3600,tick: 3600 },   // 6 h
         };
-      
+    
         // — State —
         let data = [];     // {t, energy, speed, ib1, ib2, lumi?}
         let timer = null;
         let yKey  = els.ySel.value;
         let xKey  = els.xSel.value;
-        let lastHover = null; // zuletzt „nearest“ für Pin
-      
+    
         /* === Helpers ============================================================ */
         const num = x => {
           if (x==null) return null;
@@ -1429,54 +1419,38 @@
           for(let v=tmin; v<=tmax+1e-9; v+=s) ticks.push(v);
           return ticks;
         }
+        // Uhrzeit-Formatter (lokal). Sekundengenau bei kurzen Fenstern.
         function fmtClock(ts, winSec){
-          const showSeconds = winSec <= 15*60;
+          const showSeconds = winSec <= 15*60; // bis 15 min inkl. Sekunden
           const opts = showSeconds
             ? { hour:'2-digit', minute:'2-digit', second:'2-digit' }
             : { hour:'2-digit', minute:'2-digit' };
           return new Date(ts*1000).toLocaleTimeString(undefined, opts);
         }
-        function fmtDateTime(ts, winSec){
-          const d = new Date(ts*1000);
-          const now = new Date();
-          const sameDay = d.toDateString() === now.toDateString();
-          const date = sameDay ? '' : d.toLocaleDateString();
-          const time = fmtClock(ts, winSec);
-          return (date ? (date+' · ') : '') + time;
-        }
-        function ago(ts){
-          const s = Math.max(0, Math.floor(Date.now()/1000) - ts);
-          if (s < 60) return `vor ${s}s`;
-          const m = Math.floor(s/60);
-          if (m < 60) return `vor ${m}m`;
-          const h = Math.floor(m/60);
-          const rm = m % 60;
-          return rm ? `vor ${h}h ${rm}m` : `vor ${h}h`;
-        }
-      
+    
         /* === Live-Fetch + Speicherung =========================================== */
         async function fetchLive(){
           const r = await fetch(SRC, { cache:'no-store' });
           if(!r.ok) throw new Error('HTTP '+r.status);
           const j = await r.json();
-      
+    
           const energyGeV = num(pickByRegex(j, /(^|_)energy($|_)|beam.?energy/i));
           const IB1       = num(pickByRegex(j, /(ib1|beam.?1.*(intensity|current))/i));
           const IB2       = num(pickByRegex(j, /(ib2|beam.?2.*(intensity|current))/i));
           const lumi      = num(pickByRegex(j, /lumi|luminosit/i)); // optional
-      
+    
           const t = Math.floor(Date.now()/1000);
           const speed = energyGeV!=null ? betaFromGeV(energyGeV) : null;
-      
+    
           data.push({ t, energy:energyGeV, speed, ib1:IB1, ib2:IB2, lumi });
           const cutoff = t - (6*3600 + 300);
           if (data.length>4) data = data.filter(d=>d.t>=cutoff);
-      
+    
           const next = Math.max(MIN_INTERVAL_MS, (j?.next ?? MIN_INTERVAL_MS));
           stamp(`aktualisiert · Δ${Math.round(next/1000)}s`);
           schedule(next);
         }
-      
+    
         /* === Canvas-Setup & Plot ================================================= */
         function setupCanvas(){
           const c = els.canvas, r = els.wrap.getBoundingClientRect(), k = dpr();
@@ -1492,30 +1466,32 @@
           const W = ctx.canvas.width/dpr(), H = ctx.canvas.height/dpr();
           const m = { l:64, r:16, t:22, b:40 };
           ctx.clearRect(0,0,W,H);
-      
+    
           const now = Math.floor(Date.now()/1000);
-          const { window:win, tick:xtick } = (WINDOWS[xKey]||WINDOWS.min);
+          const win = (WINDOWS[xKey]||WINDOWS.min).window;
+          const xtick = (WINDOWS[xKey]||WINDOWS.min).tick;
           const t0  = now - win;
-      
+    
           const vis = data.filter(d=>d.t>=t0);
           if(vis.length===0){
             ctx.fillStyle='var(--muted)'; ctx.font='600 14px Inter, system-ui, sans-serif';
             ctx.fillText('Warte auf Live-Daten …', m.l, H/2);
+            // Achsentitel trotzdem zeichnen
             ctx.textAlign='left';  ctx.fillText('Uhrzeit (lokal)', m.l, H-8);
             ctx.textAlign='right'; const meta=METRICS[yKey]||METRICS.energy;
             ctx.fillText(`${meta.label} [${meta.unit}]`, W-m.r, m.t-6);
             return;
           }
-      
+    
           const yVals = vis.map(d=>d[yKey]).filter(v=>v!=null);
           const ymin = Math.min(...yVals), ymax = Math.max(...yVals);
           const pad  = (ymax-ymin || 1) * 0.12;
           const y0 = ymin - pad, y1 = ymax + pad;
-      
+    
           const xToPx = t => m.l + ((t - t0)/win) * (W - m.l - m.r);
           const yToPx = v => H - m.b - ((v - y0)/(y1 - y0)) * (H - m.t - m.b);
-      
-          // Gitter + X=Uhrzeit
+    
+          // Gitter + Ticks
           ctx.strokeStyle = '#2d2d32'; ctx.lineWidth = 1;
           ctx.fillStyle = 'var(--muted)'; ctx.font='600 11px Inter, system-ui, sans-serif';
           ctx.textAlign='center';
@@ -1523,43 +1499,43 @@
           for(let t=xStart; t<=now; t+=xtick){
             const x=xToPx(t);
             ctx.beginPath(); ctx.moveTo(x,m.t); ctx.lineTo(x,H-m.b); ctx.stroke();
+            // Tick-Label (Uhrzeit)
             const label = fmtClock(t, win);
             ctx.fillText(label, x, H-4);
           }
-          // Y-Ticks
           ctx.textAlign='right';
           niceTicks(y0,y1,4).forEach(v=>{
             const y=yToPx(v);
             ctx.beginPath(); ctx.moveTo(m.l,y); ctx.lineTo(W-m.r,y); ctx.stroke();
             ctx.fillText(v.toFixed(2), m.l-6, y+3);
           });
-      
+    
           // Achsentitel
           const meta = METRICS[yKey] || METRICS.energy;
           ctx.fillStyle='var(--muted)'; ctx.font='600 12px Inter, system-ui, sans-serif';
           ctx.textAlign='left';  ctx.fillText('Uhrzeit (lokal)', m.l, H-22);
           ctx.textAlign='right'; ctx.fillText(`${meta.label} [${meta.unit}]`, W-m.r, m.t-8);
-      
+    
           // Linie
           ctx.beginPath();
           vis.forEach((d,i)=>{ if(d[yKey]==null) return; const x=xToPx(d.t), y=yToPx(d[yKey]); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
           ctx.strokeStyle='var(--accent)'; ctx.lineWidth=2;
           ctx.shadowColor='rgba(125,211,252,.25)'; ctx.shadowBlur=8; ctx.stroke(); ctx.shadowBlur=0;
-      
+    
           // Punkte
           ctx.fillStyle='rgba(125,211,252,.9)';
           vis.forEach(d=>{ if(d[yKey]==null) return; const x=xToPx(d.t), y=yToPx(d[yKey]); ctx.beginPath(); ctx.arc(x,y,2.2,0,Math.PI*2); ctx.fill(); });
         }
-      
-        /* === Hover + Pin (zeigt Zeitpunkt der Messung) =========================== */
+    
+        /* === Hover: Crosshair + Tooltip (Uhrzeit) ================================ */
         function bindPointer(){
           const c=els.canvas, tip=els.tip;
-      
+    
           function nearestAt(clientX){
             const rect=c.getBoundingClientRect(), x=(clientX-rect.left);
             const W=rect.width, m={ l:64, r:16, t:22, b:40 };
             const now=Math.floor(Date.now()/1000),
-                  { window:win }=(WINDOWS[xKey]||WINDOWS.min),
+                  win=(WINDOWS[xKey]||WINDOWS.min).window,
                   t0=now-win;
             const pxToT = px => t0 + ((px - m.l)/(W - m.l - m.r))*win;
             const t = Math.max(t0, Math.min(now, pxToT(x)));
@@ -1570,60 +1546,45 @@
             const a=Math.max(0,lo-1), b=Math.min(vis.length-1,lo);
             return Math.abs(vis[b].t - t) < Math.abs(vis[a].t - t) ? vis[b] : vis[a];
           }
-      
-          function drawCrosshairFor(n){
+    
+          function onMoveBase(clientX){
+            const n = nearestAt(clientX);
+            if(!n){ tip.style.display='none'; render(); return; }
+    
             render();
             const ctx=c.getContext('2d'), rect=c.getBoundingClientRect(), k=dpr();
             const W=rect.width, H=rect.height, m={ l:64, r:16, t:22, b:40 };
             const now=Math.floor(Date.now()/1000),
-                  { window:win }=(WINDOWS[xKey]||WINDOWS.min),
+                  win=(WINDOWS[xKey]||WINDOWS.min).window,
                   t0=now-win;
-      
+    
             const vis=data.filter(d=>d.t>=t0);
             const vals=vis.map(d=>d[yKey]).filter(v=>v!=null);
             const ymin=Math.min(...vals), ymax=Math.max(...vals);
             const pad=(ymax-ymin||1)*0.12, y0=ymin-pad, y1=ymax+pad;
-      
+    
             const xToPx=t=>m.l+((t-t0)/win)*(W-m.l-m.r);
             const yToPx=v=>H-m.b-((v-y0)/(y1-y0))*(H-m.t-m.b);
             const x=xToPx(n.t), y=yToPx(n[yKey]);
-      
+    
             ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.scale(k,k);
             ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1;
             ctx.beginPath(); ctx.moveTo(x,m.t); ctx.lineTo(x,H-m.b); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(m.l,y); ctx.lineTo(W-m.r,y); ctx.stroke();
             ctx.restore();
-          }
-      
-          function onMove(clientX){
-            const n = nearestAt(clientX);
-            lastHover = n;
-            if(!n){ tip.style.display='none'; render(); return; }
-            drawCrosshairFor(n);
-            const { window:win }=(WINDOWS[xKey]||WINDOWS.min);
+    
             const meta = METRICS[yKey] || METRICS.energy;
-            tip.innerHTML = `<b>${meta.label}</b><br>
-              <span class="muted">Zeit:</span> ${fmtDateTime(n.t, win)} (${ago(n.t)})<br>
-              <span class="muted">Wert:</span> ${meta.fmt(n[yKey])} ${meta.unit}`;
+            tip.innerHTML = `<b>${meta.label}</b><br><span class="muted">Zeit:</span> ${fmtClock(n.t, win)} · <span class="muted">Wert:</span> ${meta.fmt(n[yKey])} ${meta.unit}`;
             tip.style.display='block';
           }
-      
-          function setPin(n){
-            if(!n){ pinEl.textContent=''; return; }
-            const { window:win }=(WINDOWS[xKey]||WINDOWS.min);
-            const meta = METRICS[yKey] || METRICS.energy;
-            pinEl.textContent = `Fixiert · ${meta.label}: ${meta.fmt(n[yKey])} ${meta.unit} · Zeitpunkt: ${fmtDateTime(n.t, win)} (${ago(n.t)})`;
-          }
-      
-          // Events
-          c.addEventListener('mousemove', e=>onMove(e.clientX), { passive:true });
+    
+          c.addEventListener('mousemove', e=>onMoveBase(e.clientX), { passive:true });
           c.addEventListener('mouseleave', ()=>{ els.tip.style.display='none'; render(); }, { passive:true });
-          c.addEventListener('touchstart', e=>{ if(e.touches[0]) onMove(e.touches[0].clientX); }, { passive:true });
-          c.addEventListener('touchmove',  e=>{ if(e.touches[0]) onMove(e.touches[0].clientX); }, { passive:true });
+          c.addEventListener('touchstart', e=>{ if(e.touches[0]) onMoveBase(e.touches[0].clientX); }, { passive:true });
+          c.addEventListener('touchmove',  e=>{ if(e.touches[0]) onMoveBase(e.touches[0].clientX); }, { passive:true });
           c.addEventListener('touchend',   ()=>{ els.tip.style.display='none'; render(); }, { passive:true });
-          c.addEventListener('click',      ()=> setPin(lastHover));
         }
-      
+    
         /* === Historie laden (optional) + Init =================================== */
         async function loadHistory(){
           try{
@@ -1646,7 +1607,7 @@
             console.warn('Historie nicht verfügbar:', e);
           }
         }
-      
+    
         /* === Status + Timer + Start ============================================= */
         function stamp(msg){
           const d=new Date();
@@ -1660,18 +1621,19 @@
         async function initWithHistory(){
           bindPointer();
           window.addEventListener('resize', render);
-          els.ySel.addEventListener('change', ()=>{ yKey = els.ySel.value; render(); pinEl.textContent=''; });
-          els.xSel.addEventListener('change', ()=>{ xKey = els.xSel.value; render(); pinEl.textContent=''; });
+          els.ySel.addEventListener('change', ()=>{ yKey = els.ySel.value; render(); });
+          els.xSel.addEventListener('change', ()=>{ xKey = els.xSel.value; render(); });
           els.btnNow.addEventListener('click', ()=>fetchLive().catch(()=>{}));
-      
+    
           await loadHistory();          // letzte Stunde (falls Datei vorhanden)
           await fetchLive().catch(()=>{}); // sofort 1 Live-Sample
         }
-      
+    
         // — Start —
         initWithHistory();
       })();
     </script>
+
 
 
   
@@ -1680,6 +1642,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
   </body>
 </html>
+
 
 
 
