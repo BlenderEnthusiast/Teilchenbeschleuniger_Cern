@@ -1,12 +1,12 @@
-name: Fetch LHC snapshot
+name: Fetch LHC data (every 5 min)
 
 on:
   schedule:
-    - cron: "*/5 * * * *"   # alle 5 Minuten (Minuten-Granularität ist bei Actions realistischer)
-  workflow_dispatch: {}
+    - cron: "*/5 * * * *"     # alle 5 Minuten
+  workflow_dispatch: {}       # manuell startbar
 
 permissions:
-  contents: write
+  contents: write             # damit wir committen dürfen
 
 jobs:
   fetch:
@@ -14,29 +14,71 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fetch latest JSON
-        run: |
-          mkdir -p data
-          curl -fsSL https://lhcstatus2.ovh/vistars.json -o data/latest.json
-          # Wenn du zusätzlich „history“ pflegen willst:
-          TS=$(date +%s)
-          # einfache Extraktion einiger Zahlen (robust genug für Verlauf)
-          E=$(jq -r '..|.energy? // empty' data/latest.json | head -n1)
-          IB1=$(jq -r '..|.ib1? // empty' data/latest.json | head -n1)
-          IB2=$(jq -r '..|.ib2? // empty' data/latest.json | head -n1)
-          LUMI=$(jq -r '..|.lumi? // empty' data/latest.json | head -n1)
-          # Zeile anhängen (nur wenn mind. ein Wert vorhanden ist)
-          echo "{\"t\":$TS,\"energy\":${E:-null},\"ib1\":${IB1:-null},\"ib2\":${IB2:-null},\"lumi\":${LUMI:-null}}" >> data/lhc_history.jsonl
-          # optional: History auf letzte 24h „trimmen“
-          tail -n 1000 data/lhc_history.jsonl > data/lhc_history.tmp && mv data/lhc_history.tmp data/lhc_history.jsonl
+      # optional, falls jq fehlt (meist nicht nötig):
+      # - name: Install jq
+      #   run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Commit & push
+      - name: Ensure data folder exists
+        run: mkdir -p data
+
+      - name: Fetch latest JSON (direkt von lhcstatus2.ovh)
+        run: |
+          curl -fsSL https://lhcstatus2.ovh/vistars.json -o data/latest.json
+
+      - name: Append one history line (robust extraction via Node)
+        run: |
+          test -f data/lhc_history.jsonl || touch data/lhc_history.jsonl
+          node - <<'NODE'
+          const fs = require('fs');
+          const raw = JSON.parse(fs.readFileSync('data/latest.json','utf8'));
+
+          function num(x){
+            if (x == null) return null;
+            if (typeof x === 'number' && Number.isFinite(x)) return x;
+            const n = parseFloat(String(x).replace(',','.'));
+            return Number.isFinite(n) ? n : null;
+          }
+          function pickByRegex(obj, rx){
+            const q=[obj];
+            while(q.length){
+              const o=q.shift();
+              if (o && typeof o === 'object'){
+                for (const [k,v] of Object.entries(o)){
+                  if (rx.test(k)){
+                    if (typeof v === 'number') return v;
+                    const n = num(v && typeof v === 'object' && 'value' in v ? v.value : v);
+                    if (n != null) return n;
+                  }
+                  if (v && typeof v === 'object') q.push(v);
+                }
+              }
+            }
+            return null;
+          }
+
+          const E   = pickByRegex(raw, /(^|_)energy($|_)|beam.?energy/i);
+          const IB1 = pickByRegex(raw, /(ib1|beam.?1.*(intensity|current))/i);
+          const IB2 = pickByRegex(raw, /(ib2|beam.?2.*(intensity|current))/i);
+          const LUMI= pickByRegex(raw, /lumi|luminosit/i);
+          const t   = Math.floor(Date.now()/1000);
+
+          const line = { t, energy: E ?? null, ib1: IB1 ?? null, ib2: IB2 ?? null, lumi: LUMI ?? null };
+          fs.appendFileSync('data/lhc_history.jsonl', JSON.stringify(line) + '\n');
+          NODE
+
+      - name: Trim history (≈ letzte 24h bei 5-min Intervall)
+        run: |
+          # ca. 12 Punkte pro Stunde * 24 = 288 → + Puffer:
+          tail -n 320 data/lhc_history.jsonl > data/_tmp && mv data/_tmp data/lhc_history.jsonl
+
+      - name: Commit & push if changed
         run: |
           if [[ -n "$(git status --porcelain data)" ]]; then
-            git config user.name "github-actions[bot]"
+            git config user.name  "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add data/latest.json data/lhc_history.jsonl
-            git commit -m "Update LHC data $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+            git commit -m "Update LHC data ($(date -u +'%Y-%m-%dT%H:%M:%SZ'))"
             git push
           fi
+
 
