@@ -228,12 +228,49 @@
         box-shadow: none !important;
         -webkit-tap-highlight-color: transparent;
       }
-    </style>
-    <style>
-    /* === LIVE · Telemetrie · Styles ========================================== */
-    #tg-canvas{ touch-action:none; }
-    #tg-tip b{ font-weight:700 }
-    #tg-tip .muted{ color:var(--muted) }
+
+      /* === LIVE · Telemetrie · Styles ========================================== */
+      #tg-canvas{ touch-action:none; }
+      #tg-tip b{ font-weight:700 }
+      #tg-tip .muted{ color:var(--muted) }
+      /* ===== Quellen-Switch (iOS Style) ===== */
+      .sources-toggle{
+        display:flex; align-items:center; gap:10px;
+        padding:6px 10px; border:1px solid var(--line); border-radius:999px;
+        background:var(--card);
+      }
+      .sources-toggle .label{ font-size:13px; color:var(--muted); }
+      
+      /* iOS switch */
+      .switch{ position:relative; width:46px; height:26px; display:inline-block; }
+      .switch input{ display:none; }
+      .switch .slider{
+        position:absolute; inset:0; border-radius:999px;
+        background:#3a3a3f; transition:background .2s ease;
+        box-shadow: inset 0 0 0 1px var(--line);
+      }
+      .switch .slider::before{
+        content:""; position:absolute; height:22px; width:22px; left:2px; top:2px;
+        background:#fff; border-radius:50%; transition:transform .2s ease;
+        box-shadow:0 1px 3px rgba(0,0,0,.35);
+      }
+      .switch input:checked + .slider{ background:#22c55e; box-shadow:none; }
+      .switch input:checked + .slider::before{ transform:translateX(20px); }
+      
+      /* Quellen-Box unter Sektionen */
+      .sources-block{
+        display:none; margin-top:14px; padding:12px 14px;
+        border:1px dashed var(--line); border-radius:14px; background:rgba(255,255,255,.03);
+      }
+      .sources-block h4{ margin:0 0 8px; font-size:14px; letter-spacing:.01em; }
+      .sources-block ul{ margin:0; padding-left:18px; }
+      .sources-block li{ margin:4px 0; color:var(--muted); }
+      .sources-block a{ color:#9ecbff; text-decoration:none; }
+      .sources-block a:hover{ text-decoration:underline; }
+      
+      /* Schalter aktiviert globale Anzeige */
+      body.show-sources .sources-block{ display:block; }
+
     </style>
   </head>
   <body>
@@ -242,6 +279,13 @@
       <div class="nav container">
         <div>Beschleuniger</div>
         <nav aria-label="Hauptnavigation">
+          <div class="sources-toggle" role="group" aria-label="Quellen anzeigen">
+            <span class="label">Quellen</span>
+            <label class="switch" title="Quellen ein-/ausblenden">
+              <input id="sources-switch" type="checkbox" aria-checked="false" />
+              <span class="slider" aria-hidden="true"></span>
+            </label>
+          </div>
           <a href="#cern-teile">Einleitung</a>
           <a href="#timeline">Timeline</a>
           <a href="#chain-switch">Beschleunigerkette</a>
@@ -306,6 +350,14 @@
               <p>Quellen & Arbeitsnachweise</p>
             </a>
           </div>
+        </div>
+        <div class="sources-block" aria-label="Quellen dieser Sektion">
+          <h4>Quellen</h4>
+          <ul>
+            <li>
+              <a href="X_URL" target="_blank" rel="noopener">X – Titel der Quelle</a> — Y: kurze Beschreibung der Quelle / wofür sie genutzt wurde.
+            </li>
+          </ul>
         </div>
       </section>
 
@@ -1784,19 +1836,34 @@
         init();
       })();
     </script>
-
-
-
-
-
-
-
-  
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+    <script defer>
+      (function(){
+        const KEY = 'show_sources_v1';
+        const el  = document.getElementById('sources-switch');
+        if(!el) return;
+    
+        // Zustand laden + anwenden
+        const saved = localStorage.getItem(KEY);
+        const on = saved === '1';
+        document.body.classList.toggle('show-sources', on);
+        el.checked = on;
+        el.setAttribute('aria-checked', on ? 'true' : 'false');
+    
+        // Änderungen speichern
+        el.addEventListener('change', () => {
+          const enabled = el.checked;
+          document.body.classList.toggle('show-sources', enabled);
+          el.setAttribute('aria-checked', enabled ? 'true' : 'false');
+          try{ localStorage.setItem(KEY, enabled ? '1' : '0'); }catch{}
+        });
+      })();
+    </script>
   </body>
 </html>
+
 
 
 
