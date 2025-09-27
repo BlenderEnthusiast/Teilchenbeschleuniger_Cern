@@ -315,7 +315,9 @@
       .sources-list{ margin:0; padding-left:18px; }
       .sources-list li{ margin:6px 0; line-height:1.5; }
       
+      body[data-show-sources="true"] .sources-block{ display:block; }
       body:not([data-show-sources="true"]) .sources-toggleable{ display:none; }
+
 
     </style>
   </head>
@@ -334,7 +336,7 @@
           <span class="nav-sources">
             <a href="#sources">Quellen</a>
             <label class="switch" title="Quellen ein-/ausblenden">
-              <input id="sources-switch" type="checkbox" aria-checked="false" />
+              <input id="sources-switch" type="checkbox" role="switch" aria-label="Quellen ein-/ausblenden">
               <span class="slider" aria-hidden="true"></span>
             </label>
           </span>
@@ -1902,17 +1904,9 @@
       const sw   = document.getElementById('sources-switch');
       const KEY  = 'show_sources_v1';
     
-      function apply(on){
-        if(on){
-          body.setAttribute('data-show-sources','true');
-          sw.checked = true;
-          sw.setAttribute('aria-checked','true');
-        }else{
-          body.removeAttribute('data-show-sources');
-          sw.checked = false;
-          sw.setAttribute('aria-checked','false');
-        }
-      }
+      const KEY='show_sources_v2'; 
+    
+
     
       // initial laden
       apply(localStorage.getItem(KEY) === '1');
@@ -1927,6 +1921,7 @@
     </script>
   </body>
 </html>
+
 
 
 
