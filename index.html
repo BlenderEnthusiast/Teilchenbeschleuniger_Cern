@@ -1339,9 +1339,12 @@
     <script>
       (function(){
         /* ================== Quellen & Pfade ===================================== */
-        const SRC = 'https://lhc-proxy.leogad-59e.workers.dev/vistars'; // via Cloudflare Worker
-        const HISTORY_URL = 'data/lhc_history.jsonl';                    // optionales JSONL im Repo
-        const MIN_INTERVAL_MS = 30000;                                   // min. Poll-Intervall
+        const VISTARS_BASE = 'https://lhc-proxy.leogad-59e.workers.dev';
+        const SRC = `${VISTARS_BASE}/vistars.json`;
+        
+        // wichtig: relativ, ohne führenden Slash
+        const HISTORY_URL = 'data/lhc_history.jsonl';
+                                  // min. Poll-Intervall
       
         /* ================== UI-Hooks ============================================ */
         const els = {
@@ -1717,6 +1720,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
   </body>
 </html>
+
 
 
 
