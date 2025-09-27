@@ -270,6 +270,41 @@
       
       /* Schalter aktiviert globale Anzeige */
       body.show-sources .sources-block{ display:block; }
+      /* Subsection divider with a labeled chip */
+      .subsection-sep{
+        position:relative;
+        height:22px;
+        margin:28px 0 12px;
+      }
+      .subsection-sep::before{
+        content:"";
+        position:absolute; inset:auto 0 10px 0;
+        height:1px;
+        background:linear-gradient(90deg, transparent, var(--line), transparent);
+      }
+      .subsection-sep .chip{
+        position:absolute; left:0; bottom:0;
+        display:inline-flex; align-items:center; gap:8px;
+        padding:6px 10px; border-radius:999px;
+        border:1px solid var(--line);
+        background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+        font-size:12px; font-weight:700; letter-spacing:.04em;
+      }
+      .subsection-sep .chip .dot{
+        width:8px; height:8px; border-radius:50%;
+        background:var(--accent);
+        box-shadow:0 0 0 4px rgba(125,211,252,.18);
+      }
+      
+      /* Sources block styling (card-like) */
+      .sources-block{ margin-top:8px; border:1px dashed var(--line); border-radius:14px; padding:14px 16px; }
+      .sources-block h5{ margin:0 0 6px; font-size:13px; color:var(--muted); letter-spacing:.06em; text-transform:uppercase; }
+      .sources-list{ margin:0; padding-left:18px; }
+      .sources-list li{ margin:6px 0; line-height:1.5; }
+      
+      /* Respect your header toggle: hide both divider and block when off */
+      body:not([data-show-sources="true"]) .sources-toggleable{ display:none; }
+
 
     </style>
   </head>
@@ -350,14 +385,24 @@
               <p>Quellen & Arbeitsnachweise</p>
             </a>
           </div>
-          <div class="sources-block" aria-label="Quellen dieser Sektion">
-            <h4>Quellen</h4>
-            <ul>
-              <li>
-                <a href="X_URL" target="_blank" rel="noopener">X – Titel der Quelle</a> — Y: kurze Beschreibung der Quelle / wofür sie genutzt wurde.
-              </li>
-            </ul>
-          </div>
+            <div class="sources-toggleable">
+              <div class="subsection-sep" aria-hidden="true">
+                <span class="chip"><span class="dot" aria-hidden="true"></span>Quellen</span>
+              </div>
+            
+              <div class="sources-block card" aria-label="Quellen dieser Sektion">
+                <h5>Verwendete Quellen</h5>
+                <ul class="sources-list">
+                  <li>
+                    <a href="https://example.com" target="_blank" rel="noopener noreferrer">
+                      X – Titel der Quelle
+                    </a>
+                    — Y: kurze Beschreibung, wofür diese Quelle hier genutzt wurde.
+                  </li>
+                </ul>
+              </div>
+            </div>
+
         </div>
         
       </section>
@@ -1864,6 +1909,7 @@
     </script>
   </body>
 </html>
+
 
 
 
