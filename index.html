@@ -1899,28 +1899,41 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
     <script>
-    (function(){
-      const body = document.body;
-      const sw   = document.getElementById('sources-switch');
-      const KEY  = 'show_sources_v1';
-    
-      const KEY='show_sources_v2'; 
-    
-
-    
-      // initial laden
-      apply(localStorage.getItem(KEY) === '1');
-    
-      // ändern + speichern
-      sw.addEventListener('change', ()=>{
-        const on = sw.checked;
-        apply(on);
-        try{ localStorage.setItem(KEY, on ? '1' : '0'); }catch{}
-      });
-    })();
+      (function(){
+        const body = document.body;
+        const sw   = document.getElementById('sources-switch');
+      
+        function apply(on){
+          if(on){
+            body.setAttribute('data-show-sources','true');
+            if(sw){ sw.checked = true; sw.setAttribute('aria-checked','true'); }
+          }else{
+            body.removeAttribute('data-show-sources');
+            if(sw){ sw.checked = false; sw.setAttribute('aria-checked','false'); }
+          }
+        }
+      
+        // Immer OFF beim Laden
+        apply(false);
+      
+        // Optional: alte Persistenz-Schlüssel aufräumen
+        try{
+          localStorage.removeItem('show_sources_v1');
+          localStorage.removeItem('show_sources_v2');
+        }catch{}
+      
+        // Toggle nur für die aktuelle Sitzung (ohne Persistenz)
+        if(sw){
+          sw.addEventListener('change', ()=>{
+            apply(!!sw.checked);
+          });
+        }
+      })();
     </script>
+
   </body>
 </html>
+
 
 
 
