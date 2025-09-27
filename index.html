@@ -278,14 +278,7 @@
     <header class="header">
       <div class="nav container">
         <div>Beschleuniger</div>
-        <nav aria-label="Hauptnavigation">
-          <div class="sources-toggle" role="group" aria-label="Quellen anzeigen">
-            <span class="label">Quellen</span>
-            <label class="switch" title="Quellen ein-/ausblenden">
-              <input id="sources-switch" type="checkbox" aria-checked="false" />
-              <span class="slider" aria-hidden="true"></span>
-            </label>
-          </div>
+        <nav aria-label="Hauptnavigation"> 
           <a href="#cern-teile">Einleitung</a>
           <a href="#timeline">Timeline</a>
           <a href="#chain-switch">Beschleunigerkette</a>
@@ -293,6 +286,13 @@
           <a href="#acceleration-chain">Detektoren</a>
           <a href="#collision-detector">Kollision</a>
           <a href="#sources">Quellen</a>
+          <div class="sources-toggle" role="group" aria-label="Quellen anzeigen">
+            <span class="label">Quellen</span>
+            <label class="switch" title="Quellen ein-/ausblenden">
+              <input id="sources-switch" type="checkbox" aria-checked="false" />
+              <span class="slider" aria-hidden="true"></span>
+            </label>
+          </div>
         </nav>
       </div>
     </header>
@@ -350,15 +350,16 @@
               <p>Quellen & Arbeitsnachweise</p>
             </a>
           </div>
+          <div class="sources-block" aria-label="Quellen dieser Sektion">
+            <h4>Quellen</h4>
+            <ul>
+              <li>
+                <a href="X_URL" target="_blank" rel="noopener">X – Titel der Quelle</a> — Y: kurze Beschreibung der Quelle / wofür sie genutzt wurde.
+              </li>
+            </ul>
+          </div>
         </div>
-        <div class="sources-block" aria-label="Quellen dieser Sektion">
-          <h4>Quellen</h4>
-          <ul>
-            <li>
-              <a href="X_URL" target="_blank" rel="noopener">X – Titel der Quelle</a> — Y: kurze Beschreibung der Quelle / wofür sie genutzt wurde.
-            </li>
-          </ul>
-        </div>
+        
       </section>
 
       <!-- ================= TIMELINE ================= -->
@@ -1863,6 +1864,7 @@
     </script>
   </body>
 </html>
+
 
 
 
