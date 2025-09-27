@@ -1338,10 +1338,18 @@
     <script>
       /* === LHC · Historie + Live · JSON-Quelle, Plot, Hover (X=Uhrzeit) ======= */
       (function(){
-        const SRC = '/data/latest.json';
-        const HISTORY_URL = '/data/lhc_history.jsonl';
-        const MIN_INTERVAL_MS = 120000; // 2 min – Fallback/Poll-Intervall im Frontend
-    
+        // --- Basis: Repo-relativer Pfad (funktioniert unter GitHub Pages Projektseiten) ---
+        const ROOT = (()=>{
+          const p = location.pathname;
+          return p.endsWith('/') ? p : p.replace(/[^/]+$/, '');
+        })();
+      
+        const SRC         = `${ROOT}data/latest.json`;        // <- statt /data/...
+        const HISTORY_URL = `${ROOT}data/lhc_history.jsonl`;  // <- statt /data/...
+      
+        // Minimales Pollingintervall (falls keine Angabe in JSON)
+        const MIN_INTERVAL_MS = 30_000;
+      
         // — UI-Hooks —
         const els = {
           canvas:  document.getElementById('tg-canvas'),
@@ -1352,30 +1360,29 @@
           status:  document.getElementById('tg-status'),
           btnNow:  document.getElementById('tg-refresh'),
         };
-    
+      
         // — Y-Metriken —
         const METRICS = {
-          energy: { label:'Energie',            unit:'GeV',      fmt:v=>v==null?'–':v.toFixed(1) },
-          // WICHTIG: wir plotteten β (0..1), daher label+unit als v/c
-          speed:  { label:'Geschwindigkeit β',  unit:'v/c',      fmt:v=>v==null?'–':v.toFixed(6) },
-          ib1:    { label:'IB1 (Intensität)',   unit:'p (B1)',   fmt:v=>v==null?'–':Number(v).toExponential(2) },
-          ib2:    { label:'IB2 (Intensität)',   unit:'p (B2)',   fmt:v=>v==null?'–':Number(v).toExponential(2) },
-          lumi:   { label:'Luminosität',        unit:'cm⁻²·s⁻¹', fmt:v=>v==null?'–':Number(v).toExponential(2) },
+          energy: { label:'Energie',         unit:'GeV',      fmt:v=>v==null?'–':v.toFixed(1) },
+          speed:  { label:'Geschwindigkeit', unit:'% c',      fmt:v=>v==null?'–':(v*100).toFixed(6) },
+          ib1:    { label:'IB1 (Intensität)',unit:'p (B1)',   fmt:v=>v==null?'–':Number(v).toExponential(2) },
+          ib2:    { label:'IB2 (Intensität)',unit:'p (B2)',   fmt:v=>v==null?'–':Number(v).toExponential(2) },
+          lumi:   { label:'Luminosität',     unit:'cm⁻²s⁻¹',  fmt:v=>v==null?'–':Number(v).toExponential(2) },
         };
-    
-        // — X-Fenster (die Auswahl steuert NUR die Fensterbreite; Anzeige = Uhrzeit) —
+      
+        // — X-Fenster (Anzeige x-Achse = Uhrzeit) —
         const WINDOWS = {
-          s:   { window: 5*60,  tick: 60 },     // 5 min
-          min: { window: 60*60, tick: 10*60 },  // 60 min
-          h:   { window: 6*3600,tick: 3600 },   // 6 h
+          s:   { window: 5*60,  tick: 60 },
+          min: { window: 60*60, tick: 10*60 },
+          h:   { window: 6*3600,tick: 3600 },
         };
-    
+      
         // — State —
         let data = [];     // {t, energy, speed, ib1, ib2, lumi?}
         let timer = null;
         let yKey  = els.ySel.value;
         let xKey  = els.xSel.value;
-    
+      
         /* === Helpers ============================================================ */
         const num = x => {
           if (x==null) return null;
@@ -1416,14 +1423,6 @@
           for(let v=tmin; v<=tmax+1e-9; v+=s) ticks.push(v);
           return ticks;
         }
-        // Y-Tick-Format dynamisch (β fein; große Zahlen exponentiell)
-        function fmtYTick(v){
-          if (yKey === 'speed') return v.toFixed(6);
-          const av = Math.abs(v);
-          if (av >= 1e4 || (av>0 && av<1e-3)) return v.toExponential(1);
-          return v.toFixed(2);
-        }
-        // Uhrzeit-Formatter (lokal). Sekunden bis 15-min Fenster.
         function fmtClock(ts, winSec){
           const showSeconds = winSec <= 15*60;
           const opts = showSeconds
@@ -1431,31 +1430,30 @@
             : { hour:'2-digit', minute:'2-digit' };
           return new Date(ts*1000).toLocaleTimeString(undefined, opts);
         }
-    
+      
         /* === Live-Fetch + Speicherung =========================================== */
         async function fetchLive(){
-          const r = await fetch(`${SRC}?b=${Date.now()}`, { cache:'no-store' });
+          const r = await fetch(SRC, { cache:'no-store' });
           if(!r.ok) throw new Error('HTTP '+r.status);
           const j = await r.json();
-    
+      
           const energyGeV = num(pickByRegex(j, /(^|_)energy($|_)|beam.?energy/i));
           const IB1       = num(pickByRegex(j, /(ib1|beam.?1.*(intensity|current))/i));
           const IB2       = num(pickByRegex(j, /(ib2|beam.?2.*(intensity|current))/i));
           const lumi      = num(pickByRegex(j, /lumi|luminosit/i)); // optional
-    
+      
           const t = Math.floor(Date.now()/1000);
           const speed = energyGeV!=null ? betaFromGeV(energyGeV) : null;
-    
+      
           data.push({ t, energy:energyGeV, speed, ib1:IB1, ib2:IB2, lumi });
           const cutoff = t - (6*3600 + 300);
           if (data.length>4) data = data.filter(d=>d.t>=cutoff);
-    
-          // GitHub-Action-Snapshots haben i.d.R. kein "next" → Fallback
+      
           const next = Math.max(MIN_INTERVAL_MS, (j?.next ?? MIN_INTERVAL_MS));
           stamp(`aktualisiert · Δ${Math.round(next/1000)}s`);
           schedule(next);
         }
-    
+      
         /* === Canvas-Setup & Plot ================================================= */
         function setupCanvas(){
           const c = els.canvas, r = els.wrap.getBoundingClientRect(), k = dpr();
@@ -1471,31 +1469,30 @@
           const W = ctx.canvas.width/dpr(), H = ctx.canvas.height/dpr();
           const m = { l:64, r:16, t:22, b:40 };
           ctx.clearRect(0,0,W,H);
-    
+      
           const now = Math.floor(Date.now()/1000);
           const win = (WINDOWS[xKey]||WINDOWS.min).window;
           const xtick = (WINDOWS[xKey]||WINDOWS.min).tick;
           const t0  = now - win;
-    
+      
           const vis = data.filter(d=>d.t>=t0);
           if(vis.length===0){
             ctx.fillStyle='var(--muted)'; ctx.font='600 14px Inter, system-ui, sans-serif';
             ctx.fillText('Warte auf Live-Daten …', m.l, H/2);
-            // Achsentitel trotzdem zeichnen
             ctx.textAlign='left';  ctx.fillText('Uhrzeit (lokal)', m.l, H-8);
             ctx.textAlign='right'; const meta=METRICS[yKey]||METRICS.energy;
             ctx.fillText(`${meta.label} [${meta.unit}]`, W-m.r, m.t-6);
             return;
           }
-    
+      
           const yVals = vis.map(d=>d[yKey]).filter(v=>v!=null);
           const ymin = Math.min(...yVals), ymax = Math.max(...yVals);
           const pad  = (ymax-ymin || 1) * 0.12;
           const y0 = ymin - pad, y1 = ymax + pad;
-    
+      
           const xToPx = t => m.l + ((t - t0)/win) * (W - m.l - m.r);
           const yToPx = v => H - m.b - ((v - y0)/(y1 - y0)) * (H - m.t - m.b);
-    
+      
           // Gitter + X-Ticks (Uhrzeit)
           ctx.strokeStyle = '#2d2d32'; ctx.lineWidth = 1;
           ctx.fillStyle = 'var(--muted)'; ctx.font='600 11px Inter, system-ui, sans-serif';
@@ -1504,38 +1501,36 @@
           for(let t=xStart; t<=now; t+=xtick){
             const x=xToPx(t);
             ctx.beginPath(); ctx.moveTo(x,m.t); ctx.lineTo(x,H-m.b); ctx.stroke();
-            const label = fmtClock(t, win);
-            ctx.fillText(label, x, H-4);
+            ctx.fillText(fmtClock(t, win), x, H-4);
           }
-          // Y-Ticks
+          // Y-Gitter
           ctx.textAlign='right';
           niceTicks(y0,y1,4).forEach(v=>{
             const y=yToPx(v);
             ctx.beginPath(); ctx.moveTo(m.l,y); ctx.lineTo(W-m.r,y); ctx.stroke();
-            ctx.fillText(fmtYTick(v), m.l-6, y+3);
+            ctx.fillText(v.toFixed(2), m.l-6, y+3);
           });
-    
+      
           // Achsentitel
           const meta = METRICS[yKey] || METRICS.energy;
           ctx.fillStyle='var(--muted)'; ctx.font='600 12px Inter, system-ui, sans-serif';
           ctx.textAlign='left';  ctx.fillText('Uhrzeit (lokal)', m.l, H-22);
           ctx.textAlign='right'; ctx.fillText(`${meta.label} [${meta.unit}]`, W-m.r, m.t-8);
-    
-          // Linie
+      
+          // Linie + Punkte
           ctx.beginPath();
           vis.forEach((d,i)=>{ if(d[yKey]==null) return; const x=xToPx(d.t), y=yToPx(d[yKey]); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
           ctx.strokeStyle='var(--accent)'; ctx.lineWidth=2;
           ctx.shadowColor='rgba(125,211,252,.25)'; ctx.shadowBlur=8; ctx.stroke(); ctx.shadowBlur=0;
-    
-          // Punkte
+      
           ctx.fillStyle='rgba(125,211,252,.9)';
           vis.forEach(d=>{ if(d[yKey]==null) return; const x=xToPx(d.t), y=yToPx(d[yKey]); ctx.beginPath(); ctx.arc(x,y,2.2,0,Math.PI*2); ctx.fill(); });
         }
-    
+      
         /* === Hover: Crosshair + Tooltip (Uhrzeit) ================================ */
         function bindPointer(){
           const c=els.canvas, tip=els.tip;
-    
+      
           function nearestAt(clientX){
             const rect=c.getBoundingClientRect(), x=(clientX-rect.left);
             const W=rect.width, m={ l:64, r:16, t:22, b:40 };
@@ -1551,45 +1546,45 @@
             const a=Math.max(0,lo-1), b=Math.min(vis.length-1,lo);
             return Math.abs(vis[b].t - t) < Math.abs(vis[a].t - t) ? vis[b] : vis[a];
           }
-    
+      
           function onMoveBase(clientX){
             const n = nearestAt(clientX);
             if(!n){ tip.style.display='none'; render(); return; }
-    
+      
             render();
             const ctx=c.getContext('2d'), rect=c.getBoundingClientRect(), k=dpr();
             const W=rect.width, H=rect.height, m={ l:64, r:16, t:22, b:40 };
             const now=Math.floor(Date.now()/1000),
                   win=(WINDOWS[xKey]||WINDOWS.min).window,
                   t0=now-win;
-    
+      
             const vis=data.filter(d=>d.t>=t0);
             const vals=vis.map(d=>d[yKey]).filter(v=>v!=null);
             const ymin=Math.min(...vals), ymax=Math.max(...vals);
             const pad=(ymax-ymin||1)*0.12, y0=ymin-pad, y1=ymax+pad;
-    
+      
             const xToPx=t=>m.l+((t-t0)/win)*(W-m.l-m.r);
             const yToPx=v=>H-m.b-((v-y0)/(y1-y0))*(H-m.t-m.b);
             const x=xToPx(n.t), y=yToPx(n[yKey]);
-    
+      
             ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.scale(k,k);
             ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1;
             ctx.beginPath(); ctx.moveTo(x,m.t); ctx.lineTo(x,H-m.b); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(m.l,y); ctx.lineTo(W-m.r,y); ctx.stroke();
             ctx.restore();
-    
+      
             const meta = METRICS[yKey] || METRICS.energy;
             tip.innerHTML = `<b>${meta.label}</b><br><span class="muted">Zeit:</span> ${fmtClock(n.t, win)} · <span class="muted">Wert:</span> ${meta.fmt(n[yKey])} ${meta.unit}`;
             tip.style.display='block';
           }
-    
+      
           c.addEventListener('mousemove', e=>onMoveBase(e.clientX), { passive:true });
           c.addEventListener('mouseleave', ()=>{ els.tip.style.display='none'; render(); }, { passive:true });
           c.addEventListener('touchstart', e=>{ if(e.touches[0]) onMoveBase(e.touches[0].clientX); }, { passive:true });
           c.addEventListener('touchmove',  e=>{ if(e.touches[0]) onMoveBase(e.touches[0].clientX); }, { passive:true });
           c.addEventListener('touchend',   ()=>{ els.tip.style.display='none'; render(); }, { passive:true });
         }
-    
+      
         /* === Historie laden (optional) + Init =================================== */
         async function loadHistory(){
           try{
@@ -1612,7 +1607,7 @@
             console.warn('Historie nicht verfügbar:', e);
           }
         }
-    
+      
         /* === Status + Timer + Start ============================================= */
         function stamp(msg){
           const d=new Date();
@@ -1629,15 +1624,16 @@
           els.ySel.addEventListener('change', ()=>{ yKey = els.ySel.value; render(); });
           els.xSel.addEventListener('change', ()=>{ xKey = els.xSel.value; render(); });
           els.btnNow.addEventListener('click', ()=>fetchLive().catch(()=>{}));
-    
-          await loadHistory();          // letzte 24h (falls Datei vorhanden)
+      
+          await loadHistory();             // letzte Stunde (falls Datei vorhanden)
           await fetchLive().catch(()=>{}); // sofort 1 Live-Sample
         }
-    
+      
         // — Start —
         initWithHistory();
       })();
     </script>
+
 
 
 
@@ -1649,6 +1645,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
   </body>
 </html>
+
 
 
 
