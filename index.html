@@ -268,8 +268,9 @@
       .sources-block a{ color:#9ecbff; text-decoration:none; }
       .sources-block a:hover{ text-decoration:underline; }
       
-      /* Schalter aktiviert globale Anzeige */
-      body.show-sources .sources-block{ display:block; }
+     
+      body[data-show-sources="true"] .sources-block{ display:block; }
+
       /* Subsection divider with a labeled chip */
       .subsection-sep{
         position:relative;
@@ -1885,30 +1886,38 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
-    <script defer>
-      (function(){
-        const KEY = 'show_sources_v1';
-        const el  = document.getElementById('sources-switch');
-        if(!el) return;
+    <script>
+    (function(){
+      const body = document.body;
+      const sw   = document.getElementById('sources-switch');
+      const KEY  = 'show_sources_v1';
     
-        // Zustand laden + anwenden
-        const saved = localStorage.getItem(KEY);
-        const on = saved === '1';
-        document.body.classList.toggle('show-sources', on);
-        el.checked = on;
-        el.setAttribute('aria-checked', on ? 'true' : 'false');
+      function apply(on){
+        if(on){
+          body.setAttribute('data-show-sources','true');
+          sw.checked = true;
+          sw.setAttribute('aria-checked','true');
+        }else{
+          body.removeAttribute('data-show-sources');
+          sw.checked = false;
+          sw.setAttribute('aria-checked','false');
+        }
+      }
     
-        // Änderungen speichern
-        el.addEventListener('change', () => {
-          const enabled = el.checked;
-          document.body.classList.toggle('show-sources', enabled);
-          el.setAttribute('aria-checked', enabled ? 'true' : 'false');
-          try{ localStorage.setItem(KEY, enabled ? '1' : '0'); }catch{}
-        });
-      })();
+      // initial laden
+      apply(localStorage.getItem(KEY) === '1');
+    
+      // ändern + speichern
+      sw.addEventListener('change', ()=>{
+        const on = sw.checked;
+        apply(on);
+        try{ localStorage.setItem(KEY, on ? '1' : '0'); }catch{}
+      });
+    })();
     </script>
   </body>
 </html>
+
 
 
 
