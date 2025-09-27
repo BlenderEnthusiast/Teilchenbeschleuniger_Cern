@@ -3,10 +3,10 @@
   "energy": 450,
   "ions": false,
   "time": {
-    "page1": "2025-09-27T18:49:41+0200",
-    "cryo": "2025-09-27T18:49:41+0200",
-    "lhc3": "2025-09-27T18:49:35+0200",
-    "config": "2025-09-27T18:49:36+0200"
+    "page1": "2025-09-27T18:55:02+0200",
+    "cryo": "2025-09-27T18:55:03+0200",
+    "lhc3": "2025-09-27T18:55:00+0200",
+    "config": "2025-09-27T18:55:00+0200"
   },
   "comments": {
     "time": "2025-09-27T18:29:43+0200",
@@ -41,8 +41,8 @@
   "tsb": "PT0S",
   "postmortem": null,
   "intensity": [
-    "9.06e+13",
-    "6.73e+13"
+    "1.73e+14",
+    "1.50e+14"
   ],
   "accmode": "PROTON PHYSICS",
   "beammode": "INJECTION PHYSICS BEAM",
@@ -53,11 +53,11 @@
       "name": "ATLAS",
       "operation": {
         "status": "STANDBY",
-        "inst_lumi": 0.038,
-        "bran_lumi": 0.6,
+        "inst_lumi": 0.087,
+        "bran_lumi": 0.3,
         "fill_lumi": 0,
-        "b1_bkgd": 1.74,
-        "b2_bkgd": 0.864
+        "b1_bkgd": 1.582,
+        "b2_bkgd": 0.776
       },
       "config": {
         "beta_star": "11.00 m",
@@ -84,7 +84,7 @@
         "spectro_angle": "1077(V)",
         "separation": "-3.5(H)",
         "coll_per_turn": "2089",
-        "delta_t": "0.02 ns"
+        "delta_t": "-0.00 ns"
       }
     },
     {
@@ -92,10 +92,10 @@
       "operation": {
         "status": "STANDBY",
         "inst_lumi": 0,
-        "bran_lumi": 3,
+        "bran_lumi": null,
         "fill_lumi": 0,
-        "b1_bkgd": 0.001,
-        "b2_bkgd": 0.204
+        "b1_bkgd": 0,
+        "b2_bkgd": 1.072
       },
       "config": {
         "beta_star": "11.00 m",
@@ -113,8 +113,8 @@
         "inst_lumi": 0,
         "bran_lumi": 0,
         "fill_lumi": 0,
-        "b1_bkgd": 0.005,
-        "b2_bkgd": 0.009
+        "b1_bkgd": 0,
+        "b2_bkgd": 0
       },
       "config": {
         "beta_star": "10.00 m",
@@ -122,7 +122,7 @@
         "spectro_angle": "2106(H)",
         "separation": "-3.5(V)",
         "coll_per_turn": "2227",
-        "delta_t": "0.01 ns"
+        "delta_t": "-0.01 ns"
       }
     }
   ],
@@ -244,5 +244,5 @@
       ]
     ]
   },
-  "next": "2025-09-27T16:50:12+0000"
+  "next": "2025-09-27T16:55:34+0000"
 }
