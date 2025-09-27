@@ -1,86 +1,42 @@
-name: Fetch LHC telemetry (GitHub-only)
+name: Fetch LHC snapshot
 
 on:
   schedule:
-    - cron: "*/5 * * * *"   # alle 5 Minuten (minimales GitHub-Intervall)
-  workflow_dispatch:        # manuell auslösbar
+    - cron: "*/5 * * * *"   # alle 5 Minuten (Minuten-Granularität ist bei Actions realistischer)
+  workflow_dispatch: {}
 
 permissions:
-  contents: write           # damit wir in data/ committen dürfen
+  contents: write
 
 jobs:
   fetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Ensure data directory
-        run: mkdir -p data
-
-      - name: Fetch latest JSON (CERN Vistars mirror)
+      - name: Fetch latest JSON
         run: |
-          set -euo pipefail
-          curl -fsSL 'https://lhcstatus2.ovh/vistars.json' \
-            -H 'User-Agent: lhc-snapshot-bot (+https://github.com/${{ github.repository }})' \
-            -o data/latest.json.tmp
-          mv data/latest.json.tmp data/latest.json
+          mkdir -p data
+          curl -fsSL https://lhcstatus2.ovh/vistars.json -o data/latest.json
+          # Wenn du zusätzlich „history“ pflegen willst:
+          TS=$(date +%s)
+          # einfache Extraktion einiger Zahlen (robust genug für Verlauf)
+          E=$(jq -r '..|.energy? // empty' data/latest.json | head -n1)
+          IB1=$(jq -r '..|.ib1? // empty' data/latest.json | head -n1)
+          IB2=$(jq -r '..|.ib2? // empty' data/latest.json | head -n1)
+          LUMI=$(jq -r '..|.lumi? // empty' data/latest.json | head -n1)
+          # Zeile anhängen (nur wenn mind. ein Wert vorhanden ist)
+          echo "{\"t\":$TS,\"energy\":${E:-null},\"ib1\":${IB1:-null},\"ib2\":${IB2:-null},\"lumi\":${LUMI:-null}}" >> data/lhc_history.jsonl
+          # optional: History auf letzte 24h „trimmen“
+          tail -n 1000 data/lhc_history.jsonl > data/lhc_history.tmp && mv data/lhc_history.tmp data/lhc_history.jsonl
 
-      - name: Update history (JSONL, keep last 24h)
+      - name: Commit & push
         run: |
-          node - <<'NODE'
-          const fs = require('fs');
-          const pathLatest = 'data/latest.json';
-          const pathHist   = 'data/lhc_history.jsonl';
-
-          const raw = JSON.parse(fs.readFileSync(pathLatest,'utf8'));
-          const num = x => x==null ? null : (typeof x==='number'? x : (n=>isFinite(n)?n:null)(parseFloat(String(x).replace(',','.'))));
-          const pick = (o, rx) => {
-            const q=[o];
-            while(q.length){
-              const v=q.shift();
-              if (v && typeof v==='object'){
-                for(const [k,val] of Object.entries(v)){
-                  if(rx.test(k)){
-                    const maybe = typeof val==='number'? val : num(val?.value ?? val);
-                    if(maybe!=null) return maybe;
-                  }
-                  if (val && typeof val==='object') q.push(val);
-                }
-              }
-            }
-            return null;
-          };
-
-          const energy = num(pick(raw, /(^|_)energy($|_)|beam.?energy/i));
-          const ib1    = num(pick(raw, /(ib1|beam.?1.*(intensity|current))/i));
-          const ib2    = num(pick(raw, /(ib2|beam.?2.*(intensity|current))/i));
-          const lumi   = num(pick(raw, /lumi|luminosit/i));
-          const t      = Math.floor(Date.now()/1000);
-
-          // anhängen
-          const line = JSON.stringify({ t, energy, ib1, ib2, lumi }) + '\n';
-          try { fs.appendFileSync(pathHist, line); } catch {}
-
-          // auf letzte 24h trimmen
-          try {
-            const now   = t;
-            const lines = fs.readFileSync(pathHist,'utf8').split(/\r?\n/).filter(Boolean);
-            const kept  = lines.map(L=>JSON.parse(L))
-                               .filter(o => o && typeof o.t==='number' && o.t >= now - 24*3600);
-            fs.writeFileSync(pathHist, kept.map(o=>JSON.stringify(o)).join('\n') + '\n');
-          } catch(e) { /* ok wenn Datei noch nicht existiert */ }
-          NODE
-
-      - name: Commit & push if changed
-        run: |
-          if git diff --quiet -- data/; then
-            echo "No changes in data/"
-          else
-            git config user.name  "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [[ -n "$(git status --porcelain data)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
             git add data/latest.json data/lhc_history.jsonl
-            git commit -m "chore(data): update LHC snapshot [skip ci]"
+            git commit -m "Update LHC data $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
             git push
           fi
+
