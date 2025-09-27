@@ -1,84 +1,37 @@
-name: Fetch LHC data (every 5 min)
+name: Fetch LHC data
 
 on:
   schedule:
-    - cron: "*/5 * * * *"     # alle 5 Minuten
-  workflow_dispatch: {}       # manuell startbar
+    - cron: "*/10 * * * *"    # every 10 minutes
+  workflow_dispatch:          # manual trigger
 
 permissions:
-  contents: write             # damit wir committen dürfen
+  contents: write             # allow pushing changes
 
 jobs:
   fetch:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
-      # optional, falls jq fehlt (meist nicht nötig):
-      # - name: Install jq
-      #   run: sudo apt-get update && sudo apt-get install -y jq
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-      - name: Ensure data folder exists
-        run: mkdir -p data
+      - name: Fetch latest & append history (trim to 50 days / 7200 pts)
+        run: node fetch-lhc.mjs
 
-      - name: Fetch latest JSON (direkt von lhcstatus2.ovh)
+      - name: Commit and push if changed
         run: |
-          curl -fsSL https://lhcstatus2.ovh/vistars.json -o data/latest.json
-
-      - name: Append one history line (robust extraction via Node)
-        run: |
-          test -f data/lhc_history.jsonl || touch data/lhc_history.jsonl
-          node - <<'NODE'
-          const fs = require('fs');
-          const raw = JSON.parse(fs.readFileSync('data/latest.json','utf8'));
-
-          function num(x){
-            if (x == null) return null;
-            if (typeof x === 'number' && Number.isFinite(x)) return x;
-            const n = parseFloat(String(x).replace(',','.'));
-            return Number.isFinite(n) ? n : null;
-          }
-          function pickByRegex(obj, rx){
-            const q=[obj];
-            while(q.length){
-              const o=q.shift();
-              if (o && typeof o === 'object'){
-                for (const [k,v] of Object.entries(o)){
-                  if (rx.test(k)){
-                    if (typeof v === 'number') return v;
-                    const n = num(v && typeof v === 'object' && 'value' in v ? v.value : v);
-                    if (n != null) return n;
-                  }
-                  if (v && typeof v === 'object') q.push(v);
-                }
-              }
-            }
-            return null;
-          }
-
-          const E   = pickByRegex(raw, /(^|_)energy($|_)|beam.?energy/i);
-          const IB1 = pickByRegex(raw, /(ib1|beam.?1.*(intensity|current))/i);
-          const IB2 = pickByRegex(raw, /(ib2|beam.?2.*(intensity|current))/i);
-          const LUMI= pickByRegex(raw, /lumi|luminosit/i);
-          const t   = Math.floor(Date.now()/1000);
-
-          const line = { t, energy: E ?? null, ib1: IB1 ?? null, ib2: IB2 ?? null, lumi: LUMI ?? null };
-          fs.appendFileSync('data/lhc_history.jsonl', JSON.stringify(line) + '\n');
-          NODE
-
-      - name: Trim history (≈ letzte 24h bei 5-min Intervall)
-        run: |
-          # ca. 12 Punkte pro Stunde * 24 = 288 → + Puffer:
-          tail -n 320 data/lhc_history.jsonl > data/_tmp && mv data/_tmp data/lhc_history.jsonl
-
-      - name: Commit & push if changed
-        run: |
-          if [[ -n "$(git status --porcelain data)" ]]; then
-            git config user.name  "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet; then
             git add data/latest.json data/lhc_history.jsonl
-            git commit -m "Update LHC data ($(date -u +'%Y-%m-%dT%H:%M:%SZ'))"
+            git commit -m "data: update latest + append history (10min)"
             git push
+          else
+            echo "No changes."
           fi
-
 
