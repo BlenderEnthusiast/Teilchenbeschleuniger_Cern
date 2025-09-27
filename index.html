@@ -1336,21 +1336,13 @@
 
 
     <script>
-      /* === LHC · Historie + Live · JSON-Quelle, Plot, Hover (X=Uhrzeit) ======= */
+      /* === LHC · Historie + Live · JSON (GitHub only) · Uhrzeit · Zoom & Pan ===== */
       (function(){
-        // --- Basis: Repo-relativer Pfad (funktioniert unter GitHub Pages Projektseiten) ---
-        const ROOT = (()=>{
-          const p = location.pathname;
-          return p.endsWith('/') ? p : p.replace(/[^/]+$/, '');
-        })();
+        // ---- Files written by your GitHub Action ----------------------------------
+        const SRC         = '/data/latest.json';         // last pull (every 5 min)
+        const HISTORY_URL = '/data/lhc_history.jsonl';   // ~last 24h line-delimited
       
-        const SRC         = `${ROOT}data/latest.json`;        // <- statt /data/...
-        const HISTORY_URL = `${ROOT}data/lhc_history.jsonl`;  // <- statt /data/...
-      
-        // Minimales Pollingintervall (falls keine Angabe in JSON)
-        const MIN_INTERVAL_MS = 30_000;
-      
-        // — UI-Hooks —
+        // ---- UI elements -----------------------------------------------------------
         const els = {
           canvas:  document.getElementById('tg-canvas'),
           wrap:    document.getElementById('tg-wrap'),
@@ -1361,29 +1353,52 @@
           btnNow:  document.getElementById('tg-refresh'),
         };
       
-        // — Y-Metriken —
+        // ---- Metric glossary (+ option titles) ------------------------------------
         const METRICS = {
-          energy: { label:'Energie',         unit:'GeV',      fmt:v=>v==null?'–':v.toFixed(1) },
-          speed:  { label:'Geschwindigkeit', unit:'% c',      fmt:v=>v==null?'–':(v*100).toFixed(6) },
-          ib1:    { label:'IB1 (Intensität)',unit:'p (B1)',   fmt:v=>v==null?'–':Number(v).toExponential(2) },
-          ib2:    { label:'IB2 (Intensität)',unit:'p (B2)',   fmt:v=>v==null?'–':Number(v).toExponential(2) },
-          lumi:   { label:'Luminosität',     unit:'cm⁻²s⁻¹',  fmt:v=>v==null?'–':Number(v).toExponential(2) },
+          energy:{ label:'Energie', unit:'GeV',
+            desc:'Protonen-Gesamtenergie pro Teilchen (GeV).',
+            fmt:v=>v==null?'–':v.toFixed(1) },
+          speed: { label:'Geschwindigkeit', unit:'% c',
+            desc:'β = v/c, aus Gesamtenergie berechnet.',
+            fmt:v=>v==null?'–':(v*100).toFixed(6) },
+          ib1:   { label:'IB1 (Intensität)', unit:'p (B1)',
+            desc:'Strahl 1 Intensität (Teilchenzahl o. ä.).',
+            fmt:v=>v==null?'–':Number(v).toExponential(2) },
+          ib2:   { label:'IB2 (Intensität)', unit:'p (B2)',
+            desc:'Strahl 2 Intensität (Teilchenzahl o. ä.).',
+            fmt:v=>v==null?'–':Number(v).toExponential(2) },
+          lumi:  { label:'Luminosität', unit:'cm⁻²s⁻¹',
+            desc:'Sofortige Kollisionsrate pro Fläche und Zeit.',
+            fmt:v=>v==null?'–':Number(v).toExponential(2) },
         };
+        // add <option title="..."> tooltips
+        Array.from(els.ySel?.options||[]).forEach(op=>{
+          const m = METRICS[op.value];
+          if (m?.desc) op.title = `${m.label}: ${m.desc}`;
+        });
       
-        // — X-Fenster (Anzeige x-Achse = Uhrzeit) —
-        const WINDOWS = {
-          s:   { window: 5*60,  tick: 60 },
-          min: { window: 60*60, tick: 10*60 },
-          h:   { window: 6*3600,tick: 3600 },
+        // ---- Default windows (select only presets; user can zoom beyond) ----------
+        const PRESET_WINDOWS = {
+          s:   5*60,         // 5 min
+          min: 60*60,        // 60 min
+          h:   6*3600,       // 6 h
         };
+        const HARD_MIN_WINDOW = 30;          // 30 s min zoom
+        const HARD_MAX_WINDOW = 24*3600;     // 24 h max
       
-        // — State —
-        let data = [];     // {t, energy, speed, ib1, ib2, lumi?}
+        // ---- State ----------------------------------------------------------------
+        let data = [];                       // [{t, energy, speed, ib1, ib2, lumi}]
+        let yKey  = els.ySel.value || 'energy';
         let timer = null;
-        let yKey  = els.ySel.value;
-        let xKey  = els.xSel.value;
       
-        /* === Helpers ============================================================ */
+        // current view window [v.t0, v.t1] in seconds (unix time)
+        const v = { t0: 0, t1: 0 };
+      
+        // poll interval for re-reading latest.json (not the upstream!)
+        const MIN_INTERVAL_MS = 60_000;
+      
+        // ---- Helpers ---------------------------------------------------------------
+        const dpr = () => Math.max(1, window.devicePixelRatio || 1);
         const num = x => {
           if (x==null) return null;
           const n = (typeof x==='number') ? x : parseFloat(String(x).replace(',','.'));
@@ -1406,15 +1421,21 @@
           }
           return null;
         }
-        function betaFromGeV(E_total_GeV){
+        function betaFromGeV(E){
           const m0 = 0.9382720813; // GeV (Proton)
-          const gamma = (E_total_GeV && E_total_GeV>0) ? (E_total_GeV / m0) : 1;
+          const gamma = (E && E>0) ? (E/m0) : 1;
           if (gamma<=1) return 0;
           const b2 = 1 - 1/(gamma*gamma);
           return Math.sqrt(Math.max(0, Math.min(1, b2)));
         }
-        const dpr = () => Math.max(1, window.devicePixelRatio || 1);
-        function niceTicks(min,max,count){
+        function fmtClock(ts, winSec){
+          const showSec = (winSec <= 15*60);
+          const opts = showSec
+            ? { hour:'2-digit', minute:'2-digit', second:'2-digit' }
+            : { hour:'2-digit', minute:'2-digit' };
+          return new Date(ts*1000).toLocaleTimeString(undefined, opts);
+        }
+        function yTicks(min,max,count){
           const span=max-min||1;
           const step=Math.pow(10,Math.floor(Math.log10(span/Math.max(1,count))));
           const err=span/(count*step);
@@ -1423,17 +1444,49 @@
           for(let v=tmin; v<=tmax+1e-9; v+=s) ticks.push(v);
           return ticks;
         }
-        function fmtClock(ts, winSec){
-          const showSeconds = winSec <= 15*60;
-          const opts = showSeconds
-            ? { hour:'2-digit', minute:'2-digit', second:'2-digit' }
-            : { hour:'2-digit', minute:'2-digit' };
-          return new Date(ts*1000).toLocaleTimeString(undefined, opts);
+        function timeTickFor(win){
+          // choose a nice time step for the current window (in seconds)
+          const steps = [5,10,15,30,60,120,300,600,900,1800,3600,7200,10800];
+          const targetCount = 6;
+          const approx = win / targetCount;
+          let best = steps[0], bestDiff = Math.abs(steps[0]-approx);
+          for (const s of steps){
+            const diff = Math.abs(s - approx);
+            if (diff < bestDiff){ best = s; bestDiff = diff; }
+          }
+          return best;
         }
       
-        /* === Live-Fetch + Speicherung =========================================== */
-        async function fetchLive(){
-          const r = await fetch(SRC, { cache:'no-store' });
+        // ---- Data loading ----------------------------------------------------------
+        async function loadHistory(){
+          try{
+            const r = await fetch(`${HISTORY_URL}?b=${Date.now()}`, { cache:'no-store' });
+            if(!r.ok) throw new Error('HTTP '+r.status);
+            const text = await r.text();
+            const lines = text.split(/\r?\n/).filter(Boolean);
+            const arr = lines.map(l => JSON.parse(l)).filter(o => o && typeof o.t === 'number');
+            data = arr.map(o => ({
+              t:      o.t,
+              energy: o.energy ?? null,
+              speed:  o.speed  ?? (o.energy!=null ? betaFromGeV(o.energy) : null),
+              ib1:    o.ib1 ?? null,
+              ib2:    o.ib2 ?? null,
+              lumi:   o.lumi ?? null,
+            }));
+            // default view: last preset window (from select)
+            const now = Math.floor(Date.now()/1000);
+            const win = PRESET_WINDOWS[els.xSel.value] || PRESET_WINDOWS.min;
+            v.t1 = Math.max(now, (data.at(-1)?.t ?? now));
+            v.t0 = v.t1 - win;
+            stamp(`Historie: ${data.length} Punkte`);
+          }catch(e){
+            console.warn('Historie nicht verfügbar:', e);
+          }
+        }
+      
+        async function fetchLatest(){
+          // read ONLY your repo file; bypass GH-pages cache via bust param
+          const r = await fetch(`${SRC}?b=${Date.now()}`, { cache:'no-store' });
           if(!r.ok) throw new Error('HTTP '+r.status);
           const j = await r.json();
       
@@ -1445,43 +1498,61 @@
           const t = Math.floor(Date.now()/1000);
           const speed = energyGeV!=null ? betaFromGeV(energyGeV) : null;
       
-          data.push({ t, energy:energyGeV, speed, ib1:IB1, ib2:IB2, lumi });
-          const cutoff = t - (6*3600 + 300);
-          if (data.length>4) data = data.filter(d=>d.t>=cutoff);
+          // merge (avoid minute-duplicates with same values)
+          const last = data.at(-1);
+          const dup = last && Math.abs(last.t - t) <= 60 &&
+                      last.energy===energyGeV && last.ib1===IB1 && last.ib2===IB2 && last.lumi===lumi;
+          if(!dup){
+            data.push({ t, energy:energyGeV, speed, ib1:IB1, ib2:IB2, lumi });
+            // keep max 24h+5min
+            const cutoff = t - (24*3600 + 300);
+            data = data.filter(d => d.t >= cutoff);
+          }
       
-          const next = Math.max(MIN_INTERVAL_MS, (j?.next ?? MIN_INTERVAL_MS));
-          stamp(`aktualisiert · Δ${Math.round(next/1000)}s`);
-          schedule(next);
+          // slide view to include latest if we were at the right edge
+          const viewLen = Math.max(HARD_MIN_WINDOW, v.t1 - v.t0 || (PRESET_WINDOWS.min));
+          const atRight = (Math.abs(v.t1 - (last?.t ?? v.t1)) <= 2*60) || (v.t1 >= (last?.t ?? v.t1));
+          if(atRight){
+            v.t1 = t;
+            v.t0 = v.t1 - viewLen;
+          }
+      
+          stamp('aktualisiert');
+          schedule(MIN_INTERVAL_MS);
         }
       
-        /* === Canvas-Setup & Plot ================================================= */
-        function setupCanvas(){
-          const c = els.canvas, r = els.wrap.getBoundingClientRect(), k = dpr();
-          c.width = Math.floor(r.width * k);
+        // ---- Canvas render ---------------------------------------------------------
+        function setupCtx(){
+          const c = els.canvas, rect = els.wrap.getBoundingClientRect(), k = dpr();
+          c.width = Math.floor(rect.width * k);
           c.height= Math.floor(360 * k);
-          c.style.height='360px'; c.style.width='100%';
+          c.style.width = '100%';
+          c.style.height= '360px';
           const ctx = c.getContext('2d');
           ctx.setTransform(k,0,0,k,0,0);
           return ctx;
         }
+      
         function render(){
-          const ctx = setupCanvas();
-          const W = ctx.canvas.width/dpr(), H = ctx.canvas.height/dpr();
-          const m = { l:64, r:16, t:22, b:40 };
+          const ctx = setupCtx();
+          const W = ctx.canvas.width / dpr();
+          const H = ctx.canvas.height / dpr();
+          const m = { l:64, r:16, t:22, b:42 };
+      
           ctx.clearRect(0,0,W,H);
       
-          const now = Math.floor(Date.now()/1000);
-          const win = (WINDOWS[xKey]||WINDOWS.min).window;
-          const xtick = (WINDOWS[xKey]||WINDOWS.min).tick;
-          const t0  = now - win;
-      
-          const vis = data.filter(d=>d.t>=t0);
-          if(vis.length===0){
+          if(!data.length || !(v.t1>v.t0)){
             ctx.fillStyle='var(--muted)'; ctx.font='600 14px Inter, system-ui, sans-serif';
-            ctx.fillText('Warte auf Live-Daten …', m.l, H/2);
-            ctx.textAlign='left';  ctx.fillText('Uhrzeit (lokal)', m.l, H-8);
-            ctx.textAlign='right'; const meta=METRICS[yKey]||METRICS.energy;
-            ctx.fillText(`${meta.label} [${meta.unit}]`, W-m.r, m.t-6);
+            ctx.fillText('Warte auf Daten …', m.l, H/2);
+            drawAxisTitles(ctx, W, H, m);
+            return;
+          }
+      
+          const vis = data.filter(d => d.t >= v.t0 && d.t <= v.t1);
+          if(!vis.length){
+            ctx.fillStyle='var(--muted)'; ctx.font='600 14px Inter, system-ui, sans-serif';
+            ctx.fillText('Kein Punkt im aktuellen Fenster.', m.l, H/2);
+            drawAxisTitles(ctx, W, H, m);
             return;
           }
       
@@ -1490,56 +1561,74 @@
           const pad  = (ymax-ymin || 1) * 0.12;
           const y0 = ymin - pad, y1 = ymax + pad;
       
-          const xToPx = t => m.l + ((t - t0)/win) * (W - m.l - m.r);
-          const yToPx = v => H - m.b - ((v - y0)/(y1 - y0)) * (H - m.t - m.b);
+          const xToPx = t => m.l + ((t - v.t0)/(v.t1 - v.t0)) * (W - m.l - m.r);
+          const yToPx = val => H - m.b - ((val - y0)/(y1 - y0)) * (H - m.t - m.b);
       
-          // Gitter + X-Ticks (Uhrzeit)
+          // grid + ticks
           ctx.strokeStyle = '#2d2d32'; ctx.lineWidth = 1;
-          ctx.fillStyle = 'var(--muted)'; ctx.font='600 11px Inter, system-ui, sans-serif';
+          ctx.fillStyle   = 'var(--muted)'; ctx.font='600 11px Inter, system-ui, sans-serif';
+      
+          // X ticks (time)
+          const xtick = timeTickFor(v.t1 - v.t0);
+          const xStart = Math.ceil(v.t0/xtick)*xtick;
           ctx.textAlign='center';
-          const xStart=Math.ceil(t0/xtick)*xtick;
-          for(let t=xStart; t<=now; t+=xtick){
-            const x=xToPx(t);
-            ctx.beginPath(); ctx.moveTo(x,m.t); ctx.lineTo(x,H-m.b); ctx.stroke();
-            ctx.fillText(fmtClock(t, win), x, H-4);
+          for(let t=xStart; t<=v.t1; t+=xtick){
+            const x = xToPx(t);
+            ctx.beginPath(); ctx.moveTo(x, m.t); ctx.lineTo(x, H - m.b); ctx.stroke();
+            ctx.fillText(fmtClock(t, v.t1-v.t0), x, H-4);
           }
-          // Y-Gitter
+      
+          // Y ticks
           ctx.textAlign='right';
-          niceTicks(y0,y1,4).forEach(v=>{
-            const y=yToPx(v);
-            ctx.beginPath(); ctx.moveTo(m.l,y); ctx.lineTo(W-m.r,y); ctx.stroke();
-            ctx.fillText(v.toFixed(2), m.l-6, y+3);
+          yTicks(y0, y1, 4).forEach(val=>{
+            const y = yToPx(val);
+            ctx.beginPath(); ctx.moveTo(m.l, y); ctx.lineTo(W - m.r, y); ctx.stroke();
+            ctx.fillText(val.toFixed(2), m.l-6, y+3);
           });
       
-          // Achsentitel
+          // axis titles
+          drawAxisTitles(ctx, W, H, m);
+      
+          // line
+          ctx.beginPath();
+          let started = false;
+          for(const d of vis){
+            if(d[yKey]==null) { started=false; continue; }
+            const x=xToPx(d.t), y=yToPx(d[yKey]);
+            if(!started){ ctx.moveTo(x,y); started=true; } else { ctx.lineTo(x,y); }
+          }
+          ctx.strokeStyle='var(--accent)'; ctx.lineWidth=2;
+          ctx.shadowColor='rgba(125,211,252,.25)'; ctx.shadowBlur=8; ctx.stroke(); ctx.shadowBlur=0;
+      
+          // points
+          ctx.fillStyle='rgba(125,211,252,.9)';
+          for(const d of vis){
+            if(d[yKey]==null) continue;
+            const x=xToPx(d.t), y=yToPx(d[yKey]);
+            ctx.beginPath(); ctx.arc(x,y,2.1,0,Math.PI*2); ctx.fill();
+          }
+        }
+      
+        function drawAxisTitles(ctx, W, H, m){
           const meta = METRICS[yKey] || METRICS.energy;
           ctx.fillStyle='var(--muted)'; ctx.font='600 12px Inter, system-ui, sans-serif';
           ctx.textAlign='left';  ctx.fillText('Uhrzeit (lokal)', m.l, H-22);
           ctx.textAlign='right'; ctx.fillText(`${meta.label} [${meta.unit}]`, W-m.r, m.t-8);
-      
-          // Linie + Punkte
-          ctx.beginPath();
-          vis.forEach((d,i)=>{ if(d[yKey]==null) return; const x=xToPx(d.t), y=yToPx(d[yKey]); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
-          ctx.strokeStyle='var(--accent)'; ctx.lineWidth=2;
-          ctx.shadowColor='rgba(125,211,252,.25)'; ctx.shadowBlur=8; ctx.stroke(); ctx.shadowBlur=0;
-      
-          ctx.fillStyle='rgba(125,211,252,.9)';
-          vis.forEach(d=>{ if(d[yKey]==null) return; const x=xToPx(d.t), y=yToPx(d[yKey]); ctx.beginPath(); ctx.arc(x,y,2.2,0,Math.PI*2); ctx.fill(); });
         }
       
-        /* === Hover: Crosshair + Tooltip (Uhrzeit) ================================ */
-        function bindPointer(){
+        // ---- Hover (crosshair + tip with Uhrzeit & Wert) ---------------------------
+        function bindHover(){
           const c=els.canvas, tip=els.tip;
+      
+          const m = { l:64, r:16, t:22, b:42 };
       
           function nearestAt(clientX){
             const rect=c.getBoundingClientRect(), x=(clientX-rect.left);
-            const W=rect.width, m={ l:64, r:16, t:22, b:40 };
-            const now=Math.floor(Date.now()/1000),
-                  win=(WINDOWS[xKey]||WINDOWS.min).window,
-                  t0=now-win;
-            const pxToT = px => t0 + ((px - m.l)/(W - m.l - m.r))*win;
-            const t = Math.max(t0, Math.min(now, pxToT(x)));
-            const vis=data.filter(d=>d.t>=t0);
+            const W=rect.width;
+            if(!(v.t1>v.t0)) return null;
+            const pxToT = px => v.t0 + ((px - m.l)/(W - m.l - m.r)) * (v.t1 - v.t0);
+            const t = Math.max(v.t0, Math.min(v.t1, pxToT(x)));
+            const vis=data.filter(d=>d.t>=v.t0 && d.t<=v.t1);
             if(vis.length===0) return null;
             let lo=0, hi=vis.length-1;
             while(lo<hi){ const mid=(lo+hi)>>1; (vis[mid].t<t)?(lo=mid+1):(hi=mid); }
@@ -1547,68 +1636,113 @@
             return Math.abs(vis[b].t - t) < Math.abs(vis[a].t - t) ? vis[b] : vis[a];
           }
       
-          function onMoveBase(clientX){
-            const n = nearestAt(clientX);
-            if(!n){ tip.style.display='none'; render(); return; }
+          function drawCrosshair(n){
+            const ctx = c.getContext('2d'), k=dpr();
+            const rect=c.getBoundingClientRect();
+            const W=rect.width, H=rect.height;
+            const x = m.l + ( (n.t - v.t0) / (v.t1 - v.t0) ) * (W - m.l - m.r);
       
-            render();
-            const ctx=c.getContext('2d'), rect=c.getBoundingClientRect(), k=dpr();
-            const W=rect.width, H=rect.height, m={ l:64, r:16, t:22, b:40 };
-            const now=Math.floor(Date.now()/1000),
-                  win=(WINDOWS[xKey]||WINDOWS.min).window,
-                  t0=now-win;
-      
-            const vis=data.filter(d=>d.t>=t0);
+            // recompute y scaling for current data slice
+            const vis = data.filter(d=>d.t>=v.t0 && d.t<=v.t1);
             const vals=vis.map(d=>d[yKey]).filter(v=>v!=null);
             const ymin=Math.min(...vals), ymax=Math.max(...vals);
             const pad=(ymax-ymin||1)*0.12, y0=ymin-pad, y1=ymax+pad;
+            const y = H - m.b - ((n[yKey]-y0)/(y1-y0)) * (H - m.t - m.b);
       
-            const xToPx=t=>m.l+((t-t0)/win)*(W-m.l-m.r);
-            const yToPx=v=>H-m.b-((v-y0)/(y1-y0))*(H-m.t-m.b);
-            const x=xToPx(n.t), y=yToPx(n[yKey]);
+            const raw = c.getContext('2d');
+            raw.save(); raw.setTransform(1,0,0,1,0,0); raw.scale(k,k);
+            raw.strokeStyle='rgba(255,255,255,.18)'; raw.lineWidth=1;
+            raw.beginPath(); raw.moveTo(x, m.t); raw.lineTo(x, H - m.b); raw.stroke();
+            raw.beginPath(); raw.moveTo(m.l, y);  raw.lineTo(W - m.r, y); raw.stroke();
+            raw.restore();
+          }
       
-            ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.scale(k,k);
-            ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1;
-            ctx.beginPath(); ctx.moveTo(x,m.t); ctx.lineTo(x,H-m.b); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(m.l,y); ctx.lineTo(W-m.r,y); ctx.stroke();
-            ctx.restore();
-      
+          function showTip(n){
             const meta = METRICS[yKey] || METRICS.energy;
-            tip.innerHTML = `<b>${meta.label}</b><br><span class="muted">Zeit:</span> ${fmtClock(n.t, win)} · <span class="muted">Wert:</span> ${meta.fmt(n[yKey])} ${meta.unit}`;
+            const win  = (v.t1 - v.t0);
+            tip.innerHTML = `<b>${meta.label}</b><br>
+              <span class="muted">Zeit:</span> ${fmtClock(n.t, win)}
+              · <span class="muted">Wert:</span> ${meta.fmt(n[yKey])} ${meta.unit}`;
             tip.style.display='block';
           }
       
-          c.addEventListener('mousemove', e=>onMoveBase(e.clientX), { passive:true });
-          c.addEventListener('mouseleave', ()=>{ els.tip.style.display='none'; render(); }, { passive:true });
-          c.addEventListener('touchstart', e=>{ if(e.touches[0]) onMoveBase(e.touches[0].clientX); }, { passive:true });
-          c.addEventListener('touchmove',  e=>{ if(e.touches[0]) onMoveBase(e.touches[0].clientX); }, { passive:true });
-          c.addEventListener('touchend',   ()=>{ els.tip.style.display='none'; render(); }, { passive:true });
-        }
-      
-        /* === Historie laden (optional) + Init =================================== */
-        async function loadHistory(){
-          try{
-            const bust = Date.now();
-            const r = await fetch(`${HISTORY_URL}?b=${bust}`, { cache:'no-store' });
-            if(!r.ok) throw new Error('HTTP '+r.status);
-            const text = await r.text();
-            const lines = text.split(/\r?\n/).filter(Boolean);
-            const arr = lines.map(l => JSON.parse(l)).filter(o => o && typeof o.t === 'number');
-            data = arr.map(o => ({
-              t: o.t,
-              energy: o.energy ?? null,
-              speed:  o.speed  ?? (o.energy!=null ? betaFromGeV(o.energy) : null),
-              ib1:    o.ib1 ?? null,
-              ib2:    o.ib2 ?? null,
-              lumi:   o.lumi ?? null
-            }));
-            stamp(`Historie: ${arr.length} Punkte`);
-          }catch(e){
-            console.warn('Historie nicht verfügbar:', e);
+          function onMove(clientX){
+            const n = nearestAt(clientX);
+            if(!n){ tip.style.display='none'; render(); return; }
+            render();       // redraw base
+            drawCrosshair(n);
+            showTip(n);
           }
+      
+          c.addEventListener('mousemove', e=>onMove(e.clientX), { passive:true });
+          c.addEventListener('mouseleave', ()=>{ tip.style.display='none'; render(); }, { passive:true });
+      
+          c.addEventListener('touchstart', e=>{ if(e.touches[0]) onMove(e.touches[0].clientX); }, { passive:true });
+          c.addEventListener('touchmove',  e=>{ if(e.touches[0]) onMove(e.touches[0].clientX); }, { passive:true });
+          c.addEventListener('touchend',   ()=>{ tip.style.display='none'; render(); }, { passive:true });
         }
       
-        /* === Status + Timer + Start ============================================= */
+        // ---- Zoom (wheel) & Pan (drag) --------------------------------------------
+        function bindZoomPan(){
+          const c=els.canvas;
+          const m = { l:64, r:16, t:22, b:42 };
+      
+          // wheel zoom around cursor time
+          c.addEventListener('wheel', (e)=>{
+            e.preventDefault(); // keep pointer focus here
+            if(!(v.t1>v.t0)) return;
+            const rect=c.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const W = rect.width;
+            const anchor = v.t0 + ((x - m.l)/(W - m.l - m.r)) * (v.t1 - v.t0);
+            const factor = Math.pow(1.0015, e.deltaY);  // >1 zoom out, <1 zoom in
+            let newWin = (v.t1 - v.t0) * factor;
+            newWin = Math.max(HARD_MIN_WINDOW, Math.min(HARD_MAX_WINDOW, newWin));
+            const a = anchor;
+            const t0p = a - (a - v.t0) * (newWin / (v.t1 - v.t0));
+            const t1p = t0p + newWin;
+            v.t0 = t0p; v.t1 = t1p;
+            render();
+          }, { passive:false });
+      
+          // drag pan
+          let dragging = false, lastX = 0;
+          c.addEventListener('mousedown', (e)=>{
+            dragging = true; lastX = e.clientX;
+            e.preventDefault();
+          });
+          window.addEventListener('mouseup', ()=>{ dragging=false; });
+          window.addEventListener('mousemove', (e)=>{
+            if(!dragging || !(v.t1>v.t0)) return;
+            const rect=c.getBoundingClientRect();
+            const W=rect.width;
+            const dx = e.clientX - lastX; lastX = e.clientX;
+            const secPerPx = (v.t1 - v.t0) / (W - m.l - m.r);
+            const dt = -dx * secPerPx;
+            v.t0 += dt; v.t1 += dt;
+            render();
+          });
+      
+          // touch pan (one finger)
+          let tdrag=false, tx=0;
+          c.addEventListener('touchstart', (e)=>{
+            if(e.touches.length===1){ tdrag=true; tx=e.touches[0].clientX; }
+          }, { passive:true });
+          c.addEventListener('touchend', ()=>{ tdrag=false; }, { passive:true });
+          c.addEventListener('touchmove', (e)=>{
+            if(!tdrag || e.touches.length!==1) return;
+            const rect=c.getBoundingClientRect();
+            const W=rect.width;
+            const nx = e.touches[0].clientX;
+            const dx = nx - tx; tx = nx;
+            const secPerPx = (v.t1 - v.t0) / (W - m.l - m.r);
+            const dt = -dx * secPerPx;
+            v.t0 += dt; v.t1 += dt;
+            render();
+          }, { passive:true });
+        }
+      
+        // ---- Status & scheduling ---------------------------------------------------
         function stamp(msg){
           const d=new Date();
           els.status.textContent = (msg? msg+' · ':'') + `aktualisiert: ${d.toLocaleTimeString()}`;
@@ -1616,23 +1750,37 @@
         }
         function schedule(ms){
           if(timer) clearTimeout(timer);
-          timer = setTimeout(()=>{ fetchLive().catch(e=>{ console.error(e); schedule(MIN_INTERVAL_MS); }); }, Math.max(MIN_INTERVAL_MS, ms|0));
+          timer = setTimeout(()=>{ fetchLatest().catch(e=>{ console.error('[latest]',e); schedule(MIN_INTERVAL_MS); }); }, Math.max(10_000, ms|0));
         }
-        async function initWithHistory(){
-          bindPointer();
+      
+        // ---- Init ------------------------------------------------------------------
+        async function init(){
+          // wiring
+          bindHover();
+          bindZoomPan();
           window.addEventListener('resize', render);
-          els.ySel.addEventListener('change', ()=>{ yKey = els.ySel.value; render(); });
-          els.xSel.addEventListener('change', ()=>{ xKey = els.xSel.value; render(); });
-          els.btnNow.addEventListener('click', ()=>fetchLive().catch(()=>{}));
       
-          await loadHistory();             // letzte Stunde (falls Datei vorhanden)
-          await fetchLive().catch(()=>{}); // sofort 1 Live-Sample
+          els.ySel.addEventListener('change', ()=>{
+            yKey = els.ySel.value;
+            render();
+          });
+          els.xSel.addEventListener('change', ()=>{
+            const win = PRESET_WINDOWS[els.xSel.value] || PRESET_WINDOWS.min;
+            const right = v.t1 || Math.floor(Date.now()/1000);
+            v.t0 = right - win;
+            v.t1 = right;
+            render();
+          });
+          els.btnNow.addEventListener('click', ()=>fetchLatest().catch(()=>{}));
+      
+          await loadHistory();         // optional (if file exists)
+          await fetchLatest().catch(()=>{}); // prime one sample
         }
       
-        // — Start —
-        initWithHistory();
+        init();
       })();
     </script>
+
 
 
 
@@ -1645,6 +1793,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
   </body>
 </html>
+
 
 
 
