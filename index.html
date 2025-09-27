@@ -28,6 +28,15 @@
       .nav { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; }
       .nav a { color:var(--muted); text-decoration:none; font-size:14px; margin-left:18px; }
       .nav a:hover { color:var(--fg); }
+    
+      .nav { display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+      .nav-sources{
+        display:inline-flex; align-items:center; gap:10px;
+        margin-left:6px; 
+      }
+
+      .nav .switch{ transform: translateY(1px); }
+
 
       .section { padding:80px 0; border-top:1px solid var(--line); scroll-margin-top:84px; }
       .reveal{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .6s ease}
@@ -303,10 +312,9 @@
       .sources-list{ margin:0; padding-left:18px; }
       .sources-list li{ margin:6px 0; line-height:1.5; }
       
-      /* Respect your header toggle: hide both divider and block when off */
-      body:not([data-show-sources="true"]) .sources-toggleable{ display:none; }
-
-
+   
+      body.show-sources .sources-block{ display:block; }
+      body:not(.show-sources) .sources-toggleable{ display:none; }
     </style>
   </head>
   <body>
@@ -320,15 +328,15 @@
           <a href="#chain-switch">Beschleunigerkette</a>
           <a href="#ring-hotspots">Teilchenbeschleuniger</a>
           <a href="#acceleration-chain">Detektoren</a>
-          <a href="#collision-detector">Kollision</a>
-          <a href="#sources">Quellen</a>
-          <div class="sources-toggle" role="group" aria-label="Quellen anzeigen">
-            <span class="label">Quellen</span>
+          <a href="#collision-detector">Kollision</a>         
+          <span class="nav-sources">
+            <a href="#sources">Quellen</a>
             <label class="switch" title="Quellen ein-/ausblenden">
               <input id="sources-switch" type="checkbox" aria-checked="false" />
               <span class="slider" aria-hidden="true"></span>
             </label>
-          </div>
+          </span>
+
         </nav>
       </div>
     </header>
@@ -1917,6 +1925,7 @@
     </script>
   </body>
 </html>
+
 
 
 
