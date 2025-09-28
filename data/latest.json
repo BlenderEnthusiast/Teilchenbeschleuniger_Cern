@@ -1,5 +1,5 @@
 {
-  "t": 1759055483,
+  "t": 1759055980,
   "energy": null,
   "speed": null,
   "ib1": null,
@@ -7,7 +7,7 @@
   "lumi": null,
   "species": "unknown",
   "_meta": {
-    "fetched_at": "2025-09-28T10:31:23.870Z",
+    "fetched_at": "2025-09-28T10:39:40.580Z",
     "sources": {
       "energy": false,
       "ib1": false,
