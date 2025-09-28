@@ -498,6 +498,57 @@
       
       /* Falls die Unterstreichung beim Subtitel noch aktiv ist – ausschalten: */
       .u-line::after{ display:none !important; }
+
+      /* Container für beide Magneten */
+      .lhc-magnets{ display:flex; flex-direction:column; gap:32px; margin:16px 0 6px; }
+      
+      /* Ein Magnet-Block mit Titel oben, darunter 2 Spalten */
+      .magnet-block{
+        display:grid; gap:14px 22px; align-items:center;
+        grid-template-columns:1.05fr 1fr;
+        grid-template-areas:
+          "title title"
+          "copy  media";
+      }
+      .magnet-block.reverse{
+        grid-template-columns:1fr 1.05fr;         /* Video | Text */
+        grid-template-areas:
+          "title title"
+          "media copy";
+      }
+      
+      /* Titel (Gradient aus deiner --heading-gradient) */
+      .magnet-title{
+        grid-area:title;
+        margin:0;
+        font-size:clamp(18px,2.8vw,22px);
+        font-weight:800; letter-spacing:-.01em;
+        background:var(--heading-gradient);
+        -webkit-background-clip:text; background-clip:text; color:transparent;
+      }
+      
+      .magnet-copy{ grid-area:copy; }
+      .magnet-copy p{ margin:0; color:var(--muted); }
+      
+      /* Video rechts/links, 16:9 */
+      .magnet-media{
+        grid-area:media; position:relative; width:100%;
+        aspect-ratio:16/9; border-radius:16px; overflow:hidden; background:#000;
+      }
+      .magnet-media video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+      
+      /* Mobile: Titel oben, dann Video, dann Text */
+      @media (max-width:900px){
+        .magnet-block,
+        .magnet-block.reverse{
+          grid-template-columns:1fr;
+          grid-template-areas:
+            "title"
+            "media"
+            "copy";
+        }
+      }
+
       
 
 
@@ -869,37 +920,33 @@
           <h3 class="reveal" style="margin-top:16px">Magneten</h3>
           <div class="lhc-magnets reveal">
           
-            <!-- Dipol: Titel oben, Text links, Video rechts -->
+            <!-- Dipol: Titel oben, Text links | Video rechts -->
             <section class="magnet-block" id="magnet-dipol">
               <h4 class="magnet-title">Dipolmagneten</h4>
-              <div class="magnet-layout">
-                <div class="magnet-copy">
-                  <p>
-                    Erzeugen ein nahezu <b>gleichförmiges Magnetfeld</b> quer zur Flugrichtung und
-                    <b>biegen</b> so die Protonen auf die Kreisbahn. Supraleitende Dipole bilden das
-                    Rückgrat des 27-km-Rings.
-                  </p>
-                </div>
-                <div class="magnet-media" aria-hidden="true">
-                  <video src="ha.mp4" autoplay muted loop playsinline preload="auto"></video>
-                </div>
+              <div class="magnet-copy">
+                <p>
+                  Erzeugen ein nahezu <b>gleichförmiges Magnetfeld</b> quer zur Flugrichtung und
+                  <b>biegen</b> so die Protonen auf die Kreisbahn. Supraleitende Dipole bilden das
+                  Rückgrat des 27-km-Rings.
+                </p>
               </div>
+              <figure class="magnet-media" aria-hidden="true">
+                <video src="media/dipol.mp4" autoplay muted loop playsinline preload="auto"></video>
+              </figure>
             </section>
           
-            <!-- Quadrupol: Titel oben, Video links, Text rechts -->
-            <section class="magnet-block" id="magnet-quadrupol">
+            <!-- Quadrupol: Titel oben, Video links | Text rechts -->
+            <section class="magnet-block reverse" id="magnet-quadrupol">
               <h4 class="magnet-title">Quadrupolmagneten</h4>
-              <div class="magnet-layout reverse">
-                <div class="magnet-media" aria-hidden="true">
-                  <video src="ba.mp4" autoplay muted loop playsinline preload="auto"></video>
-                </div>
-                <div class="magnet-copy">
-                  <p>
-                    Wirken wie <b>magnetische Linsen</b>: Fokussieren in einer und defokussieren in der
-                    anderen Ebene. In Sequenzen (FODO, starke Triplets an den Experimenten) wird der
-                    Strahlquerschnitt an den Kollisionspunkten stark verkleinert.
-                  </p>
-                </div>
+              <figure class="magnet-media" aria-hidden="true">
+                <video src="media/quadrupol.mp4" autoplay muted loop playsinline preload="auto"></video>
+              </figure>
+              <div class="magnet-copy">
+                <p>
+                  Wirken wie <b>magnetische Linsen</b>: Fokussieren in einer und defokussieren in der
+                  anderen Ebene. In Sequenzen (FODO, starke Triplets an den Experimenten) wird der
+                  Strahlquerschnitt an den Kollisionspunkten stark verkleinert.
+                </p>
               </div>
             </section>
           
@@ -2230,6 +2277,7 @@
 
   </body>
 </html>
+
 
 
 
