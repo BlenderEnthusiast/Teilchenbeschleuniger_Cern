@@ -461,6 +461,44 @@
         content: none !important;
         display: none !important;
       }
+      /* Magneten – untereinander, mit alternierendem Layout und 16:9 Video */
+      .lhc-magnets{
+        display:flex; flex-direction:column; gap:28px;
+        margin:16px 0 6px;
+      }
+      .magnet-row{
+        display:grid; grid-template-columns:1.05fr 1fr; /* Text | Video */
+        gap:22px; align-items:center;
+      }
+      .magnet-row .magnet-copy h4{ margin:0 0 6px; font-size:clamp(16px,2.6vw,20px); letter-spacing:-.01em; }
+      .magnet-row .magnet-copy p{ margin:0; color:var(--muted); }
+      
+      .magnet-media{ position:relative; width:100%; aspect-ratio:16/9; border-radius:16px; overflow:hidden; background:#000; }
+      .magnet-media video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+      
+      /* Quadrupol: Video links, Text rechts */
+      .magnet-row.reverse{
+        grid-template-columns:1fr 1.05fr;          /* Video | Text */
+        grid-template-areas:"media copy";
+      }
+      .magnet-row{ grid-template-areas:"copy media"; }
+      .magnet-row .magnet-copy{ grid-area:copy; }
+      .magnet-row .magnet-media{ grid-area:media; }
+      
+      /* Mobile: untereinander (Video über Text) */
+      @media (max-width:900px){
+        .magnet-row,
+        .magnet-row.reverse{
+          grid-template-columns:1fr;
+          grid-template-areas:
+            "media"
+            "copy";
+        }
+      }
+      
+      /* Falls die Unterstreichung beim Subtitel noch aktiv ist – ausschalten: */
+      .u-line::after{ display:none !important; }
+      
 
 
 
@@ -827,31 +865,39 @@
         <div class="container">
         
      
-          <h2 class="lhc-title reveal">Führen & Beschleunigen im LHC</h2>
-          <p class="lhc-lead reveal">
-            Zwei Baugruppen arbeiten zusammen: <b>Magnete</b> halten/fokussieren den Strahl,
-            <b>RF-Kavitäten</b> geben bei jeder Runde den Energieschub.
-          </p>
-          
-          <h3 class="u-line reveal" style="margin-top:16px">Magneten</h3>
+          <h3 class="reveal" style="margin-top:16px">Magneten</h3>
           <div class="lhc-magnets reveal">
-            <div class="lhc-item" role="article" aria-label="Dipolmagneten">
-              <h4>Dipolmagneten</h4>
-              <p>
-                Erzeugen ein nahezu <b>gleichförmiges Magnetfeld</b> quer zur Flugrichtung und
-                <b>biegen</b> so die Protonen auf die Kreisbahn. Supraleitende Dipole bilden das
-                Rückgrat des 27-km-Rings.
-              </p>
-            </div>
-            <div class="lhc-item" role="article" aria-label="Quadrupolmagneten">
-              <h4>Quadrupolmagneten</h4>
-              <p>
-                Wirken wie <b>magnetische Linsen</b>: Fokussieren in einer und defokussieren in der
-                anderen Ebene. In Sequenzen (FODO, starke Triplets an den Experimenten) wird der
-                Strahlquerschnitt an den Kollisionspunkten stark verkleinert.
-              </p>
-            </div>
+            <!-- Dipol: Text links, Video rechts -->
+            <article class="magnet-row" id="magnet-dipol">
+              <div class="magnet-copy">
+                <h4>Dipolmagneten</h4>
+                <p>
+                  Erzeugen ein nahezu <b>gleichförmiges Magnetfeld</b> quer zur Flugrichtung und
+                  <b>biegen</b> so die Protonen auf die Kreisbahn. Supraleitende Dipole bilden das
+                  Rückgrat des 27-km-Rings.
+                </p>
+              </div>
+              <div class="magnet-media" aria-hidden="true">
+                <video src="media/dipol.mp4" autoplay muted loop playsinline preload="auto"></video>
+              </div>
+            </article>
+          
+            <!-- Quadrupol: Video links, Text rechts -->
+            <article class="magnet-row reverse" id="magnet-quadrupol">
+              <div class="magnet-media" aria-hidden="true">
+                <video src="media/quadrupol.mp4" autoplay muted loop playsinline preload="auto"></video>
+              </div>
+              <div class="magnet-copy">
+                <h4>Quadrupolmagneten</h4>
+                <p>
+                  Wirken wie <b>magnetische Linsen</b>: Fokussieren in einer und defokussieren in der
+                  anderen Ebene. In Sequenzen (FODO, starke Triplets an den Experimenten) wird der
+                  Strahlquerschnitt an den Kollisionspunkten stark verkleinert.
+                </p>
+              </div>
+            </article>
           </div>
+
           
           <h3 class="u-line reveal" style="margin-top:10px">RF-Kavitäten (Radiofrequenz)</h3>
           <section class="lhc-rf reveal" aria-label="RF-Kavitäten">
@@ -2176,6 +2222,7 @@
 
   </body>
 </html>
+
 
 
 
