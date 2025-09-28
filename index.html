@@ -11,6 +11,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet"/>
 
+
+
     <style>
       /* ================= TOKENS / RESET ================= */
       *, *::before, *::after { box-sizing: border-box; }
@@ -22,39 +24,39 @@
       body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; background:var(--bg); color:var(--fg); }
       img { max-width:100%; display:block; }
       a { color:inherit; }
-
+    
       .container { max-width:1100px; margin:0 auto; padding:0 20px; }
       .header { position:sticky; top:0; z-index:40; backdrop-filter:saturate(120%) blur(10px); background:rgba(11,11,12,.6); border-bottom:1px solid var(--line); }
       .nav a { color:var(--muted); text-decoration:none; font-size:14px; margin-left:18px; }
       .nav a:hover { color:var(--fg); }
-    
+      
       .nav{
         display:flex; align-items:center; justify-content:space-between;
         padding:14px 20px; gap:18px; flex-wrap:wrap;
       }
-
+    
       .nav-sources{
         display:inline-flex; align-items:center; gap:10px;
         margin-left:6px; 
       }
-
+    
       .nav .switch{ transform: translateY(1px); }
-
-
+    
+    
       .section { padding:80px 0; border-top:1px solid var(--line); scroll-margin-top:84px; }
       .reveal{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .6s ease}
       .reveal.show{opacity:1;transform:none}
-
+    
       .grid{display:grid;gap:22px}
       .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
-
+    
       /* ================= HERO ================= */
       .hero{position:relative;min-height:88vh;display:grid;place-items:center;overflow:hidden}
       .hero .bg{position:absolute;inset:0;background:radial-gradient(1200px 600px at 70% 20%,rgba(255,255,255,.08),transparent),linear-gradient(180deg,#0c0c10,#09090b)}
       .hero .content{position:relative;text-align:center;padding:40px}
       .title{font-size:clamp(36px,6vw,72px);font-weight:700;letter-spacing:-.02em}
       .subtitle{max-width:750px;margin:14px auto 0;color:var(--muted);font-size:clamp(16px,2.2vw,18px)}
-
+    
       /* ================= HORIZONTAL TIMELINE ================= */
       #timeline h2 { font-size: clamp(26px, 3.8vw, 40px); margin:0 0 16px; }
       .timeline-slider { display:flex; align-items:center; justify-content:center; gap:18px; margin:40px 0; }
@@ -89,7 +91,7 @@
         .event-media{ flex-basis:auto; }
         .event-media img{ height:220px; }
       }
-
+    
       /* ================= TOPIC GRID ================= */
       .topic-grid{ display:grid; gap:6px; margin:18px 0; grid-template-columns: 1fr; perspective:800px; }
       .topic-card{ position:relative; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; min-height:60px; text-decoration:none; color:var(--fg); display:flex; flex-direction:column; justify-content:center; gap:6px; transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease, background .25s ease; will-change:transform; }
@@ -98,7 +100,7 @@
       .topic-card:hover, .topic-card:focus-visible{ transform: translateY(-2px) scale(1.01) rotateX(1deg); border-color: var(--accent); box-shadow: 0 6px 20px rgba(125,211,252,.18); outline:none; background: linear-gradient(180deg,#18181b,#141416); }
       @media (max-width:900px){ .topic-grid{ grid-template-columns: 1fr 1fr; } }
       @media (max-width:600px){ .topic-grid{ grid-template-columns: 1fr; } }
-
+    
       /* ================= ACCORDION ================= */
       .accordion{padding:0; overflow:hidden; border:1px solid var(--line); border-radius:16px; transition:border-color .28s ease, box-shadow .28s ease, background .28s ease}
       .accordion-header{width:100%; display:flex; justify-content:space-between; align-items:center; gap:12px; padding:16px 18px; background:transparent; border:0; color:var(--fg); cursor:pointer; font-size:24px; font-weight:700; text-align:left;}
@@ -108,7 +110,7 @@
       .accordion-inner{ padding:12px 0 16px; }
       .accordion.open{ border-color:#90ff86; box-shadow:0 6px 22px rgba(134,225,255,.16); }
       @media (max-width:900px){ .accordion-header{font-size:16px; padding:14px 16px} }
-
+    
       /* ================= Beschleunigerkette (Model Viewer) ================= */
       #chain-switch .sub{ color:var(--muted); margin:-6px 0 16px; }
       .flow-card { display:grid; grid-template-columns: 1fr 1fr; gap:24px; background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015)); border:1px solid var(--line); border-radius:18px; padding:60px 20px 20px; box-shadow:0 10px 30px rgba(0,0,0,.25); position:relative; }
@@ -121,14 +123,14 @@
       .step-btn:hover { background:#1b1b20; border-color:var(--accent); }
       .step-btn:disabled { opacity:.5; cursor:not-allowed; }
       @media (max-width:900px){ .flow-card{ grid-template-columns:1fr } .flow-left{ max-height:none; padding-bottom:60px; } }
-
+    
       /* Blaue MV-Hotspots (ohne Labels) */
       .mv-dot{ --size:14px; width:var(--size); height:var(--size); border-radius:50%; border:2px solid #0ea5ff; background:#38bdf8; box-shadow:0 0 0 6px rgba(56,189,248,.18); cursor:pointer; }
       .mv-dot:focus, .mv-dot:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
-
+    
       .flow-viewport { width: 100%; aspect-ratio: 1 / 1; border-radius: 14px; border: 1px solid var(--line); overflow: hidden; background: #0f1014; }
       model-viewer { width: 100%; height: 100%; display: block; outline: none; }
-
+    
       /* ================= HOTSPOTS (Bild) ================= */
       #ring-hotspots .stage{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#0f0f12}
       #ring-hotspots .stage img{width:100%;height:520px;object-fit:cover;opacity:.85;filter:grayscale(20%)}
@@ -138,7 +140,7 @@
       .fact h3{margin:0 0 6px;font-size:16px}
       .fact p{margin:0;color:var(--muted);font-size:14px}
       .fact.show{display:block}
-
+    
       /* ================= PHYSIK DEMO ================= */
       #acceleration-chain .chain{display:grid;grid-template-columns:1fr 1fr;gap:22px}
       .timeline-box{position:relative;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
@@ -155,7 +157,7 @@
       #bfield::-webkit-slider-runnable-track{height:4px;background:#2d2b30;border-radius:999px}
       .svgbox{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
       @media (max-width:900px){ #acceleration-chain .chain{grid-template-columns:1fr} }
-
+    
       /* ================= RINGS ================= */
       #collision-detector .rings{display:grid;grid-template-columns:1fr 1fr;gap:22px}
       .detector{position:relative;aspect-ratio:1/1;border-radius:18px;border:1px solid var(--line);overflow:hidden;background:radial-gradient(circle at 50% 50%,#1b1b1f,#101014)}
@@ -165,12 +167,12 @@
       .layers-legend .row .name{font-weight:600}
       .layers-legend button{border:none;background:#fff;color:#000;padding:6px 10px;border-radius:10px;cursor:pointer;font-weight:600}
       @media (max-width:900px){ #collision-detector .rings{grid-template-columns:1fr} }
-
+    
       /* ================= SAFETY / FOOTER ================= */
       .safety{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
       @media (max-width:900px){ .safety{grid-template-columns:1fr} }
       .footer{padding:40px 0;color:var(--muted);text-align:center;border-top:1px solid var(--line)}
-
+    
       /* ================= Anchor Flash ================= */
       .section.flash{position:relative}
       .section.flash::before{
@@ -179,7 +181,7 @@
         animation: flashPulse 1200ms ease-out forwards 300ms;
       }
       @keyframes flashPulse{ 0%{opacity:0} 20%{opacity:1} 60%{opacity:.85} 100%{opacity:0} }
-
+    
       /* ================= PONG OVERLAY ================= */
       #pong-overlay[hidden]{ display:none !important; }
       #pong-overlay{
@@ -206,14 +208,14 @@
       .pong-muted{ color:var(--muted); font-weight:500; }
       #pong-close{ border:1px solid var(--line); background:transparent; color:var(--fg); border-radius:10px; padding:8px 12px; cursor:pointer; }
       #pong-close:hover{ background:#17181c; border-color:var(--accent); }
-
+    
       /* ================= Screensaver / Clip Player ================= */
       #dvd-wrap { position: fixed; inset: 0; z-index: 9999; background: transparent; opacity: 0; pointer-events: none; transition: opacity 2s ease; }
       #dvd-wrap.active { opacity: 1; pointer-events: auto; }
       #content-wrap { transition: filter 2s cubic-bezier(.4, 0, .2, 1); }
       #content-wrap.blur { filter: blur(12px); }
       #dvd-box iframe, #dvd-box video { width: 2000px; height: auto; max-width: 200vw; }
-
+    
       .clip-card { background: var(--card, #141416); border: 1px solid var(--line, #242428); border-radius: 18px; padding: 18px; max-width: 1000px; margin: 40px auto; }
       .clip-box { display: grid; grid-template-columns: 1.1fr 1.4fr; gap: 24px; align-items: stretch; }
       @media (max-width:900px){ .clip-box { grid-template-columns: 1fr; } }
@@ -240,7 +242,7 @@
         box-shadow: none !important;
         -webkit-tap-highlight-color: transparent;
       }
-
+    
       /* === LIVE · Telemetrie · Styles ========================================== */
       #tg-canvas{ touch-action:none; }
       #tg-tip b{ font-weight:700 }
@@ -282,7 +284,7 @@
       
      
       body[data-show-sources="true"] .sources-block{ display:block; }
-
+    
       /* Subsection divider with a labeled chip */
       .subsection-sep{
         position:relative;
@@ -383,12 +385,11 @@
       
       /* — Resets, falls alter Block noch aktiv war — */
       .lhc-magnets::before, .lhc-item::before { display:none !important; content:none !important; }
-
-
-
-
-
     </style>
+
+
+
+    
   </head>
   <body>
     <!-- ================= HEADER ================= -->
@@ -409,7 +410,6 @@
               <span class="slider" aria-hidden="true"></span>
             </label>
           </span>
-
         </nav>
       </div>
     </header>
@@ -467,14 +467,13 @@
               <p>Quellen & Arbeitsnachweise</p>
             </a>
           </div>
-            <div class="sources-toggleable">
-              <div class="subsection-sep" aria-hidden="true">
-                <span class="chip"><span class="dot" aria-hidden="true"></span>Quellen</span>
-              </div>
-      
 
+          <div class="sources-toggleable">
+            <div class="subsection-sep" aria-hidden="true">
+              <span class="chip"><span class="dot" aria-hidden="true"></span>Quellen</span>
+            </div>
+          </div>
         </div>
-        
       </section>
 
       <!-- ================= TIMELINE ================= -->
@@ -499,17 +498,17 @@
             </div>
             <div class="labels" id="tl-labels"></div>
           </div>
-             <div class="sources-block card" aria-label="Quellen dieser Sektion">
-              <h5>Verwendete Quellen</h5>
-              <ul class="sources-list">
-                <li>
-                  <a href="https://example.com" target="_blank" rel="noopener noreferrer">
-                    X – Titel der Quelle
-                  </a>
-                
-                </li>
-              </ul>
-            </div>
+
+          <div class="sources-block card" aria-label="Quellen dieser Sektion">
+            <h5>Verwendete Quellen</h5>
+            <ul class="sources-list">
+              <li>
+                <a href="https://example.com" target="_blank" rel="noopener noreferrer">
+                  X – Titel der Quelle
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
       </section>
 
@@ -540,7 +539,6 @@
                   min-camera-orbit="auto 60deg 10m"
                   max-camera-orbit="auto 60deg 4000m"
                   interpolation-decay="200">
-
                   <!-- 9 Hotspots (ohne Labels) -->
                   <button class="mv-dot" slot="hotspot-LINAC4"    data-name="LINAC4"    data-position="20.6911m -0.684515m -112.797m"  data-normal="0m 1m 0m"></button>
                   <button class="mv-dot" slot="hotspot-PSBooster" data-name="PSBooster" data-position="36.691m 0.25m -77.884m"         data-normal="0m 1m 0m"></button>
@@ -551,169 +549,39 @@
                   <button class="mv-dot" slot="hotspot-ALICE"     data-name="ALICE"     data-position="473m 0.25m 144.7m"              data-normal="0m 1m 0m"></button>
                   <button class="mv-dot" slot="hotspot-LHCb"      data-name="LHCb"      data-position="-518.19m 0.25m 178.78m"         data-normal="0m 1m 0m"></button>
                   <button class="mv-dot" slot="hotspot-CMS"       data-name="CMS"       data-position="-16.125m 0.25m 1762m"           data-normal="0m 1m 0m"></button>
-
                 </model-viewer>
+              </div>
 
-                <!-- Smooth focus/zoom controller -->
-                <script>
-                (function(){
-                  const mv = document.getElementById('mv');
-                  if(!mv) return;
-
-                  const parsePos = (s) => (s||'0m 0m 0m').split(' ').map(p => parseFloat(String(p).replace('m',''))||0);
-                  const fmtPos   = (v) => `${v[0].toFixed(3)}m ${v[1].toFixed(3)}m ${v[2].toFixed(3)}m`;
-                  const parseOrbit = (s) => {
-                    const parts = (s||'auto auto 200m').split(' ');
-                    const num = (p)=> (p==null||p==='auto')?null:parseFloat(p);
-                    return { theta: parts[0]==='auto'?null:num(parts[0]), phi: parts[1]==='auto'?null:num(parts[1]), r: num(parts[2])??200 };
-                  };
-                  const fmtOrbit = ({theta=null,phi=null,r=200}) => `${theta==null?'auto':theta+'deg'} ${phi==null?'auto':phi+'deg'} ${(+r).toFixed(3)}m`;
-                  const easeInOutCubic=(t)=> t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
-
-                  function readPositions(){
-                    const map={};
-                    mv.querySelectorAll('button.mv-dot[data-name]').forEach(btn=>{
-                      map[btn.dataset.name]=btn.dataset.position||'0m 0m 0m';
-                    });
-                    return map;
-                  }
-                  let POS = readPositions();
-                  const mo = new MutationObserver(()=>{ POS = readPositions(); });
-                  mo.observe(mv,{subtree:true, attributes:true, attributeFilter:['data-position']});
-
-                  const ORBIT_RADIUS = {
-                    LINAC4:   20,
-                    PSBooster:25,
-                    PS:      200,
-                    SPS:     1000,
-                    LHC:     4000,
-                    ATLAS:   20,
-                    CMS:     20,
-                    ALICE:   20,
-                    LHCb:    20
-                  };
-
-                  let currTarget=null;
-                  let currOrbit=null;
-                  let animId=null;
-
-                  mv.addEventListener('load', ()=>{
-                    const attrTarget = mv.getAttribute('camera-target');
-                    currTarget = (attrTarget && !/auto/i.test(attrTarget)) ? parsePos(attrTarget)
-                                : POS.LINAC4 ? parsePos(POS.LINAC4) : [0,0,0];
-                    currOrbit = parseOrbit(mv.getAttribute('camera-orbit'));
-                    if(!currOrbit || isNaN(currOrbit.r)) currOrbit = {theta:null, phi:null, r: ORBIT_RADIUS.LINAC4};
-                    mv.setAttribute('camera-target', fmtPos(currTarget));
-                    mv.setAttribute('camera-orbit',  fmtOrbit(currOrbit));
-                  }, {once:true});
-
-                  function stopAnim(){ if(animId){ cancelAnimationFrame(animId); animId=null; } }
-
-                  async function focusTo(name, duration=900){
-                    const targetStr = POS[name];
-                    if(!targetStr) return;
-                    if(mv.updateComplete) await mv.updateComplete;
-
-                    const startPos   = currTarget || (mv.getAttribute('camera-target') ? parsePos(mv.getAttribute('camera-target')) : [0,0,0]);
-                    const endPos     = parsePos(targetStr);
-                    const startOrbit = currOrbit || parseOrbit(mv.getAttribute('camera-orbit'));
-                    const desiredR   = ORBIT_RADIUS[name] ?? startOrbit.r ?? 200;
-                    const endOrbit   = { theta:startOrbit.theta, phi:startOrbit.phi, r:desiredR };
-
-                    const t0 = performance.now();
-                    stopAnim();
-
-                    const step = (now)=>{
-                      const t = Math.min(1,(now - t0)/duration);
-                      const k = easeInOutCubic(t);
-
-                      const pos = [
-                        startPos[0] + (endPos[0]-startPos[0]) * k,
-                        startPos[1] + (endPos[1]-startPos[1]) * k,
-                        startPos[2] + (endPos[2]-startPos[2]) * k,
-                      ];
-                      const r = (startOrbit.r ?? 200) + ((endOrbit.r)-(startOrbit.r ?? 200)) * k;
-
-                      mv.setAttribute('camera-target', fmtPos(pos));
-                      mv.setAttribute('camera-orbit',  fmtOrbit({theta:startOrbit.theta, phi:startOrbit.phi, r}));
-
-                      if(t<1){
-                        animId = requestAnimationFrame(step);
-                      }else{
-                        currTarget = endPos;
-                        currOrbit  = {theta:startOrbit.theta, phi:startOrbit.phi, r:endOrbit.r};
-                        animId = null;
-                      }
-                    };
-                    animId = requestAnimationFrame(step);
-                  }
-
-                  mv.addEventListener('click', (e)=>{
-                    const btn = e.composedPath().find(n=> n?.classList?.contains?.('mv-dot'));
-                    if(btn && btn.dataset?.name){
-                      focusTo(btn.dataset.name, 800);
-                    }
-                  });
-
-                  window.__MV_FOCUS__ = { focusTo, get POS(){ return POS; } };
-                })();
-                </script>
-
-                <!-- Control Panel (XY editor) -->
-                <div id="mv-hotspot-controls" class="card" style="margin-top:12px">
-                  <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:end">
-                    <label>
-                      <div style="font-size:12px;color:var(--muted)">Hotspot</div>
-                      <select id="mv-hotspot-select">
-                        <option>LINAC4</option>
-                        <option>PSBooster</option>
-                        <option>PS</option>
-                        <option>SPS</option>
-                        <option>LHC</option>
-                        <option>ATLAS</option>
-                        <option>CMS</option>
-                        <option>ALICE</option>
-                        <option>LHCb</option>
-                      </select>
-                    </label>
-                    <label>
-                      <div style="font-size:12px;color:var(--muted)">x (m)</div>
-                      <input id="mv-x" type="number" step="0.1" value="0" style="width:110px">
-                    </label>
-                    <label>
-                      <div style="font-size:12px;color:var(--muted)">y (m)</div>
-                      <input id="mv-y" type="number" step="0.1" value="0" style="width:110px">
-                    </label>
-                    <button id="mv-apply" class="step-btn" type="button">Setzen</button>
-                  </div>
-                  <div style="margin-top:8px; font-size:12px; color:var(--muted)">
-                    Hinweis: Z bleibt hier 0 m (kannst du im Script erweitern).
-                  </div>
+              <!-- Control Panel (XY editor) -->
+              <div id="mv-hotspot-controls" class="card" style="margin-top:12px">
+                <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:end">
+                  <label>
+                    <div style="font-size:12px;color:var(--muted)">Hotspot</div>
+                    <select id="mv-hotspot-select">
+                      <option>LINAC4</option>
+                      <option>PSBooster</option>
+                      <option>PS</option>
+                      <option>SPS</option>
+                      <option>LHC</option>
+                      <option>ATLAS</option>
+                      <option>CMS</option>
+                      <option>ALICE</option>
+                      <option>LHCb</option>
+                    </select>
+                  </label>
+                  <label>
+                    <div style="font-size:12px;color:var(--muted)">x (m)</div>
+                    <input id="mv-x" type="number" step="0.1" value="0" style="width:110px">
+                  </label>
+                  <label>
+                    <div style="font-size:12px;color:var(--muted)">y (m)</div>
+                    <input id="mv-y" type="number" step="0.1" value="0" style="width:110px">
+                  </label>
+                  <button id="mv-apply" class="step-btn" type="button">Setzen</button>
                 </div>
-
-                <script>
-                (function(){
-                  const mv = document.getElementById('mv');
-                  const sel = document.getElementById('mv-hotspot-select');
-                  const xIn = document.getElementById('mv-x');
-                  const yIn = document.getElementById('mv-y');
-                  const btn = document.getElementById('mv-apply');
-                  const getBtn = (name)=> mv.querySelector(`button.mv-dot[data-name="${name}"]`);
-                  function load(name){
-                    const b=getBtn(name); if(!b) return;
-                    const [xm,ym] = (b.dataset.position||'0m 0m 0m').split(' ');
-                    xIn.value=parseFloat(xm)||0; yIn.value=parseFloat(ym)||0;
-                  }
-                  function apply(){
-                    const b=getBtn(sel.value); if(!b) return;
-                    const x=parseFloat(xIn.value)||0; const y=parseFloat(yIn.value)||0; const z=0;
-                    b.dataset.position = `${x}m ${y}m ${z}m`;
-                  }
-                  sel.addEventListener('change',()=>load(sel.value));
-                  btn.addEventListener('click',apply);
-                  load(sel.value);
-                })();
-                </script>
+                <div style="margin-top:8px; font-size:12px; color:var(--muted)">
+                  Hinweis: Z bleibt hier 0 m (kannst du im Script erweitern).
+                </div>
               </div>
             </div>
 
@@ -727,31 +595,29 @@
               </div>
             </div>
           </div>
+
           <div class="sources-block card" aria-label="Quellen dieser Sektion">
-              <h5>Verwendete Quellen</h5>
-              <ul class="sources-list">
-                <li>
-                  <a href="https://example.com" target="_blank" rel="noopener noreferrer">
-                    X – Titel der Quelle
-                  </a>
-                 
-                </li>
-              </ul>
-            </div>
+            <h5>Verwendete Quellen</h5>
+            <ul class="sources-list">
+              <li>
+                <a href="https://example.com" target="_blank" rel="noopener noreferrer">
+                  X – Titel der Quelle
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
       </section>
 
       <!-- ================= TEILCHENBESCHLEUNIGER  ================= -->
       <section class="section" id="ring-hotspots">
         <div class="container">
-        
-     
           <h2 class="lhc-title reveal">Führen & Beschleunigen im LHC</h2>
           <p class="lhc-lead reveal">
             Zwei Baugruppen arbeiten zusammen: <b>Magnete</b> halten/fokussieren den Strahl,
             <b>RF-Kavitäten</b> geben bei jeder Runde den Energieschub.
           </p>
-          
+
           <h3 class="u-line reveal" style="margin-top:16px">Magneten</h3>
           <div class="lhc-magnets reveal">
             <div class="lhc-item" role="article" aria-label="Dipolmagneten">
@@ -771,7 +637,7 @@
               </p>
             </div>
           </div>
-          
+
           <h3 class="u-line reveal" style="margin-top:10px">RF-Kavitäten (Radiofrequenz)</h3>
           <section class="lhc-rf reveal" aria-label="RF-Kavitäten">
             <div>
@@ -786,9 +652,8 @@
                 <li>Kryo- &amp; HF-Technik für stabile Felder</li>
               </ul>
             </div>
-          
+
             <div class="lhc-video" aria-hidden="true">
-              <!-- Pfad anpassen: z. B. /media/rf-cavity-loop.mp4 -->
               <video src="media/rf-cavity-loop.mp4" autoplay muted loop playsinline preload="auto"
                      aria-label="Schematische RF-Kavität (Loop)"></video>
             </div>
@@ -801,7 +666,7 @@
         <div class="container">
           <h2 class="reveal">A Toroidal LHC Apparatus</h2>
           <p class="reveal">Eine Einführung in einen der 4 Detektoren des LHCs, Atlas</p>
-       
+
           <div class="clip-card">
             <div class="clip-box">
               <div class="clip-left">
@@ -812,7 +677,7 @@
                   <button id="btn-next" class="step-btn" type="button">Weiter ▶</button>
                 </div>
               </div>
-  
+
               <div class="clip-right">
                 <video id="vidA" playsinline muted preload="auto"></video>
                 <video id="vidB" playsinline muted preload="auto"></video>
@@ -821,17 +686,17 @@
               </div>
             </div>
           </div>
+
           <div class="sources-block card" aria-label="Quellen dieser Sektion">
-              <h5>Verwendete Quellen</h5>
-              <ul class="sources-list">
-                <li>
-                  <a href="https://example.com" target="_blank" rel="noopener noreferrer">
-                    X – Titel der Quelle
-                  </a>
-                 
-                </li>
-              </ul>
-            </div>
+            <h5>Verwendete Quellen</h5>
+            <ul class="sources-list">
+              <li>
+                <a href="https://example.com" target="_blank" rel="noopener noreferrer">
+                  X – Titel der Quelle
+                </a>
+              </li>
+            </ul>
+          </div>
          </div>
       </section>
 
@@ -854,17 +719,17 @@
               <div class="row"><div class="name">LHC</div><button type="button" data-target="lhc">zeigen</button></div>
             </div>
           </div>
+
           <div class="sources-block card" aria-label="Quellen dieser Sektion">
-              <h5>Verwendete Quellen</h5>
-              <ul class="sources-list">
-                <li>
-                  <a href="https://example.com" target="_blank" rel="noopener noreferrer">
-                    X – Titel der Quelle
-                  </a>
-                 
-                </li>
-              </ul>
-            </div>
+            <h5>Verwendete Quellen</h5>
+            <ul class="sources-list">
+              <li>
+                <a href="https://example.com" target="_blank" rel="noopener noreferrer">
+                  X – Titel der Quelle
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
       </section>
       
@@ -906,6 +771,7 @@
           </div>
         </div>
       </section>
+
       <!-- ================= SICHERHEIT ================= -->
       <section class="section" id="safety">
         <div class="container">
@@ -915,22 +781,19 @@
             <div class="card reveal"><h3>Betrieb</h3><p>Kontrollierte Strahlzeiten & Wartungsphasen.</p></div>
             <div class="card reveal"><h3>Mythen</h3><p>Schwarze Löcher? Nope. Physikalisch nicht relevant.</p></div>
           </div>
+
           <div class="sources-block card" aria-label="Quellen dieser Sektion">
-              <h5>Verwendete Quellen</h5>
-              <ul class="sources-list">
-                <li>
-                  <a href="https://example.com" target="_blank" rel="noopener noreferrer">
-                    X – Titel der Quelle
-                  </a>
-                 
-                </li>
-              </ul>
-            </div>
+            <h5>Verwendete Quellen</h5>
+            <ul class="sources-list">
+              <li>
+                <a href="https://example.com" target="_blank" rel="noopener noreferrer">
+                  X – Titel der Quelle
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
       </section>
-
-
-
 
       <!-- ================= QUELLEN ================= -->
       <section class="section" id="sources">
@@ -972,13 +835,22 @@
     </div>
 
     <!-- ================= SCRIPTS ================= -->
-    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 
+
+
+
+
+
+    <!-- Model Viewer (external module) -->
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    
+    <!-- Reveal on scroll -->
     <script defer>
       const ioReveal = new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('show')})},{threshold:.2});
       document.querySelectorAll('.reveal').forEach(x=>ioReveal.observe(x));
     </script>
-
+    
+    <!-- Hotspots (image facts) -->
     <script defer>
       (function(){
         const hotspots = [...document.querySelectorAll('.hotspot')];
@@ -999,7 +871,8 @@
         });
       })();
     </script>
-
+    
+    <!-- Physik-Demo (optional steps + B-Field curve) -->
     <script defer>
       (function(){
         const stepsEl = document.getElementById('phys-steps');
@@ -1040,7 +913,8 @@
         if(b && bval && beam){ b.addEventListener('input',upd); upd(); }
       })();
     </script>
-
+    
+    <!-- Timeline (horizontal slider) -->
     <script defer>
       (function(){
         const events=[
@@ -1115,7 +989,8 @@
         window.addEventListener('keydown',e=>{ if(e.key==='ArrowLeft') go(-1); if(e.key==='ArrowRight') go(1); });
       })();
     </script>
-
+    
+    <!-- Intro Accordion + Anchor Highlight -->
     <script defer>
       (function(){
         const acc = document.getElementById('cern-accordion');
@@ -1165,7 +1040,7 @@
         window.addEventListener('hashchange', ()=>highlight(location.hash));
       })();
     </script>
-
+    
     <!-- PONG overlay wiring -->
     <script defer>
       (function(){
@@ -1188,7 +1063,7 @@
         window.__PONG__ = { open, close, isOpen, ctx, canvas, scoreEl, bestEl, LS_KEY, resizeCanvas };
       })();
     </script>
-
+    
     <!-- PONG game -->
     <script defer>
       (function(){
@@ -1300,89 +1175,150 @@
         window.__PONG__._togglePause = togglePause;
       })();
     </script>
-
-    <!-- Beschleunigerkette: Buttons & Texte + CAMERA FOCUS (smooth) -->
-    <script defer>
+    
+    <!-- Beschleunigerkette · Model-Viewer camera focus (smooth) -->
+    <script>
       (function(){
-        const elTitle = document.getElementById('flow-title');
-        const elText  = document.getElementById('flow-text');
-        const modePro = document.getElementById('mode-protons');
-        const modeIon = document.getElementById('mode-ions');
-        const prevBtn = document.getElementById('step-prev');
-        const nextBtn = document.getElementById('step-next');
-
-        const protons = [
-          { key:'Linear Accelerator 4 (LINAC4)', text:'Der Linear Accelerator 4 (LINAC4) wurde 2020 offiziell in Betrieb genommen und ist der erste Schritt in der LHC-Beschleunigerkette. Er beschleunigt negativ geladene Wasserstoffionen (H⁻) auf eine Energie von 160 MeV, was etwa 0,43 % der Lichtgeschwindigkeit entspricht. Anschließend werden die Elektronen abgestreift, sodass reine Protonen entstehen. Der LINAC4 ersetzt den älteren LINAC2 und liefert einen dichteren und stärkeren Strahl. Er arbeitet als linearer Beschleuniger mit Radiofrequenz-Kavitäten. Die erzeugten Protonen werden anschließend in den Proton Synchrotron Booster eingespeist. LINAC4 bildet damit die Einspeisung für den gesamten weiteren Beschleunigerkomplex.' },
-          { key:'Proton Synchrotron Booster (PSB)', text:'Der Proton Synchrotron Booster (PSB) wurde 1972 in Betrieb genommen und ist die zweite Stufe nach dem LINAC4. Er übernimmt Protonen, die aus LINAC4 mit 160 MeV kommen, und beschleunigt sie auf 2 GeV. Der PSB besteht aus vier übereinanderliegenden Ringen, die gleichzeitig genutzt werden, um mehrere Strahlenpakete aufzubauen. Er arbeitet als Synchrotron mit Magnetfeldern zur Führung und Radiofrequenz-Kavitäten zur Beschleunigung. Der Booster erhöht nicht nur die Energie, sondern auch die Intensität und Qualität des Strahls. Die Protonen aus dem PSB werden anschließend an das Proton Synchrotron (PS) weitergegeben. ' },
-          { key:'Proton Synchrotron (PS)',         text:'Das Proton Synchrotron (PS) ging 1959 in Betrieb und war damals der größte Beschleuniger der Welt. Es übernimmt Protonen mit 2 GeV vom PS Booster und beschleunigt sie auf 26 GeV. Mit einem Umfang von 628 m ist es ein Synchrotron, das Magnetfelder und Radiofrequenz-Felder nutzt. Neben Protonen können auch schwere Ionen beschleunigt werden, die aus speziellen Ionenquellen kommen. Das PS bereitet die Strahlen für verschiedene Zwecke vor: ein Teil geht direkt an Experimente am CERN (z. B. Neutrino-, Antiproton- oder Festkörperphysik), ein anderer Teil wird an das Super Proton Synchrotron (SPS) weitergeleitet. Damit ist das PS eine Art Verteilstation im CERN-Komplex. ' },
-          { key:'Super Proton Synchrotron (SPS)',        text:'Das Super Proton Synchrotron (SPS) wurde 1976 in Betrieb genommen und übernimmt Protonen oder Ionen vom PS mit 26 GeV. Es beschleunigt sie auf bis zu 450 GeV. Mit einem Umfang von 6,9 km ist es einer der größten Synchrotrons am CERN. Neben Protonen werden hier auch schwere Ionen wie Bleiionen beschleunigt, die in den PS eingespeist wurden. Der SPS lieferte früher auch Strahlen für Eigenexperimente (z. B. Neutrinos nach Gran Sasso oder WA-Experimente). Heute ist er vor allem dafür zuständig, die Strahlenpakete für den Large Hadron Collider (LHC) vorzubereiten und dort einzuspeisen. Er ist damit die letzte Stufe vor dem eigentlichen Hochenergie-Collider.' },
-          { key:'Large Hadron Collider (LHC)',        text:'Kollisionen bei sehr hoher Schwerpunktsenergie.' }
-        ];
-
-        let mode = 'protons';
-        let i = 0;
-        const seq = () => (mode==='protons' ? protons : ions); /* ions optional later */
-
-        function stepToHotspotName(stepKey){
-          const s = String(stepKey).toLowerCase().trim();
-          if (s.includes('linac4')) return 'LINAC4';
-          if (s.includes('(psb') || s.includes('booster')) return 'PSBooster';
-          if (/\bsps\b/.test(s) || s.includes('super proton synchrotron')) return 'SPS';
-          if (/\bps\b/.test(s) || s.includes(' proton synchrotron')) return 'PS';
-          if (/\blhc\b/.test(s)) return 'LHC';
-          return null;
+        const mv = document.getElementById('mv');
+        if(!mv) return;
+    
+        const parsePos = (s) => (s||'0m 0m 0m').split(' ').map(p => parseFloat(String(p).replace('m',''))||0);
+        const fmtPos   = (v) => `${v[0].toFixed(3)}m ${v[1].toFixed(3)}m ${v[2].toFixed(3)}m`;
+        const parseOrbit = (s) => {
+          const parts = (s||'auto auto 200m').split(' ');
+          const num = (p)=> (p==null||p==='auto')?null:parseFloat(p);
+          return { theta: parts[0]==='auto'?null:num(parts[0]), phi: parts[1]==='auto'?null:num(parts[1]), r: num(parts[2])??200 };
+        };
+        const fmtOrbit = ({theta=null,phi=null,r=200}) => `${theta==null?'auto':theta+'deg'} ${phi==null?'auto':phi+'deg'} ${(+r).toFixed(3)}m`;
+        const easeInOutCubic=(t)=> t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+    
+        function readPositions(){
+          const map={};
+          mv.querySelectorAll('button.mv-dot[data-name]').forEach(btn=>{
+            map[btn.dataset.name]=btn.dataset.position||'0m 0m 0m';
+          });
+          return map;
         }
-
-        function fade(el, text, dur=180){
-          const RDM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-          if(RDM){ el.textContent = text; return; }
-          el.animate([{opacity:1},{opacity:.2}],{duration:dur,easing:'ease'}).onfinish=()=>{
-            el.textContent = text;
-            el.animate([{opacity:.2},{opacity:1}],{duration:dur,easing:'ease'});
+        let POS = readPositions();
+        const mo = new MutationObserver(()=>{ POS = readPositions(); });
+        mo.observe(mv,{subtree:true, attributes:true, attributeFilter:['data-position']});
+    
+        const ORBIT_RADIUS = {
+          LINAC4:   20,
+          PSBooster:25,
+          PS:      200,
+          SPS:     1000,
+          LHC:     4000,
+          ATLAS:   20,
+          CMS:     20,
+          ALICE:   20,
+          LHCb:    20
+        };
+    
+        let currTarget=null;
+        let currOrbit=null;
+        let animId=null;
+    
+        mv.addEventListener('load', ()=>{
+          const attrTarget = mv.getAttribute('camera-target');
+          currTarget = (attrTarget && !/auto/i.test(attrTarget)) ? parsePos(attrTarget)
+                      : POS.LINAC4 ? parsePos(POS.LINAC4) : [0,0,0];
+          currOrbit = parseOrbit(mv.getAttribute('camera-orbit'));
+          if(!currOrbit || isNaN(currOrbit.r)) currOrbit = {theta:null, phi:null, r: ORBIT_RADIUS.LINAC4};
+          mv.setAttribute('camera-target', fmtPos(currTarget));
+          mv.setAttribute('camera-orbit',  fmtOrbit(currOrbit));
+        }, {once:true});
+    
+        function stopAnim(){ if(animId){ cancelAnimationFrame(animId); animId=null; } }
+    
+        async function focusTo(name, duration=900){
+          const targetStr = POS[name];
+          if(!targetStr) return;
+          if(mv.updateComplete) await mv.updateComplete;
+    
+          const startPos   = currTarget || (mv.getAttribute('camera-target') ? parsePos(mv.getAttribute('camera-target')) : [0,0,0]);
+          const endPos     = parsePos(targetStr);
+          const startOrbit = currOrbit || parseOrbit(mv.getAttribute('camera-orbit'));
+          const desiredR   = ORBIT_RADIUS[name] ?? startOrbit.r ?? 200;
+          const endOrbit   = { theta:startOrbit.theta, phi:startOrbit.phi, r:desiredR };
+    
+          const t0 = performance.now();
+          stopAnim();
+    
+          const step = (now)=>{
+            const t = Math.min(1,(now - t0)/duration);
+            const k = easeInOutCubic(t);
+    
+            const pos = [
+              startPos[0] + (endPos[0]-startPos[0]) * k,
+              startPos[1] + (endPos[1]-startPos[1]) * k,
+              startPos[2] + (endPos[2]-startPos[2]) * k,
+            ];
+            const r = (startOrbit.r ?? 200) + ((endOrbit.r)-(startOrbit.r ?? 200)) * k;
+    
+            mv.setAttribute('camera-target', fmtPos(pos));
+            mv.setAttribute('camera-orbit',  fmtOrbit({theta:startOrbit.theta, phi:startOrbit.phi, r}));
+    
+            if(t<1){
+              animId = requestAnimationFrame(step);
+            }else{
+              currTarget = endPos;
+              currOrbit  = {theta:startOrbit.theta, phi:startOrbit.phi, r:endOrbit.r};
+              animId = null;
+            }
           };
+          animId = requestAnimationFrame(step);
         }
-
-        async function render(){
-          const step = seq()[i];
-          fade(elTitle, step.key);
-          fade(elText,  step.text);
-          prevBtn.disabled = (i===0);
-          nextBtn.disabled = (i===seq().length-1);
-          const hotspotName = stepToHotspotName(step.key);
-          if(hotspotName && window.__MV_FOCUS__){
-            await window.__MV_FOCUS__.focusTo(hotspotName, 900);
+    
+        mv.addEventListener('click', (e)=>{
+          const btn = e.composedPath().find(n=> n?.classList?.contains?.('mv-dot'));
+          if(btn && btn.dataset?.name){
+            focusTo(btn.dataset.name, 800);
           }
-        }
-
-        function setMode(m){
-          if(mode===m) return;
-          mode = m; i = 0;
-          if(modePro) modePro.classList.toggle('active', mode==='protons');
-          if(modeIon) modeIon.classList.toggle('active', mode==='ions');
-          render();
-        }
-
-        modePro?.addEventListener('click', ()=>setMode('protons'));
-        modeIon?.addEventListener('click', ()=>setMode('ions'));
-        prevBtn?.addEventListener('click', ()=>{ if(i>0){ i--; render(); } });
-        nextBtn?.addEventListener('click', ()=>{ const max=seq().length-1; if(i<max){ i++; render(); } });
-
-        render();
+        });
+    
+        window.__MV_FOCUS__ = { focusTo, get POS(){ return POS; } };
       })();
     </script>
-
+    
+    <!-- Model-Viewer hotspot XY editor (control panel) -->
+    <script>
+      (function(){
+        const mv = document.getElementById('mv');
+        const sel = document.getElementById('mv-hotspot-select');
+        const xIn = document.getElementById('mv-x');
+        const yIn = document.getElementById('mv-y');
+        const btn = document.getElementById('mv-apply');
+        const getBtn = (name)=> mv.querySelector(`button.mv-dot[data-name="${name}"]`);
+        function load(name){
+          const b=getBtn(name); if(!b) return;
+          const [xm,ym] = (b.dataset.position||'0m 0m 0m').split(' ');
+          xIn.value=parseFloat(xm)||0; yIn.value=parseFloat(ym)||0;
+        }
+        function apply(){
+          const b=getBtn(sel.value); if(!b) return;
+          const x=parseFloat(xIn.value)||0; const y=parseFloat(yIn.value)||0; const z=0;
+          b.dataset.position = `${x}m ${y}m ${z}m`;
+        }
+        sel.addEventListener('change',()=>load(sel.value));
+        btn.addEventListener('click',apply);
+        load(sel.value);
+      })();
+    </script>
+    
+    <!-- Screensaver / DVD bounce -->
     <script>
      (function(){
         const wrap    = document.getElementById('dvd-wrap');
         const box     = document.getElementById('dvd-box');
         const content = document.getElementById('content-wrap');
-
+    
         const IDLE_MS = 20000;
         let x = 40, y = 40;
         let vx = 1.1, vy = 0.85;
         let bw = 320, bh = 180;
         let raf = null, idleTimer = null, saverOn = false;
-
+    
         function step(){
           const W = window.innerWidth;
           const H = window.innerHeight;
@@ -1392,7 +1328,7 @@
           box.style.transform = `translate(${x}px, ${y}px)`;
           raf = requestAnimationFrame(step);
         }
-
+    
         function startSaver(){
           if (saverOn) return;
           saverOn = true;
@@ -1400,7 +1336,7 @@
           content.classList.add('blur');
           step();
         }
-
+    
         function stopSaver(){
           if (!saverOn) return;
           saverOn = false;
@@ -1408,28 +1344,29 @@
           content.classList.remove('blur');
           cancelAnimationFrame(raf);
         }
-
+    
         function resetIdleTimer(){
           stopSaver();
           if (idleTimer) clearTimeout(idleTimer);
           idleTimer = setTimeout(startSaver, IDLE_MS);
         }
-
+    
         const resetEvents = ['mousemove','mousedown','keydown','touchstart','scroll','pointerdown','wheel'];
         resetEvents.forEach(ev => window.addEventListener(ev, resetIdleTimer, { passive:true }));
-
+    
         wrap.addEventListener('click', stopSaver);
         window.addEventListener('keydown', stopSaver);
-
+    
         document.addEventListener('visibilitychange', () => {
           if (document.hidden) stopSaver();
           else resetIdleTimer();
         });
-
+    
         resetIdleTimer();
       })();
     </script>
-
+    
+    <!-- Clip Player (ATLAS segments) -->
     <script>
       (function(){
         const BASE = 'ATLAS/';
@@ -1593,9 +1530,8 @@
         })();
       })();
     </script>
-
-
-
+    
+    <!-- Live Telemetry (custom canvas plot + history) -->
     <script>
       /* === LHC · Historie + Live · robust mit Debug-Ausgabe ===================== */
       (function(){
@@ -2056,10 +1992,13 @@
         init();
       })();
     </script>
-
+    
+    <!-- External libs (Chart.js & plugins) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+    
+    <!-- Quellen Toggle (session-only) -->
     <script>
       (function(){
         const body = document.body;
@@ -2093,8 +2032,10 @@
       })();
     </script>
 
+
   </body>
 </html>
+
 
 
 
