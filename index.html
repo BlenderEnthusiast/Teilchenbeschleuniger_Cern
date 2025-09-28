@@ -687,62 +687,64 @@
 
       <!-- ================= TEILCHENBESCHLEUNIGER  ================= -->
       <section class="section" id="ring-hotspots">
-        <div class="subsection-sep" aria-hidden="true" style="margin-top:24px">
-          <span class="chip"><span class="dot" aria-hidden="true"></span>Einführung</span>
-        </div>
-        
-        <h3 class="reveal" style="margin:8px 0 6px">Wie der LHC Teilchen führt & beschleunigt</h3>
-        <p class="reveal" style="color:var(--muted); margin:0 0 12px">
-          Zwei Baugruppen arbeiten zusammen: <b>Magnete</b> halten und fokussieren den Strahl im Ring,
-          <b>RF-Kavitäten</b> liefern bei jeder Runde den Energieschub. Unten die Kurzüberblicke.
-        </p>
-        
-        <div class="subsection-sep" aria-hidden="true">
-          <span class="chip"><span class="dot" aria-hidden="true"></span>Magneten</span>
-        </div>
-        
-        <div class="magneten-grid reveal">
-          <div>
-            <h4 style="margin:0 0 4px">Dipolmagneten</h4>
-            <p>
-              Dipole erzeugen ein nahezu gleichförmiges Magnetfeld quer zur Flugrichtung und
-              <b>biegen</b> so die Protonen auf die Kreisbahn. Im LHC bilden supraleitende Dipole
-              das Rückgrat des 27-km-Rings.
-            </p>
+        <div class="container">
+          <div class="subsection-sep" aria-hidden="true" style="margin-top:24px">
+            <span class="chip"><span class="dot" aria-hidden="true"></span>Einführung</span>
           </div>
-          <div>
-            <h4 style="margin:0 0 4px">Quadrupolmagneten</h4>
-            <p>
-              Quadrupole wirken wie <b>magnetische Linsen</b>: Sie fokussieren in einer und defokussieren
-              in der anderen Ebene. In Sequenzen (z.&nbsp;B. FODO, starke Triplets an den Experimenten)
-              wird der Strahlquerschnitt an den Kollisionspunkten stark verkleinert.
-            </p>
+          
+          <h3 class="reveal" style="margin:8px 0 6px">Wie der LHC Teilchen führt & beschleunigt</h3>
+          <p class="reveal" style="color:var(--muted); margin:0 0 12px">
+            Zwei Baugruppen arbeiten zusammen: <b>Magnete</b> halten und fokussieren den Strahl im Ring,
+            <b>RF-Kavitäten</b> liefern bei jeder Runde den Energieschub. Unten die Kurzüberblicke.
+          </p>
+          
+          <div class="subsection-sep" aria-hidden="true">
+            <span class="chip"><span class="dot" aria-hidden="true"></span>Magneten</span>
           </div>
-        </div>
-        
-        <div class="subsection-sep" aria-hidden="true">
-          <span class="chip"><span class="dot" aria-hidden="true"></span>Beschleuniger</span>
-        </div>
-        
-        <div class="rf-split reveal" aria-label="RF-Kavitäten">
-          <div>
-            <h3>RF-Kavitäten (Radiofrequenz)</h3>
-            <p>
-              RF-Kavitäten stellen ein <b>zeitlich schwingendes elektrisches Feld</b> bereit. Die Bunches
-              passieren in der richtigen Phase und werden bei jeder Runde <b>energiewirksam angeschoben</b>.
-              So steigt die Teilchenenergie über viele Umläufe stetig an.
-            </p>
-            <ul style="margin:10px 0 0; padding-left:18px; color:var(--muted); font-size:14px">
-              <li>Phasen-/Spannungsregelung und Längsfokussierung (RF-Bucket)</li>
-              <li>Synchronisation mit dem Bunch-Takt</li>
-              <li>Kryo- & HF-Technik für stabile Felder</li>
-            </ul>
+          
+          <div class="magneten-grid reveal">
+            <div>
+              <h4 style="margin:0 0 4px">Dipolmagneten</h4>
+              <p>
+                Dipole erzeugen ein nahezu gleichförmiges Magnetfeld quer zur Flugrichtung und
+                <b>biegen</b> so die Protonen auf die Kreisbahn. Im LHC bilden supraleitende Dipole
+                das Rückgrat des 27-km-Rings.
+              </p>
+            </div>
+            <div>
+              <h4 style="margin:0 0 4px">Quadrupolmagneten</h4>
+              <p>
+                Quadrupole wirken wie <b>magnetische Linsen</b>: Sie fokussieren in einer und defokussieren
+                in der anderen Ebene. In Sequenzen (z.&nbsp;B. FODO, starke Triplets an den Experimenten)
+                wird der Strahlquerschnitt an den Kollisionspunkten stark verkleinert.
+              </p>
+            </div>
           </div>
-          <div class="rf-video" aria-hidden="true">
-            <!-- Pfad anpassen: lege deine Loop-MP4 z. B. in /media/ -->
-            <video src="media/rf-cavity-loop.mp4"
-                   autoplay muted loop playsinline preload="auto"
-                   aria-label="Schematische RF-Kavität (Loop)"></video>
+          
+          <div class="subsection-sep" aria-hidden="true">
+            <span class="chip"><span class="dot" aria-hidden="true"></span>Beschleuniger</span>
+          </div>
+          
+          <div class="rf-split reveal" aria-label="RF-Kavitäten">
+            <div>
+              <h3>RF-Kavitäten (Radiofrequenz)</h3>
+              <p>
+                RF-Kavitäten stellen ein <b>zeitlich schwingendes elektrisches Feld</b> bereit. Die Bunches
+                passieren in der richtigen Phase und werden bei jeder Runde <b>energiewirksam angeschoben</b>.
+                So steigt die Teilchenenergie über viele Umläufe stetig an.
+              </p>
+              <ul style="margin:10px 0 0; padding-left:18px; color:var(--muted); font-size:14px">
+                <li>Phasen-/Spannungsregelung und Längsfokussierung (RF-Bucket)</li>
+                <li>Synchronisation mit dem Bunch-Takt</li>
+                <li>Kryo- & HF-Technik für stabile Felder</li>
+              </ul>
+            </div>
+            <div class="rf-video" aria-hidden="true">
+              <!-- Pfad anpassen: lege deine Loop-MP4 z. B. in /media/ -->
+              <video src="media/rf-cavity-loop.mp4"
+                     autoplay muted loop playsinline preload="auto"
+                     aria-label="Schematische RF-Kavität (Loop)"></video>
+            </div>
           </div>
         </div>
       </section>
@@ -2046,6 +2048,7 @@
 
   </body>
 </html>
+
 
 
 
