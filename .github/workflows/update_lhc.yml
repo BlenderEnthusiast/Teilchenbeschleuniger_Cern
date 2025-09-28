@@ -1,0 +1,79 @@
+name: Update LHC data
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # alle 5 Minuten (realistischstes Minimum bei GitHub)
+  workflow_dispatch:        # manuell starten
+  push:
+    paths:
+      - ".github/workflows/update_lhc.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ensure data dir
+        run: mkdir -p data
+
+      - name: Fetch Vistars JSON (CERN → Repo)
+        run: |
+          set -euo pipefail
+          URL_PRIMARY="https://op-webtools.web.cern.ch/vistar/vistars.json"
+          URL_FALLBACK="https://lhcstatus2.ovh/vistars.json"
+          TMP="$(mktemp)"
+          OUT="data/latest.json"
+
+          # Hole Primärquelle, bei Fehlern Fallback
+          (curl -fsSL "$URL_PRIMARY" -o "$TMP" || curl -fsSL "$URL_FALLBACK" -o "$TMP")
+
+          # JSON verifizieren
+          jq -e . "$TMP" >/dev/null
+
+          # Optional große Felder kürzen (macht Datei kleiner)
+          jq 'del(.postmortem, .comments?[]?.text?)' "$TMP" > "$OUT"
+
+      - name: Append to JSONL history (keep last 24h)
+        run: |
+          set -euo pipefail
+          NOW=$(date +%s)
+          HIST="data/lhc_history.jsonl"
+
+          # Kompakter Datensatz für den Plot
+          LINE=$(jq -c --arg t "$NOW" '{
+            t: ($t|tonumber),
+            energy: (.energy // .beam_energy // .beamEnergy // null),
+            ib1: (.intensity?.b1 // .ib1 // null),
+            ib2: (.intensity?.b2 // .ib2 // null),
+            lumi: (.lumi // .inst_lumi // .luminosity // null)
+          }' data/latest.json)
+
+          touch "$HIST"
+          LAST="$(tail -n 1 "$HIST" || true)"
+          if [ "$LINE" != "$LAST" ]; then
+            echo "$LINE" >> "$HIST"
+          fi
+
+          # Auf 24h kürzen (JSONL → filtern → JSONL)
+          jq -sR 'split("\n")
+            | map(select(length>0) | fromjson)
+            | map(select(.t >= (now - 86400)))
+            | .[]' "$HIST" > "$HIST.tmp"
+          mv "$HIST.tmp" "$HIST"
+
+      - name: Commit & push if changed
+        run: |
+          set -e
+          if git diff --quiet --exit-code data; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/latest.json data/lhc_history.jsonl
+          git commit -m "data: update LHC Vistars snapshot"
+          git push
