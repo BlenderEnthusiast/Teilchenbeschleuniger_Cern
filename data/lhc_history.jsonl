@@ -179,4 +179,6 @@
 {"t":1759046117,"energy":6799,"ib1":null,"ib2":null,"lumi":15736.791}
 {"t":1759046248,"energy":6799,"speed":0.9999999904777953,"ib1":null,"ib2":null,"lumi":15685.231}
 {"t":1759047325,"energy":4725,"speed":0.9999999802837657,"ib1":null,"ib2":null,"lumi":0}
-{"t":1759047425,"energy":4203,"ib1":null,"ib2":null,"lumi":0}{"t":1759047600,"energy":382,"speed":0.9999969835125602,"ib1":null,"ib2":null,"lumi":0}
+{"t":1759047425,"energy":4203,"ib1":null,"ib2":null,"lumi":0}
+{"t":1759047600,"energy":382,"speed":0.9999969835125602,"ib1":null,"ib2":null,"lumi":0}
+{"t":1759048495,"energy":59,"ib1":null,"ib2":null,"lumi":0}
