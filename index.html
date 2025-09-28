@@ -421,6 +421,39 @@
           color: CanvasText;
         }
       }
+      :root{
+        --heading-gradient: linear-gradient(90deg, hsl(0 0% 100%), hsl(216 100% 89%) 10%);
+      }
+      
+      /* Alle Überschriften mit Gradient (Safari-Fix inklusive) */
+      :where(h1,h2,h3,h4,h5,h6){
+        background: var(--heading-gradient);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        -webkit-text-fill-color: transparent; /* Safari */
+      }
+      
+      /* Sicherstellen, dass die LHC-Title dieselbe Variable nutzen
+         (überschreibt die frühere feste Farbverlauf-Definition) */
+      .lhc-title{
+        background: var(--heading-gradient) !important;
+        -webkit-background-clip: text !important;
+        background-clip: text !important;
+        color: transparent !important;
+        -webkit-text-fill-color: transparent !important;
+      }
+      
+      /* Barrierefreiheit / Druck: bei Zwangsfarben oder Print normaler Text */
+      @media (forced-colors: active), print {
+        :where(h1,h2,h3,h4,h5,h6),
+        .lhc-title{
+          background: none !important;
+          color: inherit !important;
+          -webkit-text-fill-color: currentColor !important;
+        }
+      }
+
 
 
 
@@ -2134,6 +2167,7 @@
 
   </body>
 </html>
+
 
 
 
