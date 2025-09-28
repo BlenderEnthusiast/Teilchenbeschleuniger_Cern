@@ -329,6 +329,76 @@
       
       .rf-video{ width:100%; aspect-ratio:1/1; }
       .rf-video video{ width:100%; height:100%; object-fit:contain; border-radius:12px; }
+      /* === LHC · Komponenten (stylisch, ohne Boxen) ============================= */
+      .lhc-head{ margin:26px 0 10px; }
+      .lhc-eyebrow{
+        display:inline-flex; align-items:center; gap:8px;
+        font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+        color:var(--muted);
+      }
+      .lhc-eyebrow .dot{
+        width:8px; height:8px; border-radius:50%;
+        background:linear-gradient(180deg,var(--accent),#9affa7);
+        box-shadow:0 0 0 5px rgba(125,211,252,.12);
+      }
+      .lhc-title{
+        margin:6px 0 6px; font-size:clamp(22px,4.2vw,38px); font-weight:800; letter-spacing:-.02em;
+        background:linear-gradient(90deg,#fff, #9ecbff 40%, #a7f3d0 80%);
+        -webkit-background-clip:text; background-clip:text; color:transparent;
+      }
+      .lhc-lead{ margin:0; color:var(--muted); font-size:clamp(14px,2.2vw,16px); }
+      
+      /* Magneten: elegante „Rail“ links, keine Karten */
+      .lhc-magnets{ position:relative; margin:18px 0 8px; padding-left:28px; }
+      .lhc-magnets::before{
+        content:""; position:absolute; left:8px; top:4px; bottom:6px;
+        width:2px; background:linear-gradient(180deg,#2c2c31, #3a3a40);
+      }
+      .lhc-item{ position:relative; padding:10px 0 14px; }
+      .lhc-item:not(:last-child){ border-bottom:1px dashed rgba(255,255,255,.06); }
+      .lhc-item::before{
+        content:""; position:absolute; left:-20px; top:12px;
+        width:12px; height:12px; border-radius:50%;
+        background:radial-gradient(circle at 35% 35%, #fff, #9ecbff 60%, #7dd3fc 100%);
+        box-shadow:0 0 18px rgba(125,211,252,.28), 0 0 0 4px rgba(125,211,252,.10);
+      }
+      .lhc-item h3{ margin:0 0 4px; font-size:clamp(16px,2.6vw,20px); letter-spacing:-.01em; }
+      .lhc-item h3 .u{
+        background:linear-gradient(90deg,transparent, rgba(125,211,252,.28), transparent);
+        background-position:0 100%; background-repeat:no-repeat; background-size:100% 2px;
+        padding-bottom:3px;
+      }
+      .lhc-item p{ margin:0; color:var(--muted); }
+      
+      /* RF-Sektion: Split mit schwebendem, maskiertem Video rechts */
+      .lhc-rf{ display:grid; gap:22px; align-items:center; margin:18px 0 0; }
+      @media (min-width:900px){ .lhc-rf{ grid-template-columns:1.15fr 1fr; } }
+      .lhc-rf h3{ margin:0 0 6px; font-size:clamp(18px,3vw,22px) }
+      .lhc-rf p{ margin:0; color:var(--muted); }
+      .lhc-list{ margin:10px 0 0; padding-left:18px; color:var(--muted); font-size:14px }
+      .lhc-list li{ margin:6px 0; }
+      
+      /* Video – ohne „Box“, aber edel mit Maske/Glow */
+      .lhc-video{ position:relative; width:100%; aspect-ratio: 4 / 3; }
+      .lhc-video::before{
+        content:""; position:absolute; inset:-2px;
+        background:conic-gradient(from 120deg, rgba(125,211,252,.18), transparent 30% 70%, rgba(167,243,208,.18));
+        filter:blur(12px); opacity:.9; pointer-events:none;
+      }
+      .lhc-video video{
+        position:absolute; inset:0; width:100%; height:100%; object-fit:contain;
+        border-radius:16px;
+        mask-image: radial-gradient(120% 120% at 50% 50%, #000 72%, rgba(0,0,0,.7) 86%, transparent 100%);
+        filter: drop-shadow(0 18px 40px rgba(8,163,255,.10));
+        transform: perspective(1000px) rotateX(0.8deg) rotateY(-1deg);
+        transition: transform .5s ease;
+      }
+      .lhc-video:hover video{ transform: perspective(1000px) rotateX(0deg) rotateY(0deg); }
+      
+      @media (prefers-reduced-motion: reduce){
+        .lhc-video video{ transition:none; transform:none; }
+      }
+
 
 
 
@@ -688,64 +758,61 @@
       <!-- ================= TEILCHENBESCHLEUNIGER  ================= -->
       <section class="section" id="ring-hotspots">
         <div class="container">
-          <div class="subsection-sep" aria-hidden="true" style="margin-top:24px">
-            <span class="chip"><span class="dot" aria-hidden="true"></span>Einführung</span>
+        
+          <div class="lhc-head reveal">
+            <div class="lhc-eyebrow"><span class="dot" aria-hidden="true"></span> Einführung</div>
+            <h2 class="lhc-title">Führen & Beschleunigen im LHC</h2>
+            <p class="lhc-lead">
+              Zwei Baugruppen arbeiten zusammen: <b>Magnete</b> halten/fokussieren den Strahl,
+              <b>RF-Kavitäten</b> geben bei jeder Runde den Energieschub.
+            </p>
           </div>
           
-          <h3 class="reveal" style="margin:8px 0 6px">Wie der LHC Teilchen führt & beschleunigt</h3>
-          <p class="reveal" style="color:var(--muted); margin:0 0 12px">
-            Zwei Baugruppen arbeiten zusammen: <b>Magnete</b> halten und fokussieren den Strahl im Ring,
-            <b>RF-Kavitäten</b> liefern bei jeder Runde den Energieschub. Unten die Kurzüberblicke.
-          </p>
-          
-          <div class="subsection-sep" aria-hidden="true">
-            <span class="chip"><span class="dot" aria-hidden="true"></span>Magneten</span>
-          </div>
-          
-          <div class="magneten-grid reveal">
-            <div>
-              <h4 style="margin:0 0 4px">Dipolmagneten</h4>
+          <div class="lhc-eyebrow" style="margin-top:14px"><span class="dot" aria-hidden="true"></span> Magneten</div>
+          <div class="lhc-magnets reveal">
+            <article class="lhc-item" role="article" aria-label="Dipolmagneten">
+              <h3><span class="u">Dipolmagneten</span></h3>
               <p>
-                Dipole erzeugen ein nahezu gleichförmiges Magnetfeld quer zur Flugrichtung und
-                <b>biegen</b> so die Protonen auf die Kreisbahn. Im LHC bilden supraleitende Dipole
-                das Rückgrat des 27-km-Rings.
+                Erzeugen ein nahezu <b>gleichförmiges Magnetfeld</b> quer zur Flugrichtung und
+                <b>biegen</b> so die Protonen auf die Kreisbahn. Supraleitende Dipole bilden das
+                Rückgrat des 27-km-Rings.
               </p>
-            </div>
-            <div>
-              <h4 style="margin:0 0 4px">Quadrupolmagneten</h4>
+            </article>
+          
+            <article class="lhc-item" role="article" aria-label="Quadrupolmagneten">
+              <h3><span class="u">Quadrupolmagneten</span></h3>
               <p>
-                Quadrupole wirken wie <b>magnetische Linsen</b>: Sie fokussieren in einer und defokussieren
-                in der anderen Ebene. In Sequenzen (z.&nbsp;B. FODO, starke Triplets an den Experimenten)
-                wird der Strahlquerschnitt an den Kollisionspunkten stark verkleinert.
+                Wirken wie <b>magnetische Linsen</b>: Fokussieren in einer und defokussieren in der
+                anderen Ebene. In Sequenzen (FODO, starke Triplets an den Experimenten) wird der
+                Strahlquerschnitt an den Kollisionspunkten stark verkleinert.
               </p>
-            </div>
+            </article>
           </div>
           
-          <div class="subsection-sep" aria-hidden="true">
-            <span class="chip"><span class="dot" aria-hidden="true"></span>Beschleuniger</span>
-          </div>
-          
-          <div class="rf-split reveal" aria-label="RF-Kavitäten">
+          <div class="lhc-eyebrow" style="margin-top:10px"><span class="dot" aria-hidden="true"></span> Beschleuniger</div>
+          <section class="lhc-rf reveal" aria-label="RF-Kavitäten">
             <div>
               <h3>RF-Kavitäten (Radiofrequenz)</h3>
               <p>
-                RF-Kavitäten stellen ein <b>zeitlich schwingendes elektrisches Feld</b> bereit. Die Bunches
-                passieren in der richtigen Phase und werden bei jeder Runde <b>energiewirksam angeschoben</b>.
-                So steigt die Teilchenenergie über viele Umläufe stetig an.
+                Stellen ein <b>schwingendes elektrisches Feld</b> bereit. Die Bunches passieren in der
+                richtigen Phase und werden pro Umlauf <b>energiewirksam angeschoben</b> – so steigt
+                ihre Gesamtenergie über viele Runden.
               </p>
-              <ul style="margin:10px 0 0; padding-left:18px; color:var(--muted); font-size:14px">
-                <li>Phasen-/Spannungsregelung und Längsfokussierung (RF-Bucket)</li>
+              <ul class="lhc-list">
+                <li>Phasen-/Spannungsregelung &amp; Längsfokussierung (RF-Bucket)</li>
                 <li>Synchronisation mit dem Bunch-Takt</li>
-                <li>Kryo- & HF-Technik für stabile Felder</li>
+                <li>Kryo- &amp; HF-Technik für stabile Felder</li>
               </ul>
             </div>
-            <div class="rf-video" aria-hidden="true">
+          
+            <div class="lhc-video" aria-hidden="true">
               <!-- Pfad anpassen: lege deine Loop-MP4 z. B. in /media/ -->
-              <video src="media/rf-cavity-loop.mp4"
-                     autoplay muted loop playsinline preload="auto"
+              <video src="media/rf-cavity-loop.mp4" autoplay muted loop playsinline preload="auto"
                      aria-label="Schematische RF-Kavität (Loop)"></video>
             </div>
-          </div>
+          </section>
+
+
         </div>
       </section>
 
@@ -2048,6 +2115,7 @@
 
   </body>
 </html>
+
 
 
 
