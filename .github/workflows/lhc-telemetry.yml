@@ -1,0 +1,41 @@
+name: Update LHC telemetry
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *" # alle 5 Minuten
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Pull Vistars & update data files
+        run: node scripts/pull_telemetry.mjs
+        env:
+          # ==== ENDPOINTS ANPASSEN ==================================================
+          # Trage hier die echten Vistars-JSON-URLs ein (oder via Repo-Secrets).
+          ENERGY_URL:  "PUT_REAL_VISTARS_ENERGY_URL_HERE"
+          IB1_URL:     "PUT_REAL_VISTARS_BEAM1_INTENSITY_URL_HERE"
+          IB2_URL:     "PUT_REAL_VISTARS_BEAM2_INTENSITY_URL_HERE"
+          LUMI_URL:    "PUT_REAL_VISTARS_LUMINOSITY_URL_HERE" # optional
+          # Optional: erzwinge Modus, falls die Quelle das nicht hergibt: "protons" | "ions"
+          FORCE_SPECIES: ""
+          # Optional: zum lokalen Testen / Fallback (1 = Mockdaten)
+          MOCK: "0"
+
+      - name: Commit & push if changed
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "telemetry: update latest + append history"
+          file_pattern: |
+            data/latest.json
+            data/lhc_history.jsonl
