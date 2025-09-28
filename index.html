@@ -453,6 +453,15 @@
           -webkit-text-fill-color: currentColor !important;
         }
       }
+      /* Unterstreichung nur im Teilchenbeschleuniger-Abschnitt (#ring-hotspots) abschalten */
+      #ring-hotspots .u-line { 
+        padding-bottom: 0 !important;
+      }
+      #ring-hotspots .u-line::after {
+        content: none !important;
+        display: none !important;
+      }
+
 
 
 
@@ -2167,6 +2176,7 @@
 
   </body>
 </html>
+
 
 
 
