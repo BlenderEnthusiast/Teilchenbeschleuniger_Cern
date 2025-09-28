@@ -1,9 +1,9 @@
-name: LHC telemetry fetcher (GitHub-only)
-
+# .github/workflows/lhc-telemetry.yml
+name: Update LHC telemetry
 on:
-  workflow_dispatch:    # manuell starten
   schedule:
-    - cron: '*/5 * * * *'   # alle 5 Minuten (GitHub garantiert ~5min Takt)
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -12,109 +12,24 @@ concurrency:
   group: lhc-telemetry
   cancel-in-progress: true
 
-env:
-  # Quelle direkt (echte Daten). Falls du lieber deinen CF-Proxy nutzt:
-  # SOURCE_URL: https://lhc-proxy.<dein-sub>.workers.dev/vistars.json
-  SOURCE_URL: https://lhcstatus2.ovh/vistars.json
-  DATA_DIR: data
-  LATEST: data/latest.json
-  HISTORY: data/lhc_history.jsonl
-
 jobs:
-  fetch:
+  update:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install jq
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y jq
-
-      - name: Ensure data dir
-        run: mkdir -p "$DATA_DIR"
-
-      - name: Fetch latest JSON (server-side, no CORS issue)
-        run: |
-          set -euo pipefail
-          curl -fsSL "$SOURCE_URL" -o /tmp/latest.json
-          # Validieren
-          jq -e . /tmp/latest.json >/dev/null
-          # Minimiert speichern (stabile Diffs)
-          jq -c . /tmp/latest.json > "$LATEST"
-
-      - name: Build history line & rotate (keep last 24h)
-        shell: bash
-        run: |
-          set -euo pipefail
-          NOW=$(date -u +%s)
-
-          # Node: robuste Extraktion (Key-Regex, tief verschachtelt)
-          node - "$NOW" <<'NODE' > /tmp/line.json
-          const fs=require('fs');
-          const now = Number(process.argv[2])||Math.floor(Date.now()/1000);
-          const j = JSON.parse(fs.readFileSync('/tmp/latest.json','utf8'));
-
-          const num = x => {
-            if (x==null) return null;
-            const n = (typeof x==='number') ? x : parseFloat(String(x).replace(',','.'));
-            return Number.isFinite(n) ? n : null;
-          };
-          function pickByRegex(obj, re){
-            const q=[obj];
-            while(q.length){
-              const o=q.shift();
-              if (o && typeof o==='object'){
-                for (const [k,v] of Object.entries(o)){
-                  if (re.test(k)){
-                    if (typeof v==='number') return v;
-                    const n = num(v && typeof v==='object' && 'value' in v ? v.value : v);
-                    if (n!=null) return n;
-                  }
-                  if (v && typeof v==='object') q.push(v);
-                }
-              }
-            }
-            return null;
-          }
-
-          const energy = num(pickByRegex(j, /(^|_)energy($|_)|beam.?energy/i));
-          const ib1    = num(pickByRegex(j, /(ib1|beam.?1.*(intensity|current))/i));
-          const ib2    = num(pickByRegex(j, /(ib2|beam.?2.*(intensity|current))/i));
-          const lumi   = num(pickByRegex(j, /lumi|luminosit/i));
-          process.stdout.write(JSON.stringify({ t: now, energy, ib1, ib2, lumi }));
-          NODE
-
-          # Vorhandene Historie filtern (letzte 24h)
-          if [[ -s "$HISTORY" ]]; then
-            jq -c --argjson cutoff "$((NOW-86400))" 'select(.t >= $cutoff)' "$HISTORY" > /tmp/keep.jsonl || true
-          else
-            : > /tmp/keep.jsonl
-          fi
-
-          # Dubletten vermeiden (gleicher/älterer Zeitstempel)
-          LAST_T=0
-          if [[ -s /tmp/keep.jsonl ]]; then
-            LAST_T=$(tail -n 1 /tmp/keep.jsonl | jq -r '.t // 0')
-          fi
-          NEW_T=$(jq -r '.t' /tmp/line.json)
-
-          if [[ "$NEW_T" -gt "$LAST_T" ]]; then
-            cat /tmp/keep.jsonl /tmp/line.json > "$HISTORY"
-          else
-            cp /tmp/keep.jsonl "$HISTORY"
-          fi
-
-      - name: Commit & push if changed
-        run: |
-          set -euo pipefail
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "$LATEST" "$HISTORY" || true
-          if git diff --cached --quiet; then
-            echo "No changes."
-          else
-            git commit -m "chore(data): update telemetry $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            git push
-          fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: node scripts/pull_telemetry.mjs
+        env:
+          ENERGY_URL:  "PUT_REAL_VISTARS_ENERGY_URL_HERE"
+          IB1_URL:     "PUT_REAL_VISTARS_BEAM1_INTENSITY_URL_HERE"
+          IB2_URL:     "PUT_REAL_VISTARS_BEAM2_INTENSITY_URL_HERE"
+          LUMI_URL:    "PUT_REAL_VISTARS_LUMINOSITY_URL_HERE"
+          FORCE_SPECIES: ""
+          MOCK: "0"
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "telemetry: update latest + append history"
+          file_pattern: |
+            data/latest.json
+            data/lhc_history.jsonl
