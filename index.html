@@ -1506,14 +1506,13 @@
 
 
     <script>
-      /* === LHC · Historie + Live · JSON (GitHub only) · Datum & Zeit · Zoom & Pan ===== */
+      /* === LHC · Historie + Live · robust mit Debug-Ausgabe ===================== */
       (function(){
-        // ---- Files, wie vom Action-Job geschrieben ------------------------------------
-        const MIN_INTERVAL_MS = 30000;
+        const MIN_INTERVAL_MS = 30000;                  // 30 s
         const SRC         = 'data/latest.json';
         const HISTORY_URL = 'data/lhc_history.jsonl';
-      
-        // ---- UI elements ---------------------------------------------------------------
+    
+        // ---- UI elements ---------------------------------------------------------
         const els = {
           canvas:  document.getElementById('tg-canvas'),
           wrap:    document.getElementById('tg-wrap'),
@@ -1522,16 +1521,46 @@
           xSel:    document.getElementById('tg-x'),
           status:  document.getElementById('tg-status'),
           btnNow:  document.getElementById('tg-refresh'),
-          species: document.getElementById('tg-species'),
         };
-      
-        const SPECIES_LABEL = {
-          protons: 'Protonen',
-          ions: 'Schwere Ionen',
-          unknown: 'unbekannt'
-        };
-      
-        // ---- Metric glossary (+ option titles) ----------------------------------------
+    
+        // Debug-Box unter der Grafik
+        let dbgBox = document.getElementById('tg-debug');
+        if(!dbgBox){
+          dbgBox = document.createElement('div');
+          dbgBox.id = 'tg-debug';
+          dbgBox.style.marginTop = '10px';
+          dbgBox.style.display   = 'none';
+          dbgBox.style.border    = '1px solid var(--line)';
+          dbgBox.style.borderRadius = '10px';
+          dbgBox.style.padding   = '10px';
+          dbgBox.style.background= 'linear-gradient(180deg,#1a1b20,#141418)';
+          dbgBox.style.color     = 'var(--muted)';
+          dbgBox.style.fontSize  = '12px';
+          dbgBox.innerHTML = '';
+          els.wrap.parentElement.appendChild(dbgBox);
+        }
+        function showDebug(msg, details={}){
+          const q = (k)=> (details && details[k]!=null ? details[k] : '–');
+          const dat = q('fetched_at');
+          const src = q('source');
+          const st  = q('status') || q('http');
+          const why = q('reason');
+          const kf  = q('keysFound');
+          dbgBox.innerHTML = `
+            <div style="font-weight:700; color:#facc15">⚠ Telemetrie-Hinweis</div>
+            <div>${msg}</div>
+            <div style="margin-top:6px;opacity:.9">
+              <b>Quelle:</b> ${src}<br>
+              <b>Status:</b> ${st}<br>
+              <b>Grund:</b> ${why}<br>
+              <b>Keys gefunden:</b> ${Array.isArray(kf)?kf.join(', '):kf}<br>
+              <b>Fetch:</b> ${dat}
+            </div>`;
+          dbgBox.style.display = 'block';
+        }
+        function hideDebug(){ dbgBox.style.display = 'none'; }
+    
+        // ---- Metric glossary -----------------------------------------------------
         const METRICS = {
           energy:{ label:'Energie', unit:'GeV',
             desc:'Protonen-Gesamtenergie pro Teilchen (GeV).',
@@ -1553,39 +1582,64 @@
           const m = METRICS[op.value];
           if (m?.desc) op.title = `${m.label}: ${m.desc}`;
         });
-      
-        // ---- Default windows -----------------------------------------------------------
-        const PRESET_WINDOWS = { s: 5*60, min: 60*60, h: 6*3600 };
+    
+        // ---- Fenster-Presets -----------------------------------------------------
+        const PRESET_WINDOWS = { s:5*60, min:60*60, h:6*3600 };
         const HARD_MIN_WINDOW = 30;
         const HARD_MAX_WINDOW = 24*3600;
-      
-        // ---- State --------------------------------------------------------------------
-        let data = [];  // [{t, energy, speed, ib1, ib2, lumi, species}]
+    
+        // ---- State ----------------------------------------------------------------
+        let data = [];           // [{t, energy, speed, ib1, ib2, lumi}]
         let yKey  = els.ySel.value || 'energy';
         let timer = null;
         const v = { t0: 0, t1: 0 };
-      
-        // ---- Utils --------------------------------------------------------------------
+    
+        // ---- Helpers --------------------------------------------------------------
         const dpr = () => Math.max(1, window.devicePixelRatio || 1);
         const num = x => {
           if (x==null) return null;
-          if (typeof x === 'number') return Number.isFinite(x) ? x : null;
-          const n = parseFloat(String(x).replace(',','.'));
+          const n = (typeof x==='number') ? x : parseFloat(String(x).replace(',','.'));
           return Number.isFinite(n) ? n : null;
         };
-      
-        function fmtClock(ts, winSec){
-          // Gewünschtes Format: DD.MM HH:MM[:SS]
-          const d = new Date(ts*1000);
-          const dd = String(d.getDate()).padStart(2,'0');
-          const mm = String(d.getMonth()+1).padStart(2,'0');
-          const HH = String(d.getHours()).padStart(2,'0');
-          const MM = String(d.getMinutes()).padStart(2,'0');
-          const showSec = (winSec <= 15*60);
-          const SS = String(d.getSeconds()).padStart(2,'0');
-          return showSec ? `${dd}.${mm} ${HH}:${MM}:${SS}` : `${dd}.${mm} ${HH}:${MM}`;
+        function pickByRegex(obj, rx){
+          const q=[obj], foundKeys=new Set();
+          while(q.length){
+            const o=q.shift();
+            if (o && typeof o==='object'){
+              for (const [k,v] of Object.entries(o)){
+                if (rx.test(k)){
+                  foundKeys.add(k);
+                  if (typeof v==='number') return { value:v, keys:[...foundKeys] };
+                  const n = num(v?.value ?? v);
+                  if (n!=null) return { value:n, keys:[...foundKeys] };
+                }
+                if (v && typeof v==='object') q.push(v);
+              }
+            }
+          }
+          return { value:null, keys:[...foundKeys] };
         }
-      
+        function betaFromGeV(E){
+          const m0 = 0.9382720813; // GeV (Proton)
+          const gamma = (E && E>0) ? (E/m0) : 1;
+          if (gamma<=1) return 0;
+          const b2 = 1 - 1/(gamma*gamma);
+          return Math.sqrt(Math.max(0, Math.min(1, b2)));
+        }
+        function fmtClock(ts, winSec){
+          // Gewünschtes Format: DD.MM HH:MM[:SS] (Sekunden nur bei kleinen Fenstern)
+          const d = new Date(ts*1000);
+          const DD = String(d.getDate()).padStart(2,'0');
+          const MM = String(d.getMonth()+1).padStart(2,'0');
+          const hh = String(d.getHours()).padStart(2,'0');
+          const mm = String(d.getMinutes()).padStart(2,'0');
+          const showSec = (winSec <= 15*60);
+          if(showSec){
+            const ss = String(d.getSeconds()).padStart(2,'0');
+            return `${DD}.${MM} ${hh}:${mm}:${ss}`;
+          }
+          return `${DD}.${MM} ${hh}:${mm}`;
+        }
         function yTicks(min,max,count){
           const span=max-min||1;
           const step=Math.pow(10,Math.floor(Math.log10(span/Math.max(1,count))));
@@ -1596,12 +1650,13 @@
           return ticks;
         }
         function timeTickFor(win){
-          const steps = [5,10,15,30,60,120,300,600,900,1800,3600,7200,10800];
-          const target = win/6;
-          return steps.reduce((best,s)=> Math.abs(s-target) < Math.abs(best-target) ? s : best, steps[0]);
+          const steps=[5,10,15,30,60,120,300,600,900,1800,3600,7200,10800];
+          const target=win/6; let best=steps[0], diff=Math.abs(steps[0]-target);
+          for(const s of steps){ const d=Math.abs(s-target); if(d<diff){best=s; diff=d;} }
+          return best;
         }
-      
-        // ---- Data loading --------------------------------------------------------------
+    
+        // ---- Data loading ----------------------------------------------------------
         async function loadHistory(){
           try{
             const r = await fetch(`${HISTORY_URL}?b=${Date.now()}`, { cache:'no-store' });
@@ -1610,56 +1665,77 @@
             const lines = text.split(/\r?\n/).filter(Boolean);
             const arr = lines.map(l => JSON.parse(l)).filter(o => o && typeof o.t === 'number');
             data = arr.map(o => ({
-              t:o.t, energy:o.energy??null, speed:o.speed??null, ib1:o.ib1??null, ib2:o.ib2??null, lumi:o.lumi??null, species: o.species || 'unknown'
+              t:      o.t,
+              energy: o.energy ?? null,
+              speed:  o.speed  ?? (o.energy!=null ? betaFromGeV(o.energy) : null),
+              ib1:    o.ib1 ?? null,
+              ib2:    o.ib2 ?? null,
+              lumi:   o.lumi ?? null,
             }));
             const now = Math.floor(Date.now()/1000);
             const win = PRESET_WINDOWS[els.xSel.value] || PRESET_WINDOWS.min;
             v.t1 = Math.max(now, (data.at(-1)?.t ?? now));
             v.t0 = v.t1 - win;
             stamp(`Historie: ${data.length} Punkte`);
-            // UI-Label initial aus letztem Punkt
-            const sp = data.at(-1)?.species || 'unknown';
-            els.species.textContent = SPECIES_LABEL[sp] || 'unbekannt';
           }catch(e){
             console.warn('Historie nicht verfügbar:', e);
           }
         }
-      
+    
         async function fetchLatest(){
-          const r = await fetch(`${SRC}?b=${Date.now()}`, { cache:'no-store' });
-          if(!r.ok) throw new Error('HTTP '+r.status);
-          const j = await r.json();
-      
-          const t = Math.floor(Date.now()/1000);
-          const energyGeV = num(j.energy ?? j.Energy ?? j.beamEnergy);
-          const speed     = num(j.speed);
-          const ib1       = num(j.ib1);
-          const ib2       = num(j.ib2);
-          const lumi      = num(j.lumi);
-          const species   = (j.species || 'unknown').toLowerCase();
-      
-          const last = data.at(-1);
-          const dup = last && Math.abs(last.t - t) <= 60 &&
-                      last.energy===energyGeV && last.ib1===ib1 && last.ib2===ib2 &&
-                      last.lumi===lumi && (last.species||'unknown')===species;
-      
-          if(!dup){
-            data.push({ t, energy:energyGeV, speed, ib1, ib2, lumi, species });
-            const cutoff = t - (24*3600 + 300);
-            data = data.filter(d => d.t >= cutoff);
+          let debug = null;
+          try{
+            const r = await fetch(`${SRC}?b=${Date.now()}`, { cache:'no-store' });
+            if(!r.ok) throw new Error('HTTP '+r.status);
+            const j = await r.json();
+    
+            // Akzeptiere sowohl "normiert" als auch "roh"
+            const e = pickByRegex(j, /(^|_)(energy|beam.?energy|lhc.?energy)(_|$)/i).value;
+            const ib1 = pickByRegex(j, /(ib1|beam.?1.*(intensity|current))/i).value;
+            const ib2 = pickByRegex(j, /(ib2|beam.?2.*(intensity|current))/i).value;
+            const lumi= pickByRegex(j, /(lumi|luminosit)/i).value;
+    
+            const t = Math.floor(Date.now()/1000);
+            const speed = e!=null ? betaFromGeV(e) : null;
+    
+            const last = data.at(-1);
+            const dup = last && Math.abs(last.t - t) <= 60 &&
+                        last.energy===e && last.ib1===ib1 && last.ib2===ib2 && last.lumi===lumi;
+            if(!dup){
+              data.push({ t, energy:e??null, speed, ib1:ib1??null, ib2:ib2??null, lumi:lumi??null });
+              const cutoff = t - (24*3600 + 300);
+              data = data.filter(d => d.t >= cutoff);
+            }
+    
+            // Debug aus Datei übernehmen (falls vorhanden)
+            debug = j && j._debug ? j._debug : null;
+    
+            // Fenster vorrücken, wenn wir rechts am Rand waren
+            const viewLen = Math.max(HARD_MIN_WINDOW, v.t1 - v.t0 || (PRESET_WINDOWS.min));
+            const atRight = (Math.abs(v.t1 - (last?.t ?? v.t1)) <= 120) || (v.t1 >= (last?.t ?? v.t1));
+            if(atRight){ v.t1 = t; v.t0 = v.t1 - viewLen; }
+    
+            // Wenn alles null -> Debug zeigen
+            const allNull = (e==null) && (ib1==null) && (ib2==null) && (lumi==null);
+            if(allNull){
+              showDebug('Quelle hat keine verwertbaren Felder geliefert.', {
+                reason: 'energy/ib1/ib2/lumi leer',
+                ...(debug||{}),
+              });
+            }else{
+              hideDebug();
+            }
+    
+            stamp('aktualisiert');
+            schedule(MIN_INTERVAL_MS);
+          }catch(e){
+            console.error('[latest] Fehler:', e);
+            showDebug('Fetch von data/latest.json fehlgeschlagen.', { reason:String(e) });
+            schedule(MIN_INTERVAL_MS);
           }
-      
-          els.species.textContent = SPECIES_LABEL[species] || 'unbekannt';
-      
-          const viewLen = Math.max(HARD_MIN_WINDOW, v.t1 - v.t0 || (PRESET_WINDOWS.min));
-          const atRight = (Math.abs(v.t1 - (last?.t ?? v.t1)) <= 2*60) || (v.t1 >= (last?.t ?? v.t1));
-          if(atRight){ v.t1 = t; v.t0 = v.t1 - viewLen; }
-      
-          stamp('aktualisiert');
-          schedule(MIN_INTERVAL_MS);
         }
-      
-        // ---- Canvas render -------------------------------------------------------------
+    
+        // ---- Canvas render (wie gehabt) -------------------------------------------
         function setupCtx(){
           const c = els.canvas, rect = els.wrap.getBoundingClientRect(), k = dpr();
           c.width = Math.floor(rect.width * k);
@@ -1670,22 +1746,21 @@
           ctx.setTransform(k,0,0,k,0,0);
           return ctx;
         }
-      
         function render(){
           const ctx = setupCtx();
           const W = ctx.canvas.width / dpr();
           const H = ctx.canvas.height / dpr();
           const m = { l:64, r:16, t:22, b:42 };
-      
+    
           ctx.clearRect(0,0,W,H);
-      
+    
           if(!data.length || !(v.t1>v.t0)){
             ctx.fillStyle='var(--muted)'; ctx.font='600 14px Inter, system-ui, sans-serif';
             ctx.fillText('Warte auf Daten …', m.l, H/2);
             drawAxisTitles(ctx, W, H, m);
             return;
           }
-      
+    
           const vis = data.filter(d => d.t >= v.t0 && d.t <= v.t1);
           if(!vis.length){
             ctx.fillStyle='var(--muted)'; ctx.font='600 14px Inter, system-ui, sans-serif';
@@ -1693,20 +1768,19 @@
             drawAxisTitles(ctx, W, H, m);
             return;
           }
-      
+    
           const yVals = vis.map(d=>d[yKey]).filter(v=>v!=null);
           const ymin = Math.min(...yVals), ymax = Math.max(...yVals);
           const pad  = (ymax-ymin || 1) * 0.12;
           const y0 = ymin - pad, y1 = ymax + pad;
-      
+    
           const xToPx = t => m.l + ((t - v.t0)/(v.t1 - v.t0)) * (W - m.l - m.r);
           const yToPx = val => H - m.b - ((val - y0)/(y1 - y0)) * (H - m.t - m.b);
-      
-          // grid + ticks
+    
+          // Grid + Ticks (X als Datum+Zeit)
           ctx.strokeStyle = '#2d2d32'; ctx.lineWidth = 1;
           ctx.fillStyle   = 'var(--muted)'; ctx.font='600 11px Inter, system-ui, sans-serif';
-      
-          // X ticks
+    
           const xtick = timeTickFor(v.t1 - v.t0);
           const xStart = Math.ceil(v.t0/xtick)*xtick;
           ctx.textAlign='center';
@@ -1715,7 +1789,7 @@
             ctx.beginPath(); ctx.moveTo(x, m.t); ctx.lineTo(x, H - m.b); ctx.stroke();
             ctx.fillText(fmtClock(t, v.t1-v.t0), x, H-4);
           }
-      
+    
           // Y ticks
           ctx.textAlign='right';
           yTicks(y0, y1, 4).forEach(val=>{
@@ -1723,10 +1797,10 @@
             ctx.beginPath(); ctx.moveTo(m.l, y); ctx.lineTo(W - m.r, y); ctx.stroke();
             ctx.fillText(val.toFixed(2), m.l-6, y+3);
           });
-      
+    
           drawAxisTitles(ctx, W, H, m);
-      
-          // line
+    
+          // Linie + Punkte
           ctx.beginPath();
           let started = false;
           for(const d of vis){
@@ -1736,8 +1810,7 @@
           }
           ctx.strokeStyle='var(--accent)'; ctx.lineWidth=2;
           ctx.shadowColor='rgba(125,211,252,.25)'; ctx.shadowBlur=8; ctx.stroke(); ctx.shadowBlur=0;
-      
-          // points
+    
           ctx.fillStyle='rgba(125,211,252,.9)';
           for(const d of vis){
             if(d[yKey]==null) continue;
@@ -1745,19 +1818,18 @@
             ctx.beginPath(); ctx.arc(x,y,2.1,0,Math.PI*2); ctx.fill();
           }
         }
-      
         function drawAxisTitles(ctx, W, H, m){
           const meta = METRICS[yKey] || METRICS.energy;
           ctx.fillStyle='var(--muted)'; ctx.font='600 12px Inter, system-ui, sans-serif';
-          ctx.textAlign='left';  ctx.fillText('Uhrzeit (lokal)', m.l, H-22);
+          ctx.textAlign='left';  ctx.fillText('Zeit (lokal)', m.l, H-22);
           ctx.textAlign='right'; ctx.fillText(`${meta.label} [${meta.unit}]`, W-m.r, m.t-8);
         }
-      
-        // ---- Hover --------------------------------------------------------------------
+    
+        // ---- Hover Crosshair ------------------------------------------------------
         function bindHover(){
           const c=els.canvas, tip=els.tip;
           const m = { l:64, r:16, t:22, b:42 };
-      
+    
           function nearestAt(clientX){
             const rect=c.getBoundingClientRect(), x=(clientX-rect.left);
             const W=rect.width;
@@ -1771,19 +1843,18 @@
             const a=Math.max(0,lo-1), b=Math.min(vis.length-1,lo);
             return Math.abs(vis[b].t - t) < Math.abs(vis[a].t - t) ? vis[b] : vis[a];
           }
-      
           function drawCrosshair(n){
             const ctx = c.getContext('2d'), k=dpr();
             const rect=c.getBoundingClientRect();
             const W=rect.width, H=rect.height;
             const x = m.l + ( (n.t - v.t0) / (v.t1 - v.t0) ) * (W - m.l - m.r);
-      
+    
             const vis = data.filter(d=>d.t>=v.t0 && d.t<=v.t1);
             const vals=vis.map(d=>d[yKey]).filter(v=>v!=null);
             const ymin=Math.min(...vals), ymax=Math.max(...vals);
             const pad=(ymax-ymin||1)*0.12, y0=ymin-pad, y1=ymax+pad;
             const y = H - m.b - ((n[yKey]-y0)/(y1-y0)) * (H - m.t - m.b);
-      
+    
             const raw = c.getContext('2d');
             raw.save(); raw.setTransform(1,0,0,1,0,0); raw.scale(k,k);
             raw.strokeStyle='rgba(255,255,255,.18)'; raw.lineWidth=1;
@@ -1791,7 +1862,6 @@
             raw.beginPath(); raw.moveTo(m.l, y);  raw.lineTo(W - m.r, y); raw.stroke();
             raw.restore();
           }
-      
           function showTip(n){
             const meta = METRICS[yKey] || METRICS.energy;
             const win  = (v.t1 - v.t0);
@@ -1800,27 +1870,23 @@
               · <span class="muted">Wert:</span> ${meta.fmt(n[yKey])} ${meta.unit}`;
             tip.style.display='block';
           }
-      
           function onMove(clientX){
             const n = nearestAt(clientX);
             if(!n){ tip.style.display='none'; render(); return; }
-            render();       // redraw base
-            drawCrosshair(n);
-            showTip(n);
+            render(); drawCrosshair(n); showTip(n);
           }
-      
           c.addEventListener('mousemove', e=>onMove(e.clientX), { passive:true });
           c.addEventListener('mouseleave', ()=>{ tip.style.display='none'; render(); }, { passive:true });
           c.addEventListener('touchstart', e=>{ if(e.touches[0]) onMove(e.touches[0].clientX); }, { passive:true });
           c.addEventListener('touchmove',  e=>{ if(e.touches[0]) onMove(e.touches[0].clientX); }, { passive:true });
           c.addEventListener('touchend',   ()=>{ tip.style.display='none'; render(); }, { passive:true });
         }
-      
-        // ---- Zoom & Pan ---------------------------------------------------------------
+    
+        // ---- Zoom & Pan ------------------------------------------------------------
         function bindZoomPan(){
           const c=els.canvas;
           const m = { l:64, r:16, t:22, b:42 };
-      
+    
           c.addEventListener('wheel', (e)=>{
             e.preventDefault();
             if(!(v.t1>v.t0)) return;
@@ -1837,7 +1903,7 @@
             v.t0 = t0p; v.t1 = t1p;
             render();
           }, { passive:false });
-      
+    
           let dragging = false, lastX = 0;
           c.addEventListener('mousedown', (e)=>{ dragging = true; lastX = e.clientX; e.preventDefault(); });
           window.addEventListener('mouseup', ()=>{ dragging=false; });
@@ -1851,7 +1917,7 @@
             v.t0 += dt; v.t1 += dt;
             render();
           });
-      
+    
           let tdrag=false, tx=0;
           c.addEventListener('touchstart', (e)=>{ if(e.touches.length===1){ tdrag=true; tx=e.touches[0].clientX; } }, { passive:true });
           c.addEventListener('touchend', ()=>{ tdrag=false; }, { passive:true });
@@ -1867,24 +1933,24 @@
             render();
           }, { passive:true });
         }
-      
-        // ---- Status/Scheduling ---------------------------------------------------------
+    
+        // ---- Status & scheduling ---------------------------------------------------
         function stamp(msg){
           const d=new Date();
-          els.status.textContent = (msg? msg+' · ':'') + `aktualisiert: ${d.toLocaleTimeString()}`;
+          els.status.textContent = (msg? msg+' · ':'') + `aktualisiert: ` + fmtClock(Math.floor(d.getTime()/1000), 60);
           render();
         }
         function schedule(ms){
           if(timer) clearTimeout(timer);
           timer = setTimeout(()=>{ fetchLatest().catch(e=>{ console.error('[latest]',e); schedule(MIN_INTERVAL_MS); }); }, Math.max(10_000, ms|0));
         }
-      
-        // ---- Init ----------------------------------------------------------------------
+    
+        // ---- Init ------------------------------------------------------------------
         async function init(){
           bindHover();
           bindZoomPan();
           window.addEventListener('resize', render);
-      
+    
           els.ySel.addEventListener('change', ()=>{ yKey = els.ySel.value; render(); });
           els.xSel.addEventListener('change', ()=>{
             const win = PRESET_WINDOWS[els.xSel.value] || PRESET_WINDOWS.min;
@@ -1892,14 +1958,14 @@
             v.t0 = right - win; v.t1 = right; render();
           });
           els.btnNow.addEventListener('click', ()=>fetchLatest().catch(()=>{}));
-      
+    
           await loadHistory();
           await fetchLatest().catch(()=>{});
         }
-      
         init();
       })();
     </script>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
@@ -1938,6 +2004,7 @@
 
   </body>
 </html>
+
 
 
 
