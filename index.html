@@ -672,33 +672,79 @@
         </div>
       </section>
 
-      <!-- ================= TEILCHENBESCHLEUNIGER (Bild-Hotspots) ================= -->
+      <!-- ================= TEILCHENBESCHLEUNIGER  ================= -->
       <section class="section" id="ring-hotspots">
-        <div class="container">
-          <h2 class="reveal">Teilchenbeschleuniger allgemein</h2>
-          <p class="reveal">Kurzer Überblick über die großen Experimente und ihre Positionen am Ring.</p>
-          <div class="stage reveal" aria-label="LHC Übersicht">
-            <img src="lhc-overview.jpg" alt="Ring-Übersicht des LHC" loading="lazy">
-            <button class="hotspot" style="left:22%;top:60%" data-title="ATLAS" data-text="Allzweckdetektor." aria-label="Hotspot ATLAS"></button>
-            <div class="fact" style="left:22%;top:60%"></div>
-            <button class="hotspot" style="left:48%;top:25%" data-title="CMS" data-text="Allzweckdetektor." aria-label="Hotspot CMS"></button>
-            <div class="fact" style="left:48%;top:25%"></div>
-            <button class="hotspot" style="left:72%;top:63%" data-title="ALICE" data-text="Schwerionen-Fokus." aria-label="Hotspot ALICE"></button>
-            <div class="fact" style="left:72%;top:63%"></div>
-            <button class="hotspot" style="left:35%;top:78%" data-title="LHCb" data-text="Physik der b-Quarks." aria-label="Hotspot LHCb"></button>
-            <div class="fact" style="left:35%;top:78%"></div>
+        <div class="subsection-sep" aria-hidden="true" style="margin-top:24px">
+          <span class="chip"><span class="dot" aria-hidden="true"></span>Komponenten</span>
+        </div>
+        
+        <p class="reveal" style="margin:8px 0 18px; color:var(--muted)">
+          LHC-Beschleuniger bestehen im Kern aus zwei technisch sehr unterschiedlichen Baugruppen:
+          <b>Magneten</b> zur Führung und Fokussierung des Strahls sowie
+          <b>RF-Kavitäten</b> zur Beschleunigung. Unten findest du die Kurzüberblicke.
+        </p>
+        
+        <!-- MAGNETEN -->
+        <div class="card reveal" style="padding:18px">
+          <h3 style="margin:0 0 8px">Magneten</h3>
+          <p style="margin:0 0 12px; color:var(--muted)">Führen und formen den Strahl im Ring.</p>
+        
+          <div class="topic-grid" style="margin-top:10px">
+            <!-- Dipolmagneten -->
+            <div class="topic-card" tabindex="0" role="article" aria-label="Dipolmagneten">
+              <h3>Dipolmagneten</h3>
+              <p>
+                Erzeugen ein weitgehend <b>gleichförmiges Magnetfeld</b> quer zum Strahl und
+                <b>biegen</b> so die Protonen auf die Kreisbahn. Im LHC bilden supraleitende
+                Dipole das „Rückgrat“ des Rings – sie halten die Teilchen auf der 27-km-Bahn.
+              </p>
+            </div>
+        
+            <!-- Quadrupolmagneten -->
+            <div class="topic-card" tabindex="0" role="article" aria-label="Quadrupolmagneten">
+              <h3>Quadrupolmagneten</h3>
+              <p>
+                Arbeiten wie <b>magnetische Linsen</b>: Sie <b>fokussieren</b> den Strahl in einer
+                Ebene und defokussieren in der anderen. In geeigneten Sequenzen (FODO/Triplets)
+                wird der Strahlquerschnitt stark verkleinert, z.&nbsp;B. an den Kollisionspunkten.
+              </p>
+            </div>
           </div>
-          <div class="sources-block card" aria-label="Quellen dieser Sektion">
-              <h5>Verwendete Quellen</h5>
-              <ul class="sources-list">
-                <li>
-                  <a href="https://example.com" target="_blank" rel="noopener noreferrer">
-                    X – Titel der Quelle
-                  </a>
-                 
-                </li>
+        </div>
+        
+        <!-- RF-KAVITÄTEN -->
+        <div class="clip-card reveal" aria-label="RF-Kavitäten">
+          <div class="clip-box">
+            <div class="clip-left">
+              <h3 style="margin:0">Beschleuniger: RF-Kavitäten</h3>
+              <p style="color:var(--muted)">
+                Radiofrequenz-Kavitäten liefern ein <b>wechselndes elektrisches Feld</b>, das die
+                vorbeifliegenden Protonen bei jeder Passage <b>energiewirksam „anschiebt“</b>.
+                Die Feldphase wird so eingestellt, dass die Teilchen beim Durchflug
+                beschleunigt werden; so steigt ihre Gesamtenergie über viele Runden stetig an.
+                (Autoplay-Loop rechts zeigt schematisch das Schwingen der Feldlinien.)
+              </p>
+              <ul style="margin:10px 0 0; padding-left:18px; color:var(--muted); font-size:14px">
+                <li>Synchronisation von <i>Feldphase</i> und <i>Bunch-Timing</i></li>
+                <li>Feinregelung von Spannung, Phase und Längsfokussierung (RF-Bucket)</li>
+                <li>Kryotechnik &amp; Hochfrequenzsysteme für stabile Hochspannungen</li>
               </ul>
             </div>
+        
+            <div class="clip-right" aria-hidden="true">
+              <!-- Ersetze den Pfad durch deine Datei, z.B. assets/rf-cavity-loop.mp4 -->
+              <video
+                src="media/rf-cavity-loop.mp4"
+                autoplay
+                muted
+                loop
+                playsinline
+                preload="auto"
+                class="active"
+                aria-label="Schematische RF-Kavität (Loop)">
+              </video>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -2001,6 +2047,7 @@
 
   </body>
 </html>
+
 
 
 
