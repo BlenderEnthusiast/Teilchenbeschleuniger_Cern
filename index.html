@@ -798,14 +798,8 @@
                 </select>
               </label>
               <button id="tg-refresh" class="step-btn" type="button" title="Jetzt aktualisieren">Jetzt aktualisieren</button>
-            
-              <!-- NEU: Modus-Pill -->
-              <span class="pong-pill">Modus: <span id="tg-mode">–</span></span>
-            
-              <!-- vorhandener Status -->
               <span id="tg-status" class="pong-muted" style="font-size:12px">aktualisiert: –</span>
             </div>
-
       
             <div id="tg-wrap" style="position:relative">
               <canvas id="tg-canvas" style="width:100%; height:360px; display:block; border:1px solid var(--line); border-radius:12px; background:#0b0c10"></canvas>
@@ -1523,10 +1517,13 @@
       /* === LHC · Historie + Live · JSON (GitHub only) · Uhrzeit · Zoom & Pan ===== */
       (function(){
         // ---- Files written by your GitHub Action ----------------------------------
-        const MIN_INTERVAL_MS = 30000;                  // min. 30 s zwischen fetches
-        const SRC         = 'data/latest.json';         // Live-Snapshot
-        const HISTORY_URL = 'data/lhc_history.jsonl';   // optional: Historie
-    
+        const MIN_INTERVAL_MS = 30000;            
+        const SRC         = 'data/latest.json';    
+        const HISTORY_URL = 'data/lhc_history.jsonl'; 
+  
+
+
+      
         // ---- UI elements -----------------------------------------------------------
         const els = {
           canvas:  document.getElementById('tg-canvas'),
@@ -1536,16 +1533,15 @@
           xSel:    document.getElementById('tg-x'),
           status:  document.getElementById('tg-status'),
           btnNow:  document.getElementById('tg-refresh'),
-          mode:    document.getElementById('tg-mode'),      // NEU
         };
-    
+      
         // ---- Metric glossary (+ option titles) ------------------------------------
         const METRICS = {
           energy:{ label:'Energie', unit:'GeV',
             desc:'Protonen-Gesamtenergie pro Teilchen (GeV).',
             fmt:v=>v==null?'–':v.toFixed(1) },
           speed: { label:'Geschwindigkeit', unit:'% c',
-            desc:'β = v/c, aus Gesamtenergie oder p/E berechnet.',
+            desc:'β = v/c, aus Gesamtenergie berechnet.',
             fmt:v=>v==null?'–':(v*100).toFixed(6) },
           ib1:   { label:'IB1 (Intensität)', unit:'p (B1)',
             desc:'Strahl 1 Intensität (Teilchenzahl o. ä.).',
@@ -1557,24 +1553,31 @@
             desc:'Sofortige Kollisionsrate pro Fläche und Zeit.',
             fmt:v=>v==null?'–':Number(v).toExponential(2) },
         };
+        // add <option title="..."> tooltips
         Array.from(els.ySel?.options||[]).forEach(op=>{
           const m = METRICS[op.value];
           if (m?.desc) op.title = `${m.label}: ${m.desc}`;
         });
-    
+      
         // ---- Default windows (select only presets; user can zoom beyond) ----------
-        const PRESET_WINDOWS = { s:5*60, min:60*60, h:6*3600 };
+        const PRESET_WINDOWS = {
+          s:   5*60,         // 5 min
+          min: 60*60,        // 60 min
+          h:   6*3600,       // 6 h
+        };
         const HARD_MIN_WINDOW = 30;          // 30 s min zoom
         const HARD_MAX_WINDOW = 24*3600;     // 24 h max
-    
+      
         // ---- State ----------------------------------------------------------------
         let data = [];                       // [{t, energy, speed, ib1, ib2, lumi}]
         let yKey  = els.ySel.value || 'energy';
         let timer = null;
-    
+      
         // current view window [v.t0, v.t1] in seconds (unix time)
         const v = { t0: 0, t1: 0 };
-    
+      
+
+      
         // ---- Helpers ---------------------------------------------------------------
         const dpr = () => Math.max(1, window.devicePixelRatio || 1);
         const num = x => {
@@ -1599,60 +1602,46 @@
           }
           return null;
         }
-        function pickTextByRegex(obj, rx){
-          const q=[obj];
-          while(q.length){
-            const o=q.shift();
-            if(o && typeof o==='object'){
-              for(const [k,v] of Object.entries(o)){
-                if(rx.test(k)){
-                  if (typeof v === 'string') return v;
-                  if (v && typeof v.value === 'string') return v.value;
-                }
-                if(v && typeof v==='object') q.push(v);
-              }
-            }
-          }
-          return null;
-        }
-        function detectSpecies(j){
-          const s = String(pickTextByRegex(j, /(particle|species|beam.?type|ion.?species)/i) || '').toLowerCase();
-          if(/proton|(^|\W)p($|\W)/.test(s)) return { kind:'proton' };
-          // Pb82+, 208Pb82+, Xe, Ar, O …
-          const m = s.match(/([A-Z][a-z]?)[-\s]*(\d{2,3})?.*?(\d{1,3})\+?/i);
-          const sym = (m?.[1] || s.match(/\b(pb|xe|ar|o)\b/i)?.[1] || '').toUpperCase();
-          const A   = m?.[2] ? +m[2] : null;
-          const Z   = m?.[3] ? +m[3] : null;
-          if(/ion|pb|lead|xe|ar|o/.test(s) || sym) return { kind:'ion', sym, A, Z };
-          return null; // unbekannt
-        }
-        function speciesLabel(info){
-          if(!info) return 'Unbekannt';
-          if(info.kind==='proton') return 'Protonen';
-          if(info.kind==='ion'){
-            const core = [info.sym, info.A].filter(Boolean).join('-') || 'Ionen';
-            return info.Z ? `${core} (Z=${info.Z}+)` : core;
-          }
-          return 'Unbekannt';
-        }
-        function betaFromEnergyGeV(E, { assume='total', species='proton' } = {}){
-          // m0: Ruheenergie je Teilchen (Proton) bzw. je Nukleon (Ion)
-          const m0 = species==='proton' ? 0.9382720813 : 0.93149410242; // GeV
-          const Etot = (assume==='kinetic') ? (E + m0) : E;
-          if(!(Etot>m0)) return 0;
-          const gamma = Etot / m0;
+        function betaFromGeV(E){
+          const m0 = 0.9382720813; // GeV (Proton)
+          const gamma = (E && E>0) ? (E/m0) : 1;
+          if (gamma<=1) return 0;
           const b2 = 1 - 1/(gamma*gamma);
           return Math.sqrt(Math.max(0, Math.min(1, b2)));
         }
-        const z2 = n => (n<10?'0'+n:String(n));
         function fmtClock(ts, winSec){
-          const d=new Date(ts*1000);
-          const DD=z2(d.getDate()), MM=z2(d.getMonth()+1);
-          const hh=z2(d.getHours()), mm=z2(d.getMinutes()), ss=z2(d.getSeconds());
-          const showSec = (winSec <= 15*60);
-          return `${DD}.${MM} ${hh}:${mm}${showSec ? ':'+ss : ''}`;
+          const d = new Date(ts * 1000);
+          const dd = String(d.getDate()).padStart(2,'0');
+          const mm = String(d.getMonth()+1).padStart(2,'0');
+          const HH = String(d.getHours()).padStart(2,'0');
+          const MM = String(d.getMinutes()).padStart(2,'0');
+          const SS = String(d.getSeconds()).padStart(2,'0');
+          const showSec = (winSec <= 15 * 60); // Sekunden nur bei kleinen Zeitfenstern
+          return `${dd}.${mm} ${HH}:${MM}${showSec ? `:${SS}` : ''}`;
         }
-    
+
+        function yTicks(min,max,count){
+          const span=max-min||1;
+          const step=Math.pow(10,Math.floor(Math.log10(span/Math.max(1,count))));
+          const err=span/(count*step);
+          const s= err>=7.5?5*step:err>=3.5?2*step:step;
+          const tmin=Math.floor(min/s)*s, tmax=Math.ceil(max/s)*s, ticks=[];
+          for(let v=tmin; v<=tmax+1e-9; v+=s) ticks.push(v);
+          return ticks;
+        }
+        function timeTickFor(win){
+          // choose a nice time step for the current window (in seconds)
+          const steps = [5,10,15,30,60,120,300,600,900,1800,3600,7200,10800];
+          const targetCount = 6;
+          const approx = win / targetCount;
+          let best = steps[0], bestDiff = Math.abs(steps[0]-approx);
+          for (const s of steps){
+            const diff = Math.abs(s - approx);
+            if (diff < bestDiff){ best = s; bestDiff = diff; }
+          }
+          return best;
+        }
+      
         // ---- Data loading ----------------------------------------------------------
         async function loadHistory(){
           try{
@@ -1664,11 +1653,12 @@
             data = arr.map(o => ({
               t:      o.t,
               energy: o.energy ?? null,
-              speed:  o.speed  ?? (o.energy!=null ? betaFromEnergyGeV(o.energy) : null),
+              speed:  o.speed  ?? (o.energy!=null ? betaFromGeV(o.energy) : null),
               ib1:    o.ib1 ?? null,
               ib2:    o.ib2 ?? null,
               lumi:   o.lumi ?? null,
             }));
+            // default view: last preset window (from select)
             const now = Math.floor(Date.now()/1000);
             const win = PRESET_WINDOWS[els.xSel.value] || PRESET_WINDOWS.min;
             v.t1 = Math.max(now, (data.at(-1)?.t ?? now));
@@ -1678,72 +1668,44 @@
             console.warn('Historie nicht verfügbar:', e);
           }
         }
-    
+      
         async function fetchLatest(){
-          try{
-            const r = await fetch(`${SRC}?b=${Date.now()}`, { cache:'no-store' });
-            if(!r.ok) throw new Error('HTTP '+r.status);
-            const j = await r.json();
-    
-            // --- Werte aus JSON ziehen ------------------------------------------------
-            const energyGeV      = num(pickByRegex(j, /(^|_)energy($|_)|beam.?energy/i));           // Gesamtenergie (pro Teilchen)
-            const energyNucGeV   = num(pickByRegex(j, /(nucleon|per.?nucleon)/i));                  // GeV/Nukleon (bei Ionen)
-            const pGeV           = num(pickByRegex(j, /(momentum|p(beam)?)/i));                     // Gesamtimpuls (falls da)
-            const IB1            = num(pickByRegex(j, /(ib1|beam.?1.*(intensity|current))/i));
-            const IB2            = num(pickByRegex(j, /(ib2|beam.?2.*(intensity|current))/i));
-            const lumi           = num(pickByRegex(j, /lumi|luminosit/i));
-            const speciesInfo    = detectSpecies(j);
-    
-            // --- β-Rechnung (maximal robust) -----------------------------------------
-            // Präferenz: p/E (falls BEIDES vorhanden und "total") → β = p/E
-            let beta = null;
-            if (pGeV!=null && energyGeV!=null) {
-              beta = Math.min(1, Math.max(0, pGeV/energyGeV));
-            } else if (energyNucGeV!=null) {
-              // Ion: Energie je Nukleon vorhanden → sicher
-              beta = betaFromEnergyGeV(energyNucGeV, { assume:'total', species:'ion' });
-            } else if (speciesInfo?.kind === 'ion' && energyGeV!=null && speciesInfo.A) {
-              // Gesamtenergie der Ionen → in „pro Nukleon“ umrechnen
-              beta = betaFromEnergyGeV(energyGeV / speciesInfo.A, { assume:'total', species:'ion' });
-            } else if (energyGeV!=null) {
-              // Default/Protonen
-              beta = betaFromEnergyGeV(energyGeV, { assume:'total', species:'proton' });
-            }
-    
-            // --- Datenliste aktualisieren --------------------------------------------
-            const t = Math.floor(Date.now()/1000);
-            const last = data.at(-1);
-            const dup = last && Math.abs(last.t - t) <= 60 &&
-                        last.energy===energyGeV && last.ib1===IB1 && last.ib2===IB2 && last.lumi===lumi &&
-                        last.speed===beta;
-            if(!dup){
-              data.push({ t, energy:energyGeV, speed:beta, ib1:IB1, ib2:IB2, lumi });
-              // keep max 24h+5min
-              const cutoff = t - (24*3600 + 300);
-              data = data.filter(d => d.t >= cutoff);
-            }
-    
-            // --- Sichtfenster ggf. nachziehen ----------------------------------------
-            const viewLen = Math.max(HARD_MIN_WINDOW, v.t1 - v.t0 || (PRESET_WINDOWS.min));
-            const atRight = (Math.abs((last?.t ?? t) - v.t1) <= 2*60) || (v.t1 >= (last?.t ?? v.t1));
-            if(atRight){
-              v.t1 = t;
-              v.t0 = v.t1 - viewLen;
-            }
-    
-            // --- UI: Zeitstempel + Modus anzeigen ------------------------------------
-            const d = Math.floor(Date.now()/1000);
-            els.status.textContent = `aktualisiert: ${z2(new Date(d*1000).getDate())}.${z2(new Date(d*1000).getMonth()+1)} ${z2(new Date(d*1000).getHours())}:${z2(new Date(d*1000).getMinutes())}:${z2(new Date(d*1000).getSeconds())}`;
-            if (els.mode) els.mode.textContent = speciesLabel(speciesInfo);
-    
-            render();
-          }catch(e){
-            console.error('[latest]', e);
-          }finally{
-            schedule(MIN_INTERVAL_MS);
+          // read ONLY your repo file; bypass GH-pages cache via bust param
+          const r = await fetch(`${SRC}?b=${Date.now()}`, { cache:'no-store' });
+          if(!r.ok) throw new Error('HTTP '+r.status);
+          const j = await r.json();
+      
+          const energyGeV = num(pickByRegex(j, /(^|_)energy($|_)|beam.?energy/i));
+          const IB1       = num(pickByRegex(j, /(ib1|beam.?1.*(intensity|current))/i));
+          const IB2       = num(pickByRegex(j, /(ib2|beam.?2.*(intensity|current))/i));
+          const lumi      = num(pickByRegex(j, /lumi|luminosit/i)); // optional
+      
+          const t = Math.floor(Date.now()/1000);
+          const speed = energyGeV!=null ? betaFromGeV(energyGeV) : null;
+      
+          // merge (avoid minute-duplicates with same values)
+          const last = data.at(-1);
+          const dup = last && Math.abs(last.t - t) <= 60 &&
+                      last.energy===energyGeV && last.ib1===IB1 && last.ib2===IB2 && last.lumi===lumi;
+          if(!dup){
+            data.push({ t, energy:energyGeV, speed, ib1:IB1, ib2:IB2, lumi });
+            // keep max 24h+5min
+            const cutoff = t - (24*3600 + 300);
+            data = data.filter(d => d.t >= cutoff);
           }
+      
+          // slide view to include latest if we were at the right edge
+          const viewLen = Math.max(HARD_MIN_WINDOW, v.t1 - v.t0 || (PRESET_WINDOWS.min));
+          const atRight = (Math.abs(v.t1 - (last?.t ?? v.t1)) <= 2*60) || (v.t1 >= (last?.t ?? v.t1));
+          if(atRight){
+            v.t1 = t;
+            v.t0 = v.t1 - viewLen;
+          }
+      
+          stamp('aktualisiert');
+          schedule(MIN_INTERVAL_MS);
         }
-    
+      
         // ---- Canvas render ---------------------------------------------------------
         function setupCtx(){
           const c = els.canvas, rect = els.wrap.getBoundingClientRect(), k = dpr();
@@ -1755,22 +1717,22 @@
           ctx.setTransform(k,0,0,k,0,0);
           return ctx;
         }
-    
+      
         function render(){
           const ctx = setupCtx();
           const W = ctx.canvas.width / dpr();
           const H = ctx.canvas.height / dpr();
           const m = { l:64, r:16, t:22, b:42 };
-    
+      
           ctx.clearRect(0,0,W,H);
-    
+      
           if(!data.length || !(v.t1>v.t0)){
             ctx.fillStyle='var(--muted)'; ctx.font='600 14px Inter, system-ui, sans-serif';
             ctx.fillText('Warte auf Daten …', m.l, H/2);
             drawAxisTitles(ctx, W, H, m);
             return;
           }
-    
+      
           const vis = data.filter(d => d.t >= v.t0 && d.t <= v.t1);
           if(!vis.length){
             ctx.fillStyle='var(--muted)'; ctx.font='600 14px Inter, system-ui, sans-serif';
@@ -1778,20 +1740,20 @@
             drawAxisTitles(ctx, W, H, m);
             return;
           }
-    
+      
           const yVals = vis.map(d=>d[yKey]).filter(v=>v!=null);
           const ymin = Math.min(...yVals), ymax = Math.max(...yVals);
           const pad  = (ymax-ymin || 1) * 0.12;
           const y0 = ymin - pad, y1 = ymax + pad;
-    
+      
           const xToPx = t => m.l + ((t - v.t0)/(v.t1 - v.t0)) * (W - m.l - m.r);
           const yToPx = val => H - m.b - ((val - y0)/(y1 - y0)) * (H - m.t - m.b);
-    
+      
           // grid + ticks
           ctx.strokeStyle = '#2d2d32'; ctx.lineWidth = 1;
           ctx.fillStyle   = 'var(--muted)'; ctx.font='600 11px Inter, system-ui, sans-serif';
-    
-          // X ticks (time) – DD.MM HH:MM[:SS]
+      
+          // X ticks (time)
           const xtick = timeTickFor(v.t1 - v.t0);
           const xStart = Math.ceil(v.t0/xtick)*xtick;
           ctx.textAlign='center';
@@ -1800,7 +1762,7 @@
             ctx.beginPath(); ctx.moveTo(x, m.t); ctx.lineTo(x, H - m.b); ctx.stroke();
             ctx.fillText(fmtClock(t, v.t1-v.t0), x, H-4);
           }
-    
+      
           // Y ticks
           ctx.textAlign='right';
           yTicks(y0, y1, 4).forEach(val=>{
@@ -1808,9 +1770,10 @@
             ctx.beginPath(); ctx.moveTo(m.l, y); ctx.lineTo(W - m.r, y); ctx.stroke();
             ctx.fillText(val.toFixed(2), m.l-6, y+3);
           });
-    
+      
+          // axis titles
           drawAxisTitles(ctx, W, H, m);
-    
+      
           // line
           ctx.beginPath();
           let started = false;
@@ -1821,7 +1784,7 @@
           }
           ctx.strokeStyle='var(--accent)'; ctx.lineWidth=2;
           ctx.shadowColor='rgba(125,211,252,.25)'; ctx.shadowBlur=8; ctx.stroke(); ctx.shadowBlur=0;
-    
+      
           // points
           ctx.fillStyle='rgba(125,211,252,.9)';
           for(const d of vis){
@@ -1830,41 +1793,20 @@
             ctx.beginPath(); ctx.arc(x,y,2.1,0,Math.PI*2); ctx.fill();
           }
         }
-    
+      
         function drawAxisTitles(ctx, W, H, m){
           const meta = METRICS[yKey] || METRICS.energy;
           ctx.fillStyle='var(--muted)'; ctx.font='600 12px Inter, system-ui, sans-serif';
-          ctx.textAlign='left';  ctx.fillText('Zeit (DD.MM HH:MM)', m.l, H-22);
+          ctx.textAlign='left';  ctx.fillText('Uhrzeit (lokal)', m.l, H-22);
           ctx.textAlign='right'; ctx.fillText(`${meta.label} [${meta.unit}]`, W-m.r, m.t-8);
         }
-    
-        // --- tick helpers -----------------------------------------------------------
-        function yTicks(min,max,count){
-          const span=max-min||1;
-          const step=Math.pow(10,Math.floor(Math.log10(span/Math.max(1,count))));
-          const err=span/(count*step);
-          const s= err>=7.5?5*step:err>=3.5?2*step:step;
-          const tmin=Math.floor(min/s)*s, tmax=Math.ceil(max/s)*s, ticks=[];
-          for(let v=tmin; v<=tmax+1e-9; v+=s) ticks.push(v);
-          return ticks;
-        }
-        function timeTickFor(win){
-          const steps = [5,10,15,30,60,120,300,600,900,1800,3600,7200,10800];
-          const targetCount = 6;
-          const approx = win / targetCount;
-          let best = steps[0], bestDiff = Math.abs(steps[0]-approx);
-          for (const s of steps){
-            const diff = Math.abs(s - approx);
-            if (diff < bestDiff){ best = s; bestDiff = diff; }
-          }
-          return best;
-        }
-    
-        // ---- Hover (crosshair + tip) ----------------------------------------------
+      
+        // ---- Hover (crosshair + tip with Uhrzeit & Wert) ---------------------------
         function bindHover(){
           const c=els.canvas, tip=els.tip;
+      
           const m = { l:64, r:16, t:22, b:42 };
-    
+      
           function nearestAt(clientX){
             const rect=c.getBoundingClientRect(), x=(clientX-rect.left);
             const W=rect.width;
@@ -1878,19 +1820,20 @@
             const a=Math.max(0,lo-1), b=Math.min(vis.length-1,lo);
             return Math.abs(vis[b].t - t) < Math.abs(vis[a].t - t) ? vis[b] : vis[a];
           }
-    
+      
           function drawCrosshair(n){
             const ctx = c.getContext('2d'), k=dpr();
             const rect=c.getBoundingClientRect();
             const W=rect.width, H=rect.height;
             const x = m.l + ( (n.t - v.t0) / (v.t1 - v.t0) ) * (W - m.l - m.r);
-    
+      
+            // recompute y scaling for current data slice
             const vis = data.filter(d=>d.t>=v.t0 && d.t<=v.t1);
             const vals=vis.map(d=>d[yKey]).filter(v=>v!=null);
             const ymin=Math.min(...vals), ymax=Math.max(...vals);
             const pad=(ymax-ymin||1)*0.12, y0=ymin-pad, y1=ymax+pad;
             const y = H - m.b - ((n[yKey]-y0)/(y1-y0)) * (H - m.t - m.b);
-    
+      
             const raw = c.getContext('2d');
             raw.save(); raw.setTransform(1,0,0,1,0,0); raw.scale(k,k);
             raw.strokeStyle='rgba(255,255,255,.18)'; raw.lineWidth=1;
@@ -1898,7 +1841,7 @@
             raw.beginPath(); raw.moveTo(m.l, y);  raw.lineTo(W - m.r, y); raw.stroke();
             raw.restore();
           }
-    
+      
           function showTip(n){
             const meta = METRICS[yKey] || METRICS.energy;
             const win  = (v.t1 - v.t0);
@@ -1907,30 +1850,31 @@
               · <span class="muted">Wert:</span> ${meta.fmt(n[yKey])} ${meta.unit}`;
             tip.style.display='block';
           }
-    
+      
           function onMove(clientX){
-            const nn = nearestAt(clientX);
-            if(!nn){ tip.style.display='none'; render(); return; }
+            const n = nearestAt(clientX);
+            if(!n){ tip.style.display='none'; render(); return; }
             render();       // redraw base
-            drawCrosshair(nn);
-            showTip(nn);
+            drawCrosshair(n);
+            showTip(n);
           }
-    
+      
           c.addEventListener('mousemove', e=>onMove(e.clientX), { passive:true });
           c.addEventListener('mouseleave', ()=>{ tip.style.display='none'; render(); }, { passive:true });
-    
+      
           c.addEventListener('touchstart', e=>{ if(e.touches[0]) onMove(e.touches[0].clientX); }, { passive:true });
           c.addEventListener('touchmove',  e=>{ if(e.touches[0]) onMove(e.touches[0].clientX); }, { passive:true });
           c.addEventListener('touchend',   ()=>{ tip.style.display='none'; render(); }, { passive:true });
         }
-    
+      
         // ---- Zoom (wheel) & Pan (drag) --------------------------------------------
         function bindZoomPan(){
           const c=els.canvas;
           const m = { l:64, r:16, t:22, b:42 };
-    
+      
+          // wheel zoom around cursor time
           c.addEventListener('wheel', (e)=>{
-            e.preventDefault();
+            e.preventDefault(); // keep pointer focus here
             if(!(v.t1>v.t0)) return;
             const rect=c.getBoundingClientRect();
             const x = e.clientX - rect.left;
@@ -1945,7 +1889,8 @@
             v.t0 = t0p; v.t1 = t1p;
             render();
           }, { passive:false });
-    
+      
+          // drag pan
           let dragging = false, lastX = 0;
           c.addEventListener('mousedown', (e)=>{
             dragging = true; lastX = e.clientX;
@@ -1962,7 +1907,7 @@
             v.t0 += dt; v.t1 += dt;
             render();
           });
-    
+      
           // touch pan (one finger)
           let tdrag=false, tx=0;
           c.addEventListener('touchstart', (e)=>{
@@ -1981,41 +1926,52 @@
             render();
           }, { passive:true });
         }
-    
+      
         // ---- Status & scheduling ---------------------------------------------------
         function stamp(msg){
-          const now = Math.floor(Date.now()/1000);
-          els.status.textContent = (msg? msg+' · ':'') +
-            `aktualisiert: ${z2(new Date(now*1000).getDate())}.${z2(new Date(now*1000).getMonth()+1)} ${z2(new Date(now*1000).getHours())}:${z2(new Date(now*1000).getMinutes())}:${z2(new Date(now*1000).getSeconds())}`;
+          const d  = new Date();
+          const dd = String(d.getDate()).padStart(2,'0');
+          const mm = String(d.getMonth()+1).padStart(2,'0');
+          const HH = String(d.getHours()).padStart(2,'0');
+          const MM = String(d.getMinutes()).padStart(2,'0');
+          const SS = String(d.getSeconds()).padStart(2,'0');
+          const ts = `${dd}.${mm} ${HH}:${MM}:${SS}`;
+          els.status.textContent = (msg ? msg + ' · ' : '') + `aktualisiert: ${ts}`;
           render();
         }
+
         function schedule(ms){
           if(timer) clearTimeout(timer);
           timer = setTimeout(()=>{ fetchLatest().catch(e=>{ console.error('[latest]',e); schedule(MIN_INTERVAL_MS); }); }, Math.max(10_000, ms|0));
         }
-    
+      
         // ---- Init ------------------------------------------------------------------
         async function init(){
+          // wiring
           bindHover();
           bindZoomPan();
           window.addEventListener('resize', render);
-    
-          els.ySel.addEventListener('change', ()=>{ yKey = els.ySel.value; render(); });
+      
+          els.ySel.addEventListener('change', ()=>{
+            yKey = els.ySel.value;
+            render();
+          });
           els.xSel.addEventListener('change', ()=>{
             const win = PRESET_WINDOWS[els.xSel.value] || PRESET_WINDOWS.min;
             const right = v.t1 || Math.floor(Date.now()/1000);
-            v.t0 = right - win; v.t1 = right; render();
+            v.t0 = right - win;
+            v.t1 = right;
+            render();
           });
           els.btnNow.addEventListener('click', ()=>fetchLatest().catch(()=>{}));
-    
-          await loadHistory();         // optional (falls Datei existiert)
-          await fetchLatest().catch(()=>{}); // prime
+      
+          await loadHistory();         // optional (if file exists)
+          await fetchLatest().catch(()=>{}); // prime one sample
         }
-    
+      
         init();
       })();
     </script>
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
