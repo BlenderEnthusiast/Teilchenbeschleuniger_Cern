@@ -3,9 +3,9 @@
   "energy": 6799,
   "ions": false,
   "time": {
-    "page1": "2025-09-28T08:49:44+0200",
-    "cryo": "2025-09-28T08:49:49+0200",
-    "lhc3": "2025-09-28T08:49:40+0200",
+    "page1": "2025-09-28T08:55:06+0200",
+    "cryo": "2025-09-28T08:55:11+0200",
+    "lhc3": "2025-09-28T08:55:04+0200",
     "config": "2025-09-27T21:27:51+0200"
   },
   "comments": {
@@ -38,7 +38,7 @@
       true
     ]
   },
-  "tsb": "PT11H49M19S",
+  "tsb": "PT11H54M41S",
   "postmortem": null,
   "intensity": [
     "3.97e+14",
@@ -53,11 +53,11 @@
       "name": "ATLAS",
       "operation": {
         "status": "PHYSICS",
-        "inst_lumi": 17651.678,
-        "bran_lumi": 20522.6,
-        "fill_lumi": 903130.188,
-        "b1_bkgd": 0.687,
-        "b2_bkgd": 1.056
+        "inst_lumi": 17376.975,
+        "bran_lumi": 20195.8,
+        "fill_lumi": 909450.063,
+        "b1_bkgd": 0.615,
+        "b2_bkgd": 0.809
       },
       "config": {
         "beta_star": "0.73 m",
@@ -72,11 +72,11 @@
       "name": "ALICE",
       "operation": {
         "status": "PHYSICS",
-        "inst_lumi": 8.459,
+        "inst_lumi": 8.664,
         "bran_lumi": 0.1,
-        "fill_lumi": 370.101,
-        "b1_bkgd": 0.601,
-        "b2_bkgd": 0.858
+        "fill_lumi": 373.212,
+        "b1_bkgd": 0.579,
+        "b2_bkgd": 0.883
       },
       "config": {
         "beta_star": "10.00 m",
@@ -91,10 +91,10 @@
       "name": "CMS",
       "operation": {
         "status": "PHYSICS",
-        "inst_lumi": 17919.545,
-        "bran_lumi": 21274.5,
-        "fill_lumi": 904366.25,
-        "b1_bkgd": 0.11,
+        "inst_lumi": 17660.16,
+        "bran_lumi": 20954.6,
+        "fill_lumi": 909980,
+        "b1_bkgd": 0.093,
         "b2_bkgd": 0.081
       },
       "config": {
@@ -110,11 +110,11 @@
       "name": "LHCb",
       "operation": {
         "status": "PHYSICS",
-        "inst_lumi": 2051.97,
+        "inst_lumi": 2070.58,
         "bran_lumi": 0.4,
-        "fill_lumi": 88546.102,
-        "b1_bkgd": 0.277,
-        "b2_bkgd": 2.409
+        "fill_lumi": 89190.797,
+        "b1_bkgd": 0.28,
+        "b2_bkgd": 2.398
       },
       "config": {
         "beta_star": "2.00 m",
@@ -244,5 +244,5 @@
       ]
     ]
   },
-  "next": "2025-09-28T06:50:21+0000"
+  "next": "2025-09-28T06:55:43+0000"
 }
