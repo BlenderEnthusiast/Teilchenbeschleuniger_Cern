@@ -863,40 +863,48 @@
       <!-- ================= TEILCHENBESCHLEUNIGER  ================= -->
       <section class="section" id="ring-hotspots">
         <div class="container">
+          <h2 class="reveal">A Toroidal LHC Apparatus</h2>
         
      
           <h3 class="reveal" style="margin-top:16px">Magneten</h3>
           <div class="lhc-magnets reveal">
-            <!-- Dipol: Text links, Video rechts -->
-            <article class="magnet-row" id="magnet-dipol">
-              <div class="magnet-copy">
-                <h4>Dipolmagneten</h4>
-                <p>
-                  Erzeugen ein nahezu <b>gleichförmiges Magnetfeld</b> quer zur Flugrichtung und
-                  <b>biegen</b> so die Protonen auf die Kreisbahn. Supraleitende Dipole bilden das
-                  Rückgrat des 27-km-Rings.
-                </p>
-              </div>
-              <div class="magnet-media" aria-hidden="true">
-                <video src="ha.mp4" autoplay muted loop playsinline preload="auto"></video>
-              </div>
-            </article>
           
-            <!-- Quadrupol: Video links, Text rechts -->
-            <article class="magnet-row reverse" id="magnet-quadrupol">
-              <div class="magnet-media" aria-hidden="true">
-                <video src="ba.mp4" autoplay muted loop playsinline preload="auto"></video>
+            <!-- Dipol: Titel oben, Text links, Video rechts -->
+            <section class="magnet-block" id="magnet-dipol">
+              <h4 class="magnet-title">Dipolmagneten</h4>
+              <div class="magnet-layout">
+                <div class="magnet-copy">
+                  <p>
+                    Erzeugen ein nahezu <b>gleichförmiges Magnetfeld</b> quer zur Flugrichtung und
+                    <b>biegen</b> so die Protonen auf die Kreisbahn. Supraleitende Dipole bilden das
+                    Rückgrat des 27-km-Rings.
+                  </p>
+                </div>
+                <div class="magnet-media" aria-hidden="true">
+                  <video src="ha.mp4" autoplay muted loop playsinline preload="auto"></video>
+                </div>
               </div>
-              <div class="magnet-copy">
-                <h4>Quadrupolmagneten</h4>
-                <p>
-                  Wirken wie <b>magnetische Linsen</b>: Fokussieren in einer und defokussieren in der
-                  anderen Ebene. In Sequenzen (FODO, starke Triplets an den Experimenten) wird der
-                  Strahlquerschnitt an den Kollisionspunkten stark verkleinert.
-                </p>
+            </section>
+          
+            <!-- Quadrupol: Titel oben, Video links, Text rechts -->
+            <section class="magnet-block" id="magnet-quadrupol">
+              <h4 class="magnet-title">Quadrupolmagneten</h4>
+              <div class="magnet-layout reverse">
+                <div class="magnet-media" aria-hidden="true">
+                  <video src="ba.mp4" autoplay muted loop playsinline preload="auto"></video>
+                </div>
+                <div class="magnet-copy">
+                  <p>
+                    Wirken wie <b>magnetische Linsen</b>: Fokussieren in einer und defokussieren in der
+                    anderen Ebene. In Sequenzen (FODO, starke Triplets an den Experimenten) wird der
+                    Strahlquerschnitt an den Kollisionspunkten stark verkleinert.
+                  </p>
+                </div>
               </div>
-            </article>
+            </section>
+          
           </div>
+
 
           
           <h3 class="u-line reveal" style="margin-top:10px">RF-Kavitäten (Radiofrequenz)</h3>
@@ -2222,6 +2230,7 @@
 
   </body>
 </html>
+
 
 
 
