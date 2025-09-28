@@ -383,6 +383,47 @@
       
       /* — Resets, falls alter Block noch aktiv war — */
       .lhc-magnets::before, .lhc-item::before { display:none !important; content:none !important; }
+      /* === Überschriften-Gradient global ======================================= */
+      :root{
+        --heading-gradient: linear-gradient(90deg, #fff, #9ecbff 45%, #a7f3d0 85%);
+      }
+      
+      /* Alle semantischen Überschriften */
+      :is(h1,h2,h3,h4,h5,h6){
+        background: var(--heading-gradient);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      
+      /* Optional: auch "Pseudo-Headlines" einfärben */
+      .accordion-header > span,
+      .flow-step-title{
+        background: var(--heading-gradient);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      
+      /* (Optional) Stellen ohne Verlauf erzwingen */
+      .no-grad,
+      .no-grad :is(h1,h2,h3,h4,h5,h6){
+        background: none !important;
+        -webkit-background-clip: initial !important;
+        color: var(--fg) !important;
+      }
+      
+      /* (Zugänglichkeit) In Zwangsfarben-Modus normal färben */
+      @media (forced-colors: active){
+        :is(h1,h2,h3,h4,h5,h6),
+        .accordion-header > span,
+        .flow-step-title{
+          background: none;
+          -webkit-background-clip: initial;
+          color: CanvasText;
+        }
+      }
+
 
 
 
@@ -2095,6 +2136,7 @@
 
   </body>
 </html>
+
 
 
 
