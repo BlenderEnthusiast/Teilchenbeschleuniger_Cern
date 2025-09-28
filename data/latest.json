@@ -3,10 +3,10 @@
   "energy": 450,
   "ions": false,
   "time": {
-    "page1": "2025-09-28T10:53:23+0200",
-    "cryo": "2025-09-28T10:53:24+0200",
-    "lhc3": "2025-09-28T10:53:14+0200",
-    "config": "2025-09-28T10:53:15+0200"
+    "page1": "2025-09-28T10:54:51+0200",
+    "cryo": "2025-09-28T10:54:51+0200",
+    "lhc3": "2025-09-28T10:54:50+0200",
+    "config": "2025-09-28T10:54:50+0200"
   },
   "comments": {
     "time": "2025-09-28T10:06:04+0200",
@@ -41,8 +41,8 @@
   "tsb": "PT0S",
   "postmortem": null,
   "intensity": [
-    "1.07e+14",
-    "8.93e+13"
+    "1.48e+14",
+    "1.07e+14"
   ],
   "accmode": "PROTON PHYSICS",
   "beammode": "INJECTION PHYSICS BEAM",
@@ -53,11 +53,11 @@
       "name": "ATLAS",
       "operation": {
         "status": "STANDBY",
-        "inst_lumi": 0.056,
-        "bran_lumi": 0.4,
+        "inst_lumi": 0.068,
+        "bran_lumi": 2.4,
         "fill_lumi": 0,
-        "b1_bkgd": 1.392,
-        "b2_bkgd": 0.743
+        "b1_bkgd": 1.515,
+        "b2_bkgd": 1.323
       },
       "config": {
         "beta_star": "11.00 m",
@@ -84,7 +84,7 @@
         "spectro_angle": "1077(V)",
         "separation": "-3.5(H)",
         "coll_per_turn": "2089",
-        "delta_t": "-0.00 ns"
+        "delta_t": "-0.01 ns"
       }
     },
     {
@@ -92,10 +92,10 @@
       "operation": {
         "status": "STANDBY",
         "inst_lumi": 0,
-        "bran_lumi": 6.7,
+        "bran_lumi": 8.1,
         "fill_lumi": 0,
         "b1_bkgd": 0,
-        "b2_bkgd": 1.163
+        "b2_bkgd": 0.702
       },
       "config": {
         "beta_star": "11.00 m",
@@ -122,7 +122,7 @@
         "spectro_angle": "2106(H)",
         "separation": "-3.5(V)",
         "coll_per_turn": "2227",
-        "delta_t": "0.05 ns"
+        "delta_t": "0.04 ns"
       }
     }
   ],
@@ -244,5 +244,5 @@
       ]
     ]
   },
-  "next": "2025-09-28T08:53:56+0000"
+  "next": "2025-09-28T08:55:23+0000"
 }
