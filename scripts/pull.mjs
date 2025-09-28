@@ -1,29 +1,31 @@
-// Node 20+: native fetch
-import fs from "node:fs";
-import path from "node:path";
+// scripts/pull_telemetry.mjs
+// Node 20+ (ESM). Schreibt data/latest.json und hängt Zeilen an data/lhc_history.jsonl an.
 
-const ROOT = process.cwd();
-const DATA_DIR = path.join(ROOT, "data");
-const LATEST = path.join(DATA_DIR, "latest.json");
-const HISTORY = path.join(DATA_DIR, "lhc_history.jsonl");
+import fs from "node:fs/promises";
 
-const ENERGY_URL = process.env.ENERGY_URL || "";
-const IB1_URL    = process.env.IB1_URL || "";
-const IB2_URL    = process.env.IB2_URL || "";
-const LUMI_URL   = process.env.LUMI_URL || ""; // optional
-const FORCE_SPECIES = (process.env.FORCE_SPECIES || "").toLowerCase().trim();
-const MOCK = process.env.MOCK === "1";
+// ---- ENV (aus Workflow) --------------------------------------------------------
+const ENERGY_URL  = process.env.ENERGY_URL  || "";   // Pflicht
+const IB1_URL     = process.env.IB1_URL     || "";   // optional
+const IB2_URL     = process.env.IB2_URL     || "";   // optional
+const LUMI_URL    = process.env.LUMI_URL    || "";   // optional
+const FORCE_SPEC  = (process.env.FORCE_SPECIES || "").trim().toLowerCase(); // "", "protons", "ions"
 
-// ---------- helpers ------------------------------------------------------------
-const ensureDir = p => fs.existsSync(p) || fs.mkdirSync(p, { recursive: true });
+// ---- Dateien -------------------------------------------------------------------
+const DIR             = "data";
+const LATEST_PATH     = `${DIR}/latest.json`;
+const HISTORY_PATH    = `${DIR}/lhc_history.jsonl`;
+const STATE_PATH      = `${DIR}/.state.json`; // nur für "last known species"
 
-const num = (x) => {
+// ---- Helpers -------------------------------------------------------------------
+function parseNumber(x) {
   if (x == null) return null;
-  const n = typeof x === "number" ? x : parseFloat(String(x).replace(",", "."));
+  if (typeof x === "number" && Number.isFinite(x)) return x;
+  const as = String(x).replace(",", ".");
+  const n = parseFloat(as);
   return Number.isFinite(n) ? n : null;
-};
+}
 
-// pick first numeric value whose key matches rx (deep)
+// Tiefen-Suche: irgendein Feld, das wie Energie/Intensität/Lumi aussieht
 function pickByRegex(obj, rx) {
   const q = [obj];
   while (q.length) {
@@ -32,7 +34,7 @@ function pickByRegex(obj, rx) {
       for (const [k, v] of Object.entries(o)) {
         if (rx.test(k)) {
           if (typeof v === "number") return v;
-          const n = num(v?.value ?? v);
+          const n = parseNumber(v?.value ?? v);
           if (n != null) return n;
         }
         if (v && typeof v === "object") q.push(v);
@@ -42,161 +44,126 @@ function pickByRegex(obj, rx) {
   return null;
 }
 
-function betaFromGeV(E) {
-  // Proton-Ruhemasse ~ 0.9382720813 GeV (pro Nukleon)
+async function fetchNum(url, rx) {
+  if (!url) return null;
+  const r = await fetch(url, { cache: "no-store" });
+  if (!r.ok) throw new Error(`${url} -> HTTP ${r.status}`);
+  const ct = r.headers.get("content-type") || "";
+  if (ct.includes("application/json")) {
+    const j = await r.json();
+    const n = pickByRegex(j, rx);
+    return n != null ? n : parseNumber(j);
+  } else {
+    const t = await r.text();
+    return parseNumber(t);
+  }
+}
+
+// Proton-β aus Gesamtenergie (GeV) per γ = E/m0, m0≈0.938 GeV
+function betaFromProtonGeV(E) {
   const m0 = 0.9382720813;
-  const gamma = E && E > 0 ? (E / m0) : 1;
-  if (gamma <= 1) return 0;
+  if (!(E > 0)) return 0;
+  const gamma = E / m0;
   const b2 = 1 - 1 / (gamma * gamma);
   return Math.sqrt(Math.max(0, Math.min(1, b2)));
 }
 
-function guessSpeciesFromPayload(...objs) {
-  // Sehr konservativ: suche Hinweise in Strings/Keys/Flags
-  const hay = JSON.stringify(objs).toLowerCase();
-  if (/ion|pb|lead|a-ion|heavy/.test(hay)) return "ions";
-  if (/proton|p\-beam|pbeam/.test(hay)) return "protons";
-  return null;
+async function readLastSpecies() {
+  try {
+    const txt = await fs.readFile(STATE_PATH, "utf8");
+    const j = JSON.parse(txt);
+    return (j && j.species) || "unknown";
+  } catch {
+    return "unknown";
+  }
 }
 
-async function getJSON(url) {
-  const r = await fetch(url, { cache: "no-store" });
-  if (!r.ok) throw new Error(`HTTP ${r.status} for ${url}`);
-  return await r.json();
+async function writeLastSpecies(species) {
+  try {
+    await fs.writeFile(STATE_PATH, JSON.stringify({ species }, null, 2) + "\n");
+  } catch {}
 }
 
-// ---------- mock fallback ------------------------------------------------------
-async function readMock() {
-  const now = Math.floor(Date.now() / 1000);
-  const baseE = 6800; // GeV
-  const jitter = (amt) => (Math.random() - 0.5) * amt;
-  const energy = baseE + jitter(50);
-  const ib1 = 1.1e14 + jitter(5e12);
-  const ib2 = 1.1e14 + jitter(5e12);
-  const lumi = 8e33 + jitter(5e32);
-  return {
-    t: now,
-    energy,
-    speed: betaFromGeV(energy),
-    ib1, ib2, lumi,
-    species: "protons",
-    _meta: { mock: true }
-  };
+/**
+ * Heuristik zur Art:
+ *  - HARDCODED OVERRIDE via FORCE_SPECIES
+ *  - klare Protonen-Signatur: E >= 4.0 TeV
+ *  - klare Ionen-Signatur:    E <= 3.5 TeV UND sehr niedrige Intensitäten
+ *  - sonst: nutze "last known", fallbacks auf "protons"
+ *
+ * Hinweis: LHC zeigt Energie häufig als protonäquivalente GeV.
+ * Für Pb82+ gilt pro Nukleon ~0.394 * E_proton; Ionen-Läufe liegen typ. ~2.5–3.0 TeV/Nukleon.
+ */
+function speciesFromSample(sample, lastKnown = "unknown") {
+  // 1) Override
+  if (FORCE_SPEC === "proton" || FORCE_SPEC === "protons") return "protons";
+  if (FORCE_SPEC === "ion" || FORCE_SPEC === "ions") return "ions";
+
+  const E = sample.energy; // GeV (protonäquivalent)
+  const I = Math.max(sample.ib1 || 0, sample.ib2 || 0);
+
+  // 2) klare Protonen-Signatur bei hohen Energien
+  if (E != null && E >= 4000) return "protons";
+
+  // 3) klare Ionen-Signatur bei niedrigeren Energien + geringer Intensität
+  if (E != null && E <= 3500 && I > 0 && I < 1e12) return "ions";
+
+  // 4) reine Intensitätsheuristik, falls E fehlt
+  if (I > 1e13) return "protons";
+  if (I > 0 && I < 5e11) return "ions";
+
+  // 5) Beibehaltung statt Springen ins Falsche
+  if (lastKnown && lastKnown !== "unknown") return lastKnown;
+
+  // 6) Konservativer Default: Protons (häufigster Run)
+  return "protons";
 }
 
-// ---------- main pull ----------------------------------------------------------
-async function pullOnce() {
-  if (MOCK) return await readMock();
-
-  const payloads = {};
-  if (ENERGY_URL) payloads.energy = await getJSON(ENERGY_URL);
-  if (IB1_URL)    payloads.ib1    = await getJSON(IB1_URL);
-  if (IB2_URL)    payloads.ib2    = await getJSON(IB2_URL);
-  if (LUMI_URL)   payloads.lumi   = await getJSON(LUMI_URL);
-
-  const energyGeV = payloads.energy ? (
-      num(pickByRegex(payloads.energy, /(^|_)energy($|_)|beam.?energy|total.?energy/i))
-    ) : null;
-
-  const IB1 = payloads.ib1 ? (
-      num(pickByRegex(payloads.ib1, /(ib1|beam.?1.*(intensity|current))/i))
-    ) : null;
-
-  const IB2 = payloads.ib2 ? (
-      num(pickByRegex(payloads.ib2, /(ib2|beam.?2.*(intensity|current))/i))
-    ) : null;
-
-  const lumi = payloads.lumi ? (
-      num(pickByRegex(payloads.lumi, /lumi|instant.*lumi|luminosit/i))
-    ) : null;
-
-  const now = Math.floor(Date.now() / 1000);
-  const speed = energyGeV != null ? betaFromGeV(energyGeV) : null;
-
-  let species = FORCE_SPECIES || guessSpeciesFromPayload(payloads.energy, payloads.ib1, payloads.ib2, payloads.lumi) || "unknown";
-
-  return {
-    t: now,
-    energy: energyGeV ?? null,
-    speed,
-    ib1: IB1 ?? null,
-    ib2: IB2 ?? null,
-    lumi: lumi ?? null,
-    species,
-    _meta: {
-      fetched_at: new Date().toISOString(),
-      sources: {
-        energy: !!payloads.energy,
-        ib1: !!payloads.ib1,
-        ib2: !!payloads.ib2,
-        lumi: !!payloads.lumi
-      }
-    }
-  };
-}
-
-// ---------- history handling ---------------------------------------------------
-function readLastLine(p) {
-  if (!fs.existsSync(p)) return null;
-  const buf = fs.readFileSync(p, "utf8").trimEnd();
-  const idx = buf.lastIndexOf("\n");
-  const line = idx >= 0 ? buf.slice(idx + 1) : buf;
-  try { return JSON.parse(line); } catch { return null; }
-}
-
-function loadAllLines(p) {
-  if (!fs.existsSync(p)) return [];
-  return fs.readFileSync(p, "utf8")
-    .split(/\r?\n/).filter(Boolean)
-    .map(l => { try { return JSON.parse(l); } catch { return null; } })
-    .filter(Boolean);
-}
-
-function saveLatest(obj) {
-  fs.writeFileSync(LATEST, JSON.stringify(obj, null, 2) + "\n", "utf8");
-}
-
-function appendHistory(obj) {
-  fs.appendFileSync(HISTORY, JSON.stringify(obj) + "\n", "utf8");
-}
-
-function pruneHistory(maxAgeSec = 48 * 3600) {
-  const now = Math.floor(Date.now() / 1000);
-  const all = loadAllLines(HISTORY);
-  const kept = all.filter(r => typeof r?.t === "number" && (now - r.t) <= maxAgeSec);
-  fs.writeFileSync(HISTORY, kept.map(r => JSON.stringify(r)).join("\n") + (kept.length ? "\n" : ""), "utf8");
+async function appendHistoryLine(obj) {
+  const line = JSON.stringify(obj);
+  await fs.appendFile(HISTORY_PATH, line + "\n");
 }
 
 async function main() {
-  ensureDir(DATA_DIR);
+  await fs.mkdir(DIR, { recursive: true });
 
-  const sample = await pullOnce();
+  // Vorheriger Species-Zustand für stabile Entscheidung
+  const lastKnown = await readLastSpecies();
 
-  // Write latest.json (für die Website)
-  saveLatest(sample);
+  // Zugriffe
+  const [energyGeV, ib1, ib2, lumi] = await Promise.all([
+    fetchNum(ENERGY_URL, /(energy|beam.?energy)/i),
+    fetchNum(IB1_URL, /(ib1|beam.?1.*(intensity|current))/i),
+    fetchNum(IB2_URL, /(ib2|beam.?2.*(intensity|current))/i),
+    fetchNum(LUMI_URL, /(lumi|luminosit)/i),
+  ]);
 
-  // Append to history (dupe-avoid + retention)
-  const last = readLastLine(HISTORY);
-  const isDup =
-    last &&
-    Math.abs((last.t ?? 0) - sample.t) <= 60 &&
-    last.energy === sample.energy &&
-    last.ib1 === sample.ib1 &&
-    last.ib2 === sample.ib2 &&
-    last.lumi === sample.lumi;
+  const t = Math.floor(Date.now() / 1000);
 
-  if (!isDup) appendHistory(sample);
-  pruneHistory(48 * 3600); // 48h behalten (Frontend zeigt eh ein Fenster)
+  const sample = {
+    t,
+    energy: energyGeV ?? null,
+    speed: energyGeV != null ? betaFromProtonGeV(energyGeV) : null,
+    ib1: ib1 ?? null,
+    ib2: ib2 ?? null,
+    lumi: lumi ?? null,
+  };
 
-  console.log("ok:", {
-    latest: path.relative(ROOT, LATEST),
-    history: path.relative(ROOT, HISTORY),
-    t: sample.t,
-    species: sample.species
-  });
+  // Art bestimmen
+  const species = speciesFromSample(sample, lastKnown);
+  sample.species = species;
+
+  // Dateien schreiben
+  await fs.writeFile(LATEST_PATH, JSON.stringify(sample, null, 2) + "\n");
+  await appendHistoryLine(sample);
+  await writeLastSpecies(species);
+
+  console.log(
+    `OK ${new Date(t * 1000).toISOString()} · E=${sample.energy ?? "–"} GeV · β=${sample.speed ?? "–"} · I=[${sample.ib1 ?? "–"}, ${sample.ib2 ?? "–"}] · L=${sample.lumi ?? "–"} · species=${species}`
+  );
 }
 
-main().catch(err => {
-  console.error("[telemetry] ERROR:", err);
+main().catch((e) => {
+  console.error("[pull_telemetry] failed:", e);
   process.exit(1);
 });
