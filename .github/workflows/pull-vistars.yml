@@ -1,36 +1,42 @@
-name: Pull Vistars JSON
+name: Pull Vistars → latest.json
 
 on:
+  workflow_dispatch:
   schedule:
-    - cron: "*/5 * * * *"   # alle 5 Minuten (GitHub-Minimum)
-  workflow_dispatch:        # manuell startbar im Actions-Tab
-
-permissions:
-  contents: write           # erlaubt commit/push
+    - cron: "*/5 * * * *"   # alle 5 Minuten
 
 jobs:
   pull:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Fetch + update data
-        env:
-          SRC_URL: https://lhcstatus2.ovh/vistars.json
-        run: node scripts/pull.mjs
-
-      - name: Commit changes
+      - name: Install deps (falls du keine hast, bleibt das leer)
         run: |
-          if [[ -n $(git status --porcelain data/) ]]; then
-            git config user.name  "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add data/latest.json data/lhc_history.jsonl
-            git commit -m "data: update from Vistars [skip ci]"
+          echo "No deps"
+
+      - name: Fetch Vistars JSON → data/latest.json (+ raw dump)
+        env:
+          # Falls du eine eigene/funktionierende URL hast, setz sie hier:
+          # VISTARS_URL: ${{ secrets.VISTARS_URL }}
+        run: |
+          node scripts/pull-vistars.mjs
+
+      - name: Commit & push updated data
+        run: |
+          git config user.name  "gh-bot"
+          git config user.email "gh-bot@users.noreply.github.com"
+          git add data/latest.json data/vistars-raw.json data/lhc_history.jsonl || true
+          if ! git diff --cached --quiet; then
+            git commit -m "data: update telemetry"
             git push
           else
-            echo "No changes to commit."
+            echo "No data changes."
           fi
