@@ -699,7 +699,7 @@
         opacity:0; pointer-events:none;
         transition: opacity .35s ease;
       }
-      }
+      
       #glossar-overlay.active{ opacity:1; pointer-events:auto; }
     
       #glossar-stage{ position:relative; display:grid; place-items:center; padding:16px; }
@@ -1421,43 +1421,7 @@
             <h2 class="glossar-title">Glossar</h2>
             <button class="glossar-close" id="glossar-close" type="button" title="Schließen (Esc)">Schließen</button>
           </div>
-          <div class="glossar-body">
-            <!-- Sektion: Annahmen -->
-            <div class="accordion" id="g-acc-annahmen">
-              <button class="accordion-header" type="button" aria-expanded="true" aria-controls="g-acc-annahmen-content">
-                <span>Annahmen</span>
-                <span class="chev" aria-hidden="true">▸</span>
-              </button>
-              <div class="accordion-content" id="g-acc-annahmen-content" style="height:auto">
-                <div class="accordion-inner">
-                  <p><b>Fixe Konstanten:</b> σ<sub>inel</sub> = <b>75 mb</b> (7,5×10⁻²⁶ cm²), f<sub>rev</sub> = <b>11 245 /s</b>.</p>
-                  <p><b>Skalierung:</b> μ = μ₀ · (N/N₀)² mit μ₀ = 60 bei N₀ = 1,15×10¹¹ p/Bunch.</p>
-                  <p><b>Crossings:</b> f<sub>bx</sub> = f<sub>rev</sub> · n<sub>bunch</sub> (ein IP).</p>
-                  <p><b>Rate:</b> R = μ · f<sub>rev</sub> · n<sub>bunch</sub>; <b>Luminosität:</b> L = R / σ<sub>inel</sub>.</p>
-                  <ul>
-                    <li>Spotgrößen (σ<sub>x</sub>, σ<sub>y</sub>), β* und Geometriefaktor H konstant.</li>
-                    <li>Keine Lücken/Füllmuster modelliert; ein IP betrachtet.</li>
-                    <li>Nur inelastische pp-Wechselwirkungen (σ<sub>inel</sub>).</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-    
-          
-            <div class="accordion" id="g-acc-begriffe">
-              <button class="accordion-header" type="button" aria-expanded="false" aria-controls="g-acc-begriffe-content">
-                <span>Begriffe</span>
-                <span class="chev" aria-hidden="true">▸</span>
-              </button>
-              <div class="accordion-content" id="g-acc-begriffe-content" style="height:0">
-                <div class="accordion-inner">
-                  <p><b>Bunch:</b> Paket aus vielen Protonen, das den Ring umläuft.</p>
-                  <p><b>Pile-up μ:</b> Mittlere Zahl inelastischer Wechselwirkungen pro Bunch-Kreuzung.</p>
-                  <p><b>Luminosität L:</b> Strahl-Intensitätsparameter (cm⁻² s⁻¹).</p>
-                </div>
-              </div>
-            </div>
-          </div> 
+          <div class="glossar-body" id="glossar-body"></div>
         </div>
       </div>
     </div>
@@ -2743,58 +2707,75 @@
         const stage   = document.getElementById('glossar-stage');
         const btnX    = document.getElementById('glossar-close');
         const content = document.getElementById('content-wrap');
+        const bodyEl  = document.getElementById('glossar-body');
       
-        function isOpen(){ return !overlay.hasAttribute('hidden'); }
-        function openGlossar(sectionId){
-          overlay.removeAttribute('hidden');
-          requestAnimationFrame(()=> overlay.classList.add('active'));
-          content?.classList.add('blur');
-      
-          // optional: direkt passende Sektion öffnen + scrollen
-          if(sectionId){
-            const map = { annahmen: 'g-acc-annahmen', begriffe: 'g-acc-begriffe' };
-            const id = map[sectionId] || sectionId;
-            const acc = document.getElementById(id);
-            if(acc){
-              openAccordion(acc);
-              // in sicht scrollen
-              setTimeout(()=> acc.scrollIntoView({behavior:'smooth', block:'start'}), 60);
-            }
+        /* ====== 1) Glossar-Daten: hier fügst du Über-/Unterthemen hinzu ====== */
+        const GLOSSAR_DATA = [
+          {
+            id: 'annahmen',
+            title: 'Annahmen',
+            items: [
+              {
+                term: 'Umlauffrequenz f<sub>rev</sub>',
+                html: 'Wie oft ein Bunch den Ring pro Sekunde umrundet. <br>Fix im Rechner: <b>11&nbsp;245&nbsp;/s</b>.'
+              },
+              {
+                term: 'Crossing-Frequenz am IP f<sub>bx</sub>',
+                html: 'Wie oft sich Bunch-Paare an einem Interaktionspunkt pro Sekunde treffen: <br><b>f<sub>bx</sub> = f<sub>rev</sub> · n<sub>bunch</sub></b>.'
+              },
+              {
+                term: 'Inelastischer Wirkungsquerschnitt σ<sub>inel</sub>',
+                html: '„Trefferfläche“ für inelastische pp-Stöße (neue Teilchen entstehen).<br>Fix im Rechner: <b>75&nbsp;mb</b> = <b>7,5×10<sup>−26</sup>&nbsp;cm²</b> (1&nbsp;mb = 10<sup>−27</sup>&nbsp;cm²).'
+              },
+              {
+                term: 'Pile-up μ',
+                html: 'Mittlere Zahl inelastischer pp-Wechselwirkungen pro Bunch-Kreuzung (dimensionslos).'
+              }
+            ]
+          },
+          {
+            id: 'begriffe',
+            title: 'Begriffe',
+            items: [
+              { term: 'Bunch', html: 'Paket aus vielen Protonen, das den Ring umläuft.' },
+              { term: 'Luminosität L', html: 'Strahl-Intensitätsparameter; bestimmt erwartete Ereignisrate für gegebene σ.' }
+            ]
           }
-          setTimeout(()=>btnX?.focus?.(), 0);
+        ];
+      
+        /* ====== 2) Renderer: wandelt Daten in Accordions um ====== */
+        function renderGlossar(data){
+          if(!bodyEl) return;
+          bodyEl.innerHTML = data.map(cat => accordionHTML(cat)).join('');
+          // Nach dem Einfügen: Accordions aktivieren
+          bodyEl.querySelectorAll('.accordion').forEach(setupAccordion);
         }
-        function closeGlossar(){
-          overlay.classList.remove('active');
-          content?.classList.remove('blur');
-          setTimeout(()=> overlay.setAttribute('hidden',''), 200);
+      
+        function accordionHTML(cat){
+          const opened = (cat.open === true); // optional
+          const items  = (cat.items||[]).map(entry => `
+            <div class="g-item" style="padding:8px 0 10px; border-bottom:1px dashed var(--line)">
+              <div class="g-term" style="font-weight:700; color:var(--fg)">${entry.term}</div>
+              <div class="g-def"  style="color:var(--muted); font-size:14px">${entry.html}</div>
+            </div>
+          `).join('');
+          return `
+            <div class="accordion" id="g-acc-${cat.id||'x'}">
+              <button class="accordion-header" type="button" aria-expanded="${opened?'true':'false'}"
+                      aria-controls="g-acc-${cat.id||'x'}-content">
+                <span>${cat.title||'Abschnitt'}</span>
+                <span class="chev" aria-hidden="true">▸</span>
+              </button>
+              <div class="accordion-content" id="g-acc-${cat.id||'x'}-content" style="height:${opened?'auto':'0'}">
+                <div class="accordion-inner">
+                  ${items}
+                </div>
+              </div>
+            </div>
+          `;
         }
       
-        // Klick auf Links, die das Glossar öffnen sollen
-        document.addEventListener('click', (e)=>{
-          const a = e.target.closest('a.glossar-open, a[href^="#glossar-"]');
-          if(!a) return;
-          e.preventDefault();
-          // Ziel ableiten (#glossar-annahmen -> "annahmen")
-          const href = a.getAttribute('href') || '';
-          const explicit = a.getAttribute('data-glossar');
-          let sect = explicit || '';
-          const m = href.match(/#glossar-([a-z0-9_-]+)/i);
-          if(!sect && m) sect = m[1].toLowerCase();
-          openGlossar(sect);
-          // Tooltip ggf. schließen
-          const tip = document.getElementById('cc-tip');
-          tip?.classList.remove('open');
-        });
-      
-        // Schließen
-        btnX?.addEventListener('click', closeGlossar);
-        window.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && isOpen()) closeGlossar(); });
-        // Optional: Klick außerhalb der „Rolle“ schließt
-        overlay.addEventListener('click', (e)=>{
-          if(e.target === overlay || e.target === stage) closeGlossar();
-        });
-      
-        // ===== Accordion-Logik (wie „Was ist CERN“, aber generisch) =============
+        /* ====== 3) Accordion-Mechanik (wie oben, hier lokal) ====== */
         function setupAccordion(acc){
           const btn   = acc.querySelector('.accordion-header');
           const panel = acc.querySelector('.accordion-content');
@@ -2818,38 +2799,94 @@
           function toggle(){ acc.classList.contains('open') ? closePanel() : openPanel(); }
       
           btn.addEventListener('click', toggle);
-          panel.addEventListener('transitionend', (e)=>{ if(e.propertyName!=='height') return; if(acc.classList.contains('open')) panel.style.height='auto'; });
+          panel.addEventListener('transitionend', (e)=>{
+            if(e.propertyName!=='height') return;
+            if(acc.classList.contains('open')) panel.style.height='auto';
+          });
       
-          // Anfangszustand aus inline height ableiten
+          // Anfangszustand korrigieren
           if(panel.style.height === 'auto' || acc.classList.contains('open')){
             acc.classList.add('open'); btn.setAttribute('aria-expanded','true');
           }
         }
       
-        function openAccordion(acc){
-          const btn   = acc.querySelector('.accordion-header');
-          const panel = acc.querySelector('.accordion-content');
-          if(!btn || !panel) return;
-          if(!acc.classList.contains('open')){
-            acc.classList.add('open');
-            btn.setAttribute('aria-expanded','true');
-            panel.style.height = panel.scrollHeight + 'px';
-            // nach Ende fixieren
-            panel.addEventListener('transitionend', function done(e){
-              if(e.propertyName==='height'){ panel.style.height='auto'; panel.removeEventListener('transitionend', done); }
-            });
+        /* ====== 4) Overlay-API (öffnen/schließen) ====== */
+        function isOpen(){ return !overlay.hasAttribute('hidden'); }
+        function openGlossar(sectionId){
+          overlay.removeAttribute('hidden');
+          requestAnimationFrame(()=> overlay.classList.add('active'));
+          content?.classList.add('blur');
+      
+          if(sectionId){
+            const id = `g-acc-${sectionId}`;
+            const acc = document.getElementById(id);
+            if(acc){
+              // aufklappen & hinscrollen
+              const btn   = acc.querySelector('.accordion-header');
+              const panel = acc.querySelector('.accordion-content');
+              if(!acc.classList.contains('open')){
+                acc.classList.add('open'); btn.setAttribute('aria-expanded','true');
+                panel.style.height = panel.scrollHeight + 'px';
+                panel.addEventListener('transitionend', function done(e){
+                  if(e.propertyName==='height'){ panel.style.height='auto'; panel.removeEventListener('transitionend', done); }
+                });
+              }
+              setTimeout(()=> acc.scrollIntoView({behavior:'smooth', block:'start'}), 60);
+            }
           }
+          setTimeout(()=>btnX?.focus?.(), 0);
+        }
+        function closeGlossar(){
+          overlay.classList.remove('active');
+          content?.classList.remove('blur');
+          setTimeout(()=> overlay.setAttribute('hidden',''), 200);
         }
       
-        // alle Glossar-Accordions initialisieren
-        document.querySelectorAll('#glossar-overlay .accordion').forEach(setupAccordion);
+        // Öffnen über Links (z. B. „Genauere Erklärung“)
+        document.addEventListener('click', (e)=>{
+          const a = e.target.closest('a.glossar-open, a[href^="#glossar-"]');
+          if(!a) return;
+          e.preventDefault();
+          const explicit = a.getAttribute('data-glossar');
+          let sect = explicit || '';
+          const m = (a.getAttribute('href')||'').match(/#glossar-([a-z0-9_-]+)/i);
+          if(!sect && m) sect = m[1].toLowerCase();
+          openGlossar(sect);
+          document.getElementById('cc-tip')?.classList.remove('open');
+        });
       
-        // Expose for debugging
-        window.__GLOSSAR__ = { open: openGlossar, close: closeGlossar, isOpen };
+        // Schließen & Interaktionen
+        btnX?.addEventListener('click', closeGlossar);
+        window.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && isOpen()) closeGlossar(); });
+        overlay.addEventListener('click', (e)=>{ if(e.target === overlay || e.target === stage) closeGlossar(); });
+      
+        /* ====== 5) Render einmalig aufbauen ====== */
+        renderGlossar(GLOSSAR_DATA);
+      
+        /* ====== 6) Kleine Helper-API zum späteren Ergänzen ====== */
+        window.__GLOSSAR__ = {
+          open: openGlossar,
+          close: closeGlossar,
+          isOpen,
+          setData(arr){ renderGlossar(arr); },
+          appendItem(catId, item){
+            const cat = GLOSSAR_DATA.find(c => c.id===catId);
+            if(!cat){ console.warn('Kategorie nicht gefunden:', catId); return; }
+            cat.items = cat.items || [];
+            cat.items.push(item);
+            renderGlossar(GLOSSAR_DATA);
+          },
+          addCategory(cat){
+            GLOSSAR_DATA.push(cat);
+            renderGlossar(GLOSSAR_DATA);
+          }
+        };
       })();
     </script>
+
   </body>
 </html>
+
 
 
 
