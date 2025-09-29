@@ -536,6 +536,26 @@
             "copy";
         }
       }
+      /* Mehr Spaltengap + sichere Spaltenbreiten */
+      .magnet-block{
+        gap: 14px clamp(28px, 4vw, 56px) !important;
+        grid-template-columns: minmax(0,1.05fr) minmax(0,1fr) !important;
+      }
+      .magnet-block.reverse{
+        gap: 14px clamp(28px, 4vw, 56px) !important;
+        grid-template-columns: minmax(0,1fr) minmax(0,1.05fr) !important; /* Video | Text */
+      }
+      
+      /* Verhindert, dass Inhalt „überläuft“ */
+      .magnet-copy,
+      .magnet-media{ min-width: 0 !important; }
+      .magnet-copy{ overflow-wrap: anywhere !important; }
+      
+      /* Extra Innenabstand nur beim rechten Text im reverse-Layout (Quadrupol) */
+      .magnet-block.reverse .magnet-copy{
+        padding-left: clamp(8px, 1.4vw, 22px) !important;
+      }
+
 
       
 
@@ -2239,6 +2259,7 @@
 
   </body>
 </html>
+
 
 
 
