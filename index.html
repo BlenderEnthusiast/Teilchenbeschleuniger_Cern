@@ -350,7 +350,7 @@
       .lhc-item h4{ margin:0 0 6px; font-size:clamp(16px,2.6vw,20px); letter-spacing:-.01em; }
       .lhc-item p{ margin:0; color:var(--muted); }
       
-      /* RF-Sektion mit elegantem Video rechts (ohne Boxen) */
+   
       .lhc-rf{ display:grid; gap:22px; align-items:center; margin:18px 0 0; }
       @media (min-width:900px){ .lhc-rf{ grid-template-columns:1.15fr 1fr; } }
       .lhc-rf p{ margin:0; color:var(--muted); }
@@ -536,7 +536,7 @@
             "copy";
         }
       }
-      /* Mehr Spaltengap + sichere Spaltenbreiten */
+    
       .magnet-block{
         gap: 14px clamp(28px, 4vw, 56px) !important;
         grid-template-columns: minmax(0,1.05fr) minmax(0,1fr) !important;
@@ -546,24 +546,36 @@
         grid-template-columns: minmax(0,1fr) minmax(0,1.05fr) !important; /* Video | Text */
       }
       
-      /* Verhindert, dass Inhalt „überläuft“ */
+    
       .magnet-copy,
       .magnet-media{ min-width: 0 !important; }
       .magnet-copy{ overflow-wrap: anywhere !important; }
       
-      /* Extra Innenabstand nur beim rechten Text im reverse-Layout (Quadrupol) */
+     
       .magnet-block.reverse .magnet-copy{
         padding-left: clamp(8px, 1.4vw, 22px) !important;
       }
 
-
+      /* === Kollision =================================================== */
+      #collision-detector .calc-grid{
+        display:grid; grid-template-columns: 1.1fr 1fr; gap:22px; align-items:start;
+      }
+      @media (max-width:900px){ #collision-detector .calc-grid{ grid-template-columns:1fr; } }
+      .calc-box{ background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px; }
+      .calc-sub{ margin:0 0 10px; font-size:clamp(16px,2.4vw,20px); font-weight:800; }
       
-
-
-
-
-
-
+      .calc-row{ display:grid; grid-template-columns:minmax(140px,.9fr) 1fr minmax(120px,.6fr);
+        gap:12px; align-items:center; margin:10px 0; }
+      .calc-row .label{ color:var(--fg); font-weight:600; }
+      .calc-row output, .calc-row .val{ text-align:right; font-variant-numeric:tabular-nums; color:var(--muted); }
+      
+      .calc-range{ appearance:none; width:100%; height:4px; background:#2d2b30; border-radius:999px; outline:none; }
+      .calc-range::-webkit-slider-thumb{ appearance:none; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.35); }
+      .calc-range::-moz-range-thumb{ width:18px; height:18px; border-radius:50%; background:#fff; border:none; }
+      
+      .calc-note{ margin-top:10px; font-size:12px; color:var(--muted); }
+      .calc-emph{ font-weight:700; color:var(--fg); }
+      
 
 
     </style>
@@ -1029,7 +1041,59 @@
         <div class="container">
           <h2 class="reveal">Kollisionen</h2>
           <p class="reveal">Müssen wir noch schauen</p>
-
+          <div class="calc-grid reveal" aria-live="polite">
+            <div class="calc-box">
+              <h3 class="calc-sub">Kurz erklärt</h3>
+              <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer non orci
+                vitae lorem feugiat rhoncus. In hac habitasse platea dictumst. Nulla facilisi.
+                Suspendisse potenti. Sed accumsan, nunc a placerat interdum, sapien purus
+                gravida neque, in pretium ipsum enim vel arcu. Curabitur quis lorem sed nisl
+                interdum condimentum. Pellentesque habitant morbi tristique senectus et netus.
+              </p>
+              <p>
+                Morbi ut nisl nec justo iaculis pellentesque. In vel risus vitae nulla
+                fringilla bibendum. Cras aliquet mi in urna faucibus, vitae gravida ligula
+                porttitor. Duis euismod, ligula non facilisis luctus, sapien magna luctus nibh,
+                a gravida enim elit quis velit.
+              </p>
+            </div>
+          
+        
+            <div class="calc-box" id="lumicalc">
+              <h3 class="calc-sub">Interaktiver Rechner (vereinfacht)</h3>
+          
+           
+              <div class="calc-row">
+                <div class="label">Bunches pro Strahl</div>
+                <input id="lc-bunches" class="calc-range" type="range" min="1" max="2808" step="1" value="2200" aria-label="Bunches pro Strahl">
+                <output for="lc-bunches" id="lc-bunches-out">2 200</output>
+              </div>
+          
+        
+              <div class="calc-row">
+                <div class="label">Protonen pro Bunch</div>
+             
+                <input id="lc-protons" class="calc-range" type="range" min="0.50" max="2.00" step="0.01" value="1.15" aria-label="Protonen pro Bunch (×10¹¹)">
+                <output for="lc-protons" id="lc-protons-out">1,15 × 10¹¹<br><span style="font-size:11px;color:var(--muted)">≈ 115 Mrd.</span></output>
+              </div>
+          
+        
+              <div class="calc-row">
+                <div class="label">Kollisionen / s</div>
+                <div class="val" id="lc-rate-aux" aria-hidden="true">—</div>
+                <div class="val calc-emph" id="lc-rate">—</div>
+              </div>
+          
+              <div class="calc-note">
+                Annahmen: <span class="calc-emph">f<sub>rev</sub> = 11 245 /s</span>.
+                Pile-up pro Crossing skaliert wie <span class="calc-emph">μ ∝ N²</span> mit
+                Referenz <span class="calc-emph">μ₀ = 60</span> bei <span class="calc-emph">N₀ = 1,15×10¹¹</span>.
+                Gesamt-Rate ≈ <span class="calc-emph">μ · f<sub>rev</sub> · n<sub>bunch</sub></span>.
+                (Nur Demo – reale L hängt auch von Strahlgrößen etc. ab.)
+              </div>
+            </div>
+          </div>
         </div>
       </section>
       
@@ -2254,9 +2318,68 @@
         }
       })();
     </script>
+    <script defer>
+      (function(){
+        const $ = (id)=>document.getElementById(id);
+        const bunch = $('lc-bunches');
+        const bunchOut = $('lc-bunches-out');
+        const prot  = $('lc-protons');
+        const protOut = $('lc-protons-out');
+        const rateEl = $('lc-rate');
+        const rateAux= $('lc-rate-aux');
+     
+        const f_rev = 11245;             
+        const N0    = 1.15e11;         
+        const mu0   = 60;             
+      
+        const nf = (x)=> new Intl.NumberFormat('de-DE').format(Math.round(x));
+        const fmtCompact = (x)=>{
+          if(x==null || !isFinite(x)) return '—';
+          if(x >= 1e9)  return (x/1e9).toFixed(2).replace('.',',') + ' Mrd/s';
+          if(x >= 1e6)  return (x/1e6).toFixed(2).replace('.',',') + ' Mio/s';
+          if(x >= 1e3)  return nf(x) + ' /s';
+          return x.toFixed(0).replace('.',',') + ' /s';
+        };
+        const fmtSci = (x)=>{
+          if(!isFinite(x)) return '—';
+          const e = x.toExponential(2).replace('.',',').replace('e+',' ×10^');
+          return e + ' /s';
+        };
+        const fmtN = (N10e11)=>{ 
+          const N = N10e11 * 1e11;
+          const mrd = N/1e9;
+          return `${N10e11.toFixed(2).replace('.',',')} × 10¹¹<br><span style="font-size:11px;color:var(--muted)">≈ ${mrd.toFixed(0).replace('.',',')} Mrd.</span>`;
+        };
+      
+        function update(){
+          const nb = Math.max(1, Math.min(2808, +bunch.value||0));
+          const N  = (+prot.value||0) * 1e11;
+      
+ 
+          const mu = mu0 * Math.pow(N / N0, 2);
+      
+    
+          const crossings = f_rev * nb;
+      
 
+          const rate = mu * crossings;
+      
+          bunchOut.textContent = nf(nb);
+          protOut.innerHTML = fmtN(+prot.value||0);
+          rateEl.textContent = fmtCompact(rate);
+          rateAux.textContent = fmtSci(rate);
+        }
+      
+        bunch?.addEventListener('input', update);
+        prot?.addEventListener('input', update);
+      
+ 
+        update();
+      })();
+    </script>
   </body>
 </html>
+
 
 
 
