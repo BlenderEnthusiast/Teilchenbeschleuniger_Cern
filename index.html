@@ -649,6 +649,20 @@
         opacity:1; visibility:visible; transform:translateY(4px);
       }
       .tooltip b{ color:var(--fg); }
+      /* Snap-Marker & Standard-Badge */
+      .range-wrap{ position:relative; }
+      .range-wrap .tick{
+        position:absolute; top:50%; transform:translate(-50%,-50%);
+        width:2px; height:12px; background:#90ff86; border-radius:2px;
+        box-shadow:0 0 0 3px rgba(144,255,134,.15); pointer-events:none;
+      }
+      .std-badge{
+        display:inline-block; margin-left:8px; padding:2px 8px;
+        border:1px solid var(--line); border-radius:999px;
+        background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));
+        font-size:11px; font-weight:700; color:var(--muted);
+      }
+
 
       
 
@@ -1140,11 +1154,12 @@
                   σ<sub>inel</sub> = <b>75 mb</b> (fix), f<sub>rev</sub> = <b>11 245 /s</b>.<br>
                   μ skaliert näherungsweise wie <b>(N/N₀)²</b> mit μ₀ = <b>60</b> bei N₀ = <b>1,15×10¹¹</b> Protonen/Bunch.<br>
                   Crossings/s am IP: f<sub>rev</sub> · n<sub>bunch</sub>.<br>
-                  <b>Rate:</b> R = μ · f<sub>rev</sub> · n<sub>bunch</sub> · (hier 1 IP).<br>
+                  <b>Rate:</b> R = μ · f<sub>rev</sub> · n<sub>bunch</sub> (hier 1 IP).<br>
                   <b>Luminosität:</b> L = R / σ<sub>inel</sub>.
                 </div>
               </div>
-          
+            
+              <!-- Toggle: Ausgabe-Modus -->
               <div class="calc-row" style="grid-template-columns:auto auto 1fr">
                 <div class="label">Ausgabe</div>
                 <div class="seg" role="tablist" aria-label="Auswahl Ausgabe">
@@ -1153,26 +1168,32 @@
                 </div>
                 <div></div>
               </div>
-          
-             
+            
+              <!-- Slider 1 -->
               <div class="calc-row">
                 <div class="label">Bunches pro Strahl</div>
-                <input id="cc-bunches" class="calc-range" type="range" min="1" max="2808" step="1" value="2200" aria-label="Bunches pro Strahl">
+                <div class="range-wrap">
+                  <input id="cc-bunches" class="calc-range" type="range" min="1" max="2808" step="1" value="2200" aria-label="Bunches pro Strahl">
+                  <span class="tick" id="tick-bunch" aria-hidden="true"></span>
+                </div>
                 <output for="cc-bunches" id="cc-bunches-out">2 200</output>
               </div>
-          
-          
+            
+              <!-- Slider 2 -->
               <div class="calc-row">
                 <div class="label">Protonen pro Bunch</div>
-             
-                <input id="cc-protons" class="calc-range" type="range" min="0.50" max="2.00" step="0.01" value="1.15" aria-label="Protonen pro Bunch (×10¹¹)">
-                <output for="cc-protons" id="cc-protons-out">1,15 × 10¹¹<br><span style="font-size:11px;color:var(--muted)">≈ 115 Mrd.</span></output>
+                <div class="range-wrap">
+                  <!-- Skala in 10^11 intern, Anzeige = Mio./Mrd. -->
+                  <input id="cc-protons" class="calc-range" type="range" min="0.50" max="2.00" step="0.01" value="1.15" aria-label="Protonen pro Bunch (×10¹¹, Anzeige in Mio./Mrd.)">
+                  <span class="tick" id="tick-prot" aria-hidden="true"></span>
+                </div>
+                <output for="cc-protons" id="cc-protons-out">115 Mrd.</output>
               </div>
-          
-             
+            
+              <!-- Ergebnis (nur EIN Wert) -->
               <div class="calc-row">
                 <div class="label" id="cc-out-label">Kollisionen / s</div>
-                <div class="val" id="cc-out-aux" aria-hidden="true">—</div>
+                <div></div>
                 <div class="val calc-emph" id="cc-out">—</div>
               </div>
             </div>
@@ -2402,116 +2423,153 @@
       })();
     </script>
     <script defer>
-      (function(){
-        const $ = (id)=>document.getElementById(id);
-      
-        // Inputs
-        const bunch = $('cc-bunches');
-        const bunchOut = $('cc-bunches-out');
-        const prot  = $('cc-protons');
-        const protOut = $('cc-protons-out');
-      
-        // Mode toggle
-        const btnRate = $('cc-mode-rate');
-        const btnLumi = $('cc-mode-lumi');
-      
-        // Output
-        const outLabel = $('cc-out-label');
-        const outMain  = $('cc-out');
-        const outAux   = $('cc-out-aux');
-      
-        // Konstanten
-        const f_rev = 11245;      // 1/s
-        const N0    = 1.15e11;    // Referenz Protonen/Bunch
-        const mu0   = 60;         // Referenz-μ bei N0
-        const SIGMA_MB   = 75;    // LHC-Standard (fix)
-        const MB_TO_CM2  = 1e-27; // 1 mb = 1e-27 cm^2
-        const SIGMA_CM2  = SIGMA_MB * MB_TO_CM2;
-      
-        let mode = 'rate'; // 'rate' | 'lumi'
-      
-        // Formatter
-        const nf = new Intl.NumberFormat('de-DE');
-        const fmtBunch = (n)=> nf.format(Math.round(n));
-        const fmtN = (N10e11)=>{
-          const N = N10e11 * 1e11;
-          const mrd = N/1e9;
-          return `${N10e11.toFixed(2).replace('.',',')} × 10¹¹<br><span style="font-size:11px;color:var(--muted)">≈ ${mrd.toFixed(0).replace('.',',')} Mrd.</span>`;
-        };
-        const fmtSci = (x, digits=2)=>{
-          if(!isFinite(x) || x===0) return '0';
-          const [m,e] = x.toExponential(digits).split('e');
-          return `${m.replace('.',',')} × 10<sup>${parseInt(e,10)}</sup>`;
-        };
-      
-        // Ergebnis-Formatter
-        const fmtRateMrd = (R)=>{
-          const mrd = R/1e9;
-          return `${mrd.toFixed(2).replace('.',',')} Mrd/s`;
-        };
-        const fmtRateAux = (R)=> fmtSci(R,2) + ' /s';
-        const fmtLumiMain = (L)=> fmtSci(L,2) + ' cm⁻² s⁻¹';
-        const fmtLumiAux  = (L)=> (L/1e34).toFixed(2).replace('.',',') + ' × 10³⁴ cm⁻² s⁻¹';
-      
-        function compute(){
-          const nb = Math.max(1, Math.min(2808, +bunch.value||0));
-          const N  = (+prot.value||0) * 1e11;
-      
-          // μ ~ (N/N0)^2 (vereinfachte Näherung)
-          const mu = mu0 * Math.pow(N / N0, 2);
-      
-          // Crossings/s am IP
-          const crossings = f_rev * nb;
-      
-          // Kollisionen/s
-          const R = mu * crossings;
-      
-          // Luminosität
-          const L = R / SIGMA_CM2;
-      
-          return { nb, N, mu, R, L };
-        }
-      
-        function render(){
-          const { nb, N, mu, R, L } = compute();
-      
-          bunchOut.textContent   = fmtBunch(nb);
-          protOut.innerHTML      = fmtN(+prot.value||0);
-      
-          if(mode === 'rate'){
-            outLabel.textContent = 'Kollisionen / s';
-            outMain.innerHTML    = fmtRateMrd(R);
-            outAux.innerHTML     = fmtRateAux(R);
-          }else{
-            outLabel.textContent = 'Luminosität L';
-            outMain.innerHTML    = fmtLumiMain(L);
-            outAux.innerHTML     = fmtLumiAux(L);
+    (function(){
+      const $ = (id)=>document.getElementById(id);
+    
+      // Inputs
+      const bunch    = $('cc-bunches');
+      const prot     = $('cc-protons');
+    
+      // Ticks (Snap-Marker)
+      const tickB    = $('tick-bunch');
+      const tickP    = $('tick-prot');
+    
+      // Outputs
+      const outBunch = $('cc-bunches-out');
+      const outProt  = $('cc-protons-out');
+      const outLabel = $('cc-out-label');
+      const outMain  = $('cc-out');
+    
+      // Mode toggle
+      const btnRate  = $('cc-mode-rate');
+      const btnLumi  = $('cc-mode-lumi');
+      let mode = 'rate'; // 'rate' | 'lumi'
+    
+      // Konstanten
+      const f_rev     = 11245;     // 1/s
+      const N0        = 1.15e11;   // Referenz Protonen/Bunch
+      const mu0       = 60;        // Referenz-μ bei N0
+      const SIGMA_CM2 = 75e-27;    // 75 mb in cm^2 (fix)
+    
+      // "Standard"-Snap-Werte
+      const STD_BUNCH = 2808;      // LHC 25-ns Nennfüllung (Design)
+      const STD_N10E11= 1.15;      // 1.15×10^11 p/Bunch
+      const SNAP_EPS_B= 3;         // ±3 Bunches
+      const SNAP_EPS_P= 0.01;      // ±0.01 in 10^11
+    
+      const nf = new Intl.NumberFormat('de-DE');
+    
+      // Formatter
+      const fmtBunch = (n, isStd)=> {
+        const base = nf.format(Math.round(n));
+        return isStd ? `${base} <span class="std-badge">Standard</span>` : base;
+      };
+      const fmtProtons = (N10e11, isStd)=>{
+        const N = N10e11*1e11; // absolut
+        let s;
+        if (N >= 1e9)  s = `${(N/1e9).toFixed(0).replace('.',',')} Mrd.`; // Milliarden
+        else if (N >= 1e6) s = `${(N/1e6).toFixed(0).replace('.',',')} Mio.`; // Millionen
+        else s = nf.format(Math.round(N));
+        return isStd ? `${s} <span class="std-badge">Standard</span>` : s;
+      };
+      const fmtRateMrd = (R)=> `${(R/1e9).toFixed(2).replace('.',',')} Mrd/s`;
+      const fmtSci = (x, digits=2)=>{
+        if(!isFinite(x) || x===0) return '0';
+        const [m,e] = x.toExponential(digits).split('e');
+        return `${m.replace('.',',')} × 10<sup>${parseInt(e,10)}</sup>`;
+      };
+      const fmtLumi = (L)=> `${fmtSci(L,2)} cm⁻² s⁻¹`;
+    
+      // Tick-Positionen (kleine Markierung auf dem Track)
+      function setTickPos(inputEl, tickEl, stdVal){
+        const min = +inputEl.min, max = +inputEl.max;
+        const p = (stdVal - min) / (max - min);
+        tickEl.style.left = (p*100) + '%';
+      }
+    
+      // Snap auf Standard bei Loslassen / Change
+      function attachSnap(inputEl, std, eps, onSnap){
+        const snapCheck = ()=>{
+          const v = +inputEl.value;
+          if (Math.abs(v - std) <= eps) {
+            inputEl.value = String(std);
+            onSnap?.();
           }
+        };
+        inputEl.addEventListener('change', snapCheck);
+        inputEl.addEventListener('keyup', (e)=>{ if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)) snapCheck(); });
+        inputEl.addEventListener('pointerup', snapCheck);
+        inputEl.addEventListener('touchend', snapCheck, {passive:true});
+      }
+    
+      function compute(){
+        const nb  = Math.max(1, Math.min(2808, +bunch.value||0));
+        const N   = (+prot.value||0) * 1e11;
+    
+        // μ ~ (N/N0)^2 (vereinfachte Näherung)
+        const mu  = mu0 * Math.pow(N / N0, 2);
+    
+        // Crossings/s am IP
+        const crossings = f_rev * nb;
+    
+        // Kollisionen/s
+        const R = mu * crossings;
+    
+        // Luminosität
+        const L = R / SIGMA_CM2;
+    
+        return { nb, N10e11: (+prot.value||0), R, L };
+      }
+    
+      function render(){
+        const { nb, N10e11, R, L } = compute();
+    
+        const isStdB = Math.abs(nb - STD_BUNCH) <= 0;       // exakt auf Standard? (nach Snap)
+        const isStdP = Math.abs(N10e11 - STD_N10E11) <= 0;  // exakt auf Standard? (nach Snap)
+    
+        outBunch.innerHTML = fmtBunch(nb, isStdB);
+        outProt.innerHTML  = fmtProtons(N10e11, isStdP);
+    
+        if (mode === 'rate'){
+          outLabel.textContent = 'Kollisionen / s';
+          outMain.innerHTML    = fmtRateMrd(R);          // immer Mrd/s
+        }else{
+          outLabel.textContent = 'Luminosität L';
+          outMain.innerHTML    = fmtLumi(L);             // ein Wert, wissenschaftl. Notation
         }
-      
-        // Events
-        bunch?.addEventListener('input', render);
-        prot?.addEventListener('input', render);
-      
-        btnRate?.addEventListener('click', ()=>{
-          mode='rate';
-          btnRate.classList.add('active'); btnRate.setAttribute('aria-selected','true');
-          btnLumi.classList.remove('active'); btnLumi.setAttribute('aria-selected','false');
-          render();
-        });
-        btnLumi?.addEventListener('click', ()=>{
-          mode='lumi';
-          btnLumi.classList.add('active'); btnLumi.setAttribute('aria-selected','true');
-          btnRate.classList.remove('active'); btnRate.setAttribute('aria-selected','false');
-          render();
-        });
-      
-        // Init
+      }
+    
+      // Toggle
+      btnRate?.addEventListener('click', ()=>{
+        mode='rate';
+        btnRate.classList.add('active'); btnRate.setAttribute('aria-selected','true');
+        btnLumi.classList.remove('active'); btnLumi.setAttribute('aria-selected','false');
         render();
-      })();
+      });
+      btnLumi?.addEventListener('click', ()=>{
+        mode='lumi';
+        btnLumi.classList.add('active'); btnLumi.setAttribute('aria-selected','true');
+        btnRate.classList.remove('active'); btnRate.setAttribute('aria-selected','false');
+        render();
+      });
+    
+      // Inputs
+      bunch?.addEventListener('input', render);
+      prot?.addEventListener('input', render);
+    
+      // Init Ticks + Snap
+      setTickPos(bunch, tickB, STD_BUNCH);
+      setTickPos(prot,  tickP, STD_N10E11);
+      attachSnap(bunch, STD_BUNCH,  SNAP_EPS_B, render);
+      attachSnap(prot,  STD_N10E11, SNAP_EPS_P, render);
+    
+      // Initial render
+      render();
+    })();
     </script>
   </body>
 </html>
+
 
 
 
