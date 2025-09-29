@@ -1062,35 +1062,56 @@
         
             <div class="calc-box" id="lumicalc">
               <h3 class="calc-sub">Interaktiver Rechner (vereinfacht)</h3>
-          
-           
+            
+              <!-- Reihe 1 -->
               <div class="calc-row">
                 <div class="label">Bunches pro Strahl</div>
                 <input id="lc-bunches" class="calc-range" type="range" min="1" max="2808" step="1" value="2200" aria-label="Bunches pro Strahl">
                 <output for="lc-bunches" id="lc-bunches-out">2 200</output>
               </div>
-          
-        
+            
+              <!-- Reihe 2 -->
               <div class="calc-row">
                 <div class="label">Protonen pro Bunch</div>
-             
+                <!-- Skala in 10^11 -->
                 <input id="lc-protons" class="calc-range" type="range" min="0.50" max="2.00" step="0.01" value="1.15" aria-label="Protonen pro Bunch (×10¹¹)">
                 <output for="lc-protons" id="lc-protons-out">1,15 × 10¹¹<br><span style="font-size:11px;color:var(--muted)">≈ 115 Mrd.</span></output>
               </div>
-          
-        
+            
+              <!-- Reihe 3: σ_inel -->
+              <div class="calc-row">
+                <div class="label">σ<sub>inel</sub> (mb)</div>
+                <input id="lc-sigma" class="calc-range" type="range" min="60" max="85" step="1" value="75" aria-label="Inelastischer Wirkungsquerschnitt (mb)">
+                <output for="lc-sigma" id="lc-sigma-out">75 mb<br><span style="font-size:11px;color:var(--muted)">7,5 × 10⁻²⁶ cm²</span></output>
+              </div>
+            
+              <!-- Ergebnis: Kollisionen/s -->
               <div class="calc-row">
                 <div class="label">Kollisionen / s</div>
                 <div class="val" id="lc-rate-aux" aria-hidden="true">—</div>
                 <div class="val calc-emph" id="lc-rate">—</div>
               </div>
-          
+            
+              <!-- Ergebnis: μ -->
+              <div class="calc-row">
+                <div class="label">Pile-up μ</div>
+                <div class="val" aria-hidden="true">—</div>
+                <div class="val calc-emph" id="lc-mu">—</div>
+              </div>
+            
+              <!-- Ergebnis: L -->
+              <div class="calc-row">
+                <div class="label">Luminosität L</div>
+                <div class="val" id="lc-L-aux" aria-hidden="true">—</div>
+                <div class="val calc-emph" id="lc-L">—</div>
+              </div>
+            
               <div class="calc-note">
                 Annahmen: <span class="calc-emph">f<sub>rev</sub> = 11 245 /s</span>.
-                Pile-up pro Crossing skaliert wie <span class="calc-emph">μ ∝ N²</span> mit
-                Referenz <span class="calc-emph">μ₀ = 60</span> bei <span class="calc-emph">N₀ = 1,15×10¹¹</span>.
-                Gesamt-Rate ≈ <span class="calc-emph">μ · f<sub>rev</sub> · n<sub>bunch</sub></span>.
-                (Nur Demo – reale L hängt auch von Strahlgrößen etc. ab.)
+                <span class="calc-emph">μ</span> skaliert hier vereinfachend wie <span class="calc-emph">N²</span> (bei gleicher Strahlgröße) mit Referenz
+                <span class="calc-emph">μ₀ = 60</span> bei <span class="calc-emph">N₀ = 1,15×10¹¹</span>.
+                Rate: <span class="calc-emph">R = μ · f<sub>rev</sub> · n<sub>bunch</sub></span>.
+                Luminosität: <span class="calc-emph">L = R / σ<sub>inel</sub></span> (σ in cm²).
               </div>
             </div>
           </div>
@@ -2321,64 +2342,96 @@
     <script defer>
       (function(){
         const $ = (id)=>document.getElementById(id);
-        const bunch = $('lc-bunches');
+      
+        // Inputs
+        const bunch    = $('lc-bunches');
         const bunchOut = $('lc-bunches-out');
-        const prot  = $('lc-protons');
-        const protOut = $('lc-protons-out');
+        const prot     = $('lc-protons');
+        const protOut  = $('lc-protons-out');
+        const sigma    = $('lc-sigma');
+        const sigmaOut = $('lc-sigma-out');
+      
+        // Outputs
         const rateEl = $('lc-rate');
         const rateAux= $('lc-rate-aux');
-     
-        const f_rev = 11245;             
-        const N0    = 1.15e11;         
-        const mu0   = 60;             
+        const muEl   = $('lc-mu');
+        const LEl    = $('lc-L');
+        const LAux   = $('lc-L-aux');
       
-        const nf = (x)=> new Intl.NumberFormat('de-DE').format(Math.round(x));
-        const fmtCompact = (x)=>{
-          if(x==null || !isFinite(x)) return '—';
+        // Konstanten (vereinfachtes Modell)
+        const f_rev = 11245;   // 1/s
+        const N0    = 1.15e11; // Referenz Protonen/Bunch
+        const mu0   = 60;      // Referenz-μ bei N0
+        const MB_TO_CM2 = 1e-27; // 1 mb = 1e-27 cm^2
+      
+        const nfInt = (x)=> new Intl.NumberFormat('de-DE').format(Math.round(x));
+        const fmtSci = (x, digits=2)=>{
+          if(!isFinite(x) || x===0) return '0';
+          const [m,e] = x.toExponential(digits).split('e');
+          const exp = parseInt(e,10);
+          return `${m.replace('.',',')} × 10<sup>${exp}</sup>`;
+        };
+        const fmtRateCompact = (x)=>{
+          if(!isFinite(x)) return '—';
           if(x >= 1e9)  return (x/1e9).toFixed(2).replace('.',',') + ' Mrd/s';
           if(x >= 1e6)  return (x/1e6).toFixed(2).replace('.',',') + ' Mio/s';
-          if(x >= 1e3)  return nf(x) + ' /s';
-          return x.toFixed(0).replace('.',',') + ' /s';
+          if(x >= 1e3)  return nfInt(x) + ' /s';
+          return Math.round(x).toString() + ' /s';
         };
-        const fmtSci = (x)=>{
-          if(!isFinite(x)) return '—';
-          const e = x.toExponential(2).replace('.',',').replace('e+',' ×10^');
-          return e + ' /s';
-        };
-        const fmtN = (N10e11)=>{ 
+        const fmtN = (N10e11)=>{
           const N = N10e11 * 1e11;
           const mrd = N/1e9;
           return `${N10e11.toFixed(2).replace('.',',')} × 10¹¹<br><span style="font-size:11px;color:var(--muted)">≈ ${mrd.toFixed(0).replace('.',',')} Mrd.</span>`;
         };
+        const fmtSigma = (mb)=>{
+          const cm2 = mb * MB_TO_CM2;
+          return `${mb} mb<br><span style="font-size:11px;color:var(--muted)">${fmtSci(cm2,2)} cm²</span>`;
+        };
       
         function update(){
-          const nb = Math.max(1, Math.min(2808, +bunch.value||0));
-          const N  = (+prot.value||0) * 1e11;
+          const nb      = Math.max(1, Math.min(2808, +bunch.value||0)); // Bunches
+          const N       = (+prot.value||0) * 1e11;                      // Protonen/Bunch
+          const sigmaMb = (+sigma.value||0);
+          const sigmaCm2= sigmaMb * MB_TO_CM2;
       
- 
+          // μ ~ (N/N0)^2  (vereinfachte Skalierung)
           const mu = mu0 * Math.pow(N / N0, 2);
       
-    
+          // Crossings/s am IP: f_rev * n_bunch
           const crossings = f_rev * nb;
       
-
-          const rate = mu * crossings;
+          // Kollisionen/s: R = μ * Crossings/s
+          const R = mu * crossings;
       
-          bunchOut.textContent = nf(nb);
-          protOut.innerHTML = fmtN(+prot.value||0);
-          rateEl.textContent = fmtCompact(rate);
-          rateAux.textContent = fmtSci(rate);
+          // Luminosität: L = R / σ_inel (σ in cm^2)
+          const L = R / sigmaCm2;
+      
+          // UI
+          bunchOut.textContent = nfInt(nb);
+          protOut.innerHTML    = fmtN(+prot.value||0);
+          sigmaOut.innerHTML   = fmtSigma(sigmaMb);
+      
+          rateEl.innerHTML     = fmtRateCompact(R);
+          rateAux.innerHTML    = fmtSci(R,2) + ' /s';
+      
+          muEl.textContent     = (mu).toFixed(2).replace('.',',');
+      
+          LEl.innerHTML        = fmtSci(L,2) + ' cm⁻² s⁻¹';
+          LAux.innerHTML       = (L/1e34).toFixed(2).replace('.',',') + ' × 10³⁴ cm⁻² s⁻¹';
         }
       
         bunch?.addEventListener('input', update);
         prot?.addEventListener('input', update);
+        sigma?.addEventListener('input', update);
       
- 
+        // Initial
         update();
       })();
     </script>
+
   </body>
 </html>
+
 
 
 
