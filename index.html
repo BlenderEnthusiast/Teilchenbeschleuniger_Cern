@@ -6,13 +6,12 @@
     <meta name="color-scheme" content="dark light" />
     <title>Teilchenbeschleuniger – Prototyp</title>
 
-    <!-- Fonts -->
+   
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet"/>
 
     <style>
-      /* ================= TOKENS / RESET ================= */
       *, *::before, *::after { box-sizing: border-box; }
       :root {
         --bg:#0b0b0c; --fg:#fafafa; --muted:#a8a8ab; --card:#141416; --line:#242428;
@@ -48,14 +47,14 @@
       .grid{display:grid;gap:22px}
       .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
 
-      /* ================= HERO ================= */
+      /* ================= Überschrift ================= */
       .hero{position:relative;min-height:88vh;display:grid;place-items:center;overflow:hidden}
       .hero .bg{position:absolute;inset:0;background:radial-gradient(1200px 600px at 70% 20%,rgba(255,255,255,.08),transparent),linear-gradient(180deg,#0c0c10,#09090b)}
       .hero .content{position:relative;text-align:center;padding:40px}
       .title{font-size:clamp(36px,6vw,72px);font-weight:700;letter-spacing:-.02em}
       .subtitle{max-width:750px;margin:14px auto 0;color:var(--muted);font-size:clamp(16px,2.2vw,18px)}
 
-      /* ================= HORIZONTAL TIMELINE ================= */
+      /* ================= Timeline ================= */
       #timeline h2 { font-size: clamp(26px, 3.8vw, 40px); margin:0 0 16px; }
       .timeline-slider { display:flex; align-items:center; justify-content:center; gap:18px; margin:40px 0; }
       .event-card { position:relative; display:flex; gap:22px; background:var(--card); border:1px solid var(--line); border-radius:18px; padding:22px; max-width:920px; width:100%; overflow:hidden; }
@@ -90,7 +89,7 @@
         .event-media img{ height:220px; }
       }
 
-      /* ================= TOPIC GRID ================= */
+  
       .topic-grid{ display:grid; gap:6px; margin:18px 0; grid-template-columns: 1fr; perspective:800px; }
       .topic-card{ position:relative; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; min-height:60px; text-decoration:none; color:var(--fg); display:flex; flex-direction:column; justify-content:center; gap:6px; transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease, background .25s ease; will-change:transform; }
       .topic-card h3{ margin:0; font-size:16px; letter-spacing:-.01em; }
@@ -99,7 +98,7 @@
       @media (max-width:900px){ .topic-grid{ grid-template-columns: 1fr 1fr; } }
       @media (max-width:600px){ .topic-grid{ grid-template-columns: 1fr; } }
 
-      /* ================= ACCORDION ================= */
+
       .accordion{padding:0; overflow:hidden; border:1px solid var(--line); border-radius:16px; transition:border-color .28s ease, box-shadow .28s ease, background .28s ease}
       .accordion-header{width:100%; display:flex; justify-content:space-between; align-items:center; gap:12px; padding:16px 18px; background:transparent; border:0; color:var(--fg); cursor:pointer; font-size:24px; font-weight:700; text-align:left;}
       .accordion .chev{transition:transform .3s ease, color .3s ease; opacity:.9}
@@ -109,7 +108,7 @@
       .accordion.open{ border-color:#90ff86; box-shadow:0 6px 22px rgba(134,225,255,.16); }
       @media (max-width:900px){ .accordion-header{font-size:16px; padding:14px 16px} }
 
-      /* ================= Beschleunigerkette (Model Viewer) ================= */
+      /* ================= Beschleunigerkette ================= */
       #chain-switch .sub{ color:var(--muted); margin:-6px 0 16px; }
       .flow-card { display:grid; grid-template-columns: 1fr 1fr; gap:24px; background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015)); border:1px solid var(--line); border-radius:18px; padding:60px 20px 20px; box-shadow:0 10px 30px rgba(0,0,0,.25); position:relative; }
       .flow-step-title { position:absolute; top:16px; left:50%; transform:translateX(-50%); font-size:22px; font-weight:800; margin:0; text-align:center; width:calc(100% - 40px); }
@@ -122,14 +121,14 @@
       .step-btn:disabled { opacity:.5; cursor:not-allowed; }
       @media (max-width:900px){ .flow-card{ grid-template-columns:1fr } .flow-left{ max-height:none; padding-bottom:60px; } }
 
-      /* Blaue MV-Hotspots (ohne Labels) */
+     
       .mv-dot{ --size:14px; width:var(--size); height:var(--size); border-radius:50%; border:2px solid #0ea5ff; background:#38bdf8; box-shadow:0 0 0 6px rgba(56,189,248,.18); cursor:pointer; }
       .mv-dot:focus, .mv-dot:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
 
       .flow-viewport { width: 100%; aspect-ratio: 1 / 1; border-radius: 14px; border: 1px solid var(--line); overflow: hidden; background: #0f1014; }
       model-viewer { width: 100%; height: 100%; display: block; outline: none; }
 
-      /* ================= HOTSPOTS (Bild) ================= */
+      /* ================= Punkte ================= */
       #ring-hotspots .stage{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#0f0f12}
       #ring-hotspots .stage img{width:100%;height:520px;object-fit:cover;opacity:.85;filter:grayscale(20%)}
       .hotspot{position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 0 0 6px rgba(255,255,255,.15);cursor:pointer;border:none;padding:0}
@@ -139,7 +138,7 @@
       .fact p{margin:0;color:var(--muted);font-size:14px}
       .fact.show{display:block}
 
-      /* ================= PHYSIK DEMO ================= */
+      /* ================= Teilchenbeschleuniger ================= */
       #acceleration-chain .chain{display:grid;grid-template-columns:1fr 1fr;gap:22px}
       .timeline-box{position:relative;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
       .timeline-box ul{list-style:none;padding:0;margin:0}
@@ -166,12 +165,10 @@
       .layers-legend button{border:none;background:#fff;color:#000;padding:6px 10px;border-radius:10px;cursor:pointer;font-weight:600}
       @media (max-width:900px){ #collision-detector .rings{grid-template-columns:1fr} }
 
-      /* ================= SAFETY / FOOTER ================= */
-      .safety{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-      @media (max-width:900px){ .safety{grid-template-columns:1fr} }
-      .footer{padding:40px 0;color:var(--muted);text-align:center;border-top:1px solid var(--line)}
+      /* ================= Sicherheit ================= */
 
-      /* ================= Anchor Flash ================= */
+
+    
       .section.flash{position:relative}
       .section.flash::before{
         content:""; position:absolute; inset:-2px; border-radius:20px; border:2px solid var(--accent);
@@ -180,7 +177,7 @@
       }
       @keyframes flashPulse{ 0%{opacity:0} 20%{opacity:1} 60%{opacity:.85} 100%{opacity:0} }
 
-      /* ================= PONG OVERLAY ================= */
+      /* ================= PONG ================= */
       #pong-overlay[hidden]{ display:none !important; }
       #pong-overlay{
         position:fixed; inset:0; z-index:9999;
@@ -241,11 +238,11 @@
         -webkit-tap-highlight-color: transparent;
       }
 
-      /* === LIVE · Telemetrie · Styles ========================================== */
+      /* === Live ========================================== */
       #tg-canvas{ touch-action:none; }
       #tg-tip b{ font-weight:700 }
       #tg-tip .muted{ color:var(--muted) }
-      /* ===== Quellen-Switch (iOS Style) ===== */
+     
       .sources-toggle{
         display:flex; align-items:center; gap:10px;
         padding:6px 10px; border:1px solid var(--line); border-radius:999px;
@@ -253,7 +250,7 @@
       }
       .sources-toggle .label{ font-size:13px; color:var(--muted); }
       
-      /* iOS switch */
+      
       .switch{ position:relative; width:46px; height:26px; display:inline-block; }
       .switch input{ display:none; }
       .switch .slider{
@@ -269,7 +266,7 @@
       .switch input:checked + .slider{ background:#22c55e; box-shadow:none; }
       .switch input:checked + .slider::before{ transform:translateX(20px); }
       
-      /* Quellen-Box unter Sektionen */
+      
       .sources-block{
         display:none; margin-top:14px; padding:12px 14px;
         border:1px dashed var(--line); border-radius:14px; background:rgba(255,255,255,.03);
@@ -283,7 +280,7 @@
      
       body[data-show-sources="true"] .sources-block{ display:block; }
 
-      /* Subsection divider with a labeled chip */
+     
       .subsection-sep{
         position:relative;
         height:22px;
@@ -309,7 +306,7 @@
         box-shadow:0 0 0 4px rgba(125,211,252,.18);
       }
       
-      /* Sources block styling (card-like) */
+  
       .sources-block{ margin-top:8px; border:1px dashed var(--line); border-radius:14px; padding:14px 16px; }
       .sources-block h5{ margin:0 0 6px; font-size:13px; color:var(--muted); letter-spacing:.06em; text-transform:uppercase; }
       .sources-list{ margin:0; padding-left:18px; }
@@ -317,7 +314,7 @@
       
       body[data-show-sources="true"] .sources-block{ display:block; }
       body:not([data-show-sources="true"]) .sources-toggleable{ display:none; }
-      /* --- LHC Komponenten --- */
+    
       .magneten-grid{ display:grid; gap:14px; margin:10px 0 18px; }
       @media (min-width:900px){ .magneten-grid{ grid-template-columns:1fr 1fr; } }
       
@@ -329,7 +326,7 @@
       
       .rf-video{ width:100%; aspect-ratio:1/1; }
       .rf-video video{ width:100%; height:100%; object-fit:contain; border-radius:12px; }
-      /* === LHC · Komponenten (clean, ohne Punkte / Mini-Headlines) ============== */
+     
       .lhc-title{
         margin:26px 0 6px;
         font-size:clamp(22px,4.2vw,38px);
@@ -339,7 +336,7 @@
       }
       .lhc-lead{ margin:0; color:var(--muted); font-size:clamp(14px,2.2vw,16px); }
       
-      /* Unterstreichung für Sektionstitel */
+   
       .u-line{ position:relative; display:inline-block; padding-bottom:6px; }
       .u-line::after{
         content:""; position:absolute; left:0; right:0; bottom:0; height:2px;
@@ -347,7 +344,7 @@
         opacity:.6;
       }
       
-      /* Magneten: 2-Spalten-Text, ohne Rail/Dots */
+      
       .lhc-magnets{ display:grid; gap:18px; margin:14px 0 6px; }
       @media (min-width:900px){ .lhc-magnets{ grid-template-columns:1fr 1fr; column-gap:28px; } }
       .lhc-item h4{ margin:0 0 6px; font-size:clamp(16px,2.6vw,20px); letter-spacing:-.01em; }
@@ -360,7 +357,7 @@
       .lhc-list{ margin:10px 0 0; padding-left:18px; color:var(--muted); font-size:14px }
       .lhc-list li{ margin:6px 0; }
       
-      /* Video – edel, ohne Rahmen; leichtes Glow + Maskierung */
+   
       .lhc-video{ position:relative; width:100%; aspect-ratio: 16 / 9; }
       .lhc-video::before{
         content:""; position:absolute; inset:-2px;
@@ -381,12 +378,12 @@
         .lhc-video video{ transition:none; transform:none; }
       }
       
-      /* — Resets, falls alter Block noch aktiv war — */
+    
       .lhc-magnets::before, .lhc-item::before { display:none !important; content:none !important; }
-      /* === Überschriften-Gradient global ======================================= */
+      /* === Überschriften-Gradient ======================================= */
       :root{ --heading-gradient: linear-gradient(90deg, hsl(0, 0%, 100%), hsl(216, 100%, 89%) 10%); }
       
-      /* Alle semantischen Überschriften */
+   
       :is(h1,h2,h3,h4,h5,h6){
         background: var(--heading-gradient);
         -webkit-background-clip: text;
@@ -394,7 +391,6 @@
         color: transparent;
       }
       
-      /* Optional: auch "Pseudo-Headlines" einfärben */
       .accordion-header > span,
       .flow-step-title{
         background: var(--heading-gradient);
@@ -403,15 +399,10 @@
         color: transparent;
       }
       
-      /* (Optional) Stellen ohne Verlauf erzwingen */
-      .no-grad,
-      .no-grad :is(h1,h2,h3,h4,h5,h6){
-        background: none !important;
-        -webkit-background-clip: initial !important;
-        color: var(--fg) !important;
-      }
+     
+
       
-      /* (Zugänglichkeit) In Zwangsfarben-Modus normal färben */
+   
       @media (forced-colors: active){
         :is(h1,h2,h3,h4,h5,h6),
         .accordion-header > span,
@@ -425,17 +416,15 @@
         --heading-gradient: linear-gradient(90deg, hsl(0 0% 100%), hsl(216 100% 89%) 10%);
       }
       
-      /* Alle Überschriften mit Gradient (Safari-Fix inklusive) */
+   
       :where(h1,h2,h3,h4,h5,h6){
         background: var(--heading-gradient);
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;
-        -webkit-text-fill-color: transparent; /* Safari */
+        -webkit-text-fill-color: transparent; 
       }
-      
-      /* Sicherstellen, dass die LHC-Title dieselbe Variable nutzen
-         (überschreibt die frühere feste Farbverlauf-Definition) */
+  
       .lhc-title{
         background: var(--heading-gradient) !important;
         -webkit-background-clip: text !important;
@@ -444,7 +433,7 @@
         -webkit-text-fill-color: transparent !important;
       }
       
-      /* Barrierefreiheit / Druck: bei Zwangsfarben oder Print normaler Text */
+      
       @media (forced-colors: active), print {
         :where(h1,h2,h3,h4,h5,h6),
         .lhc-title{
@@ -453,7 +442,7 @@
           -webkit-text-fill-color: currentColor !important;
         }
       }
-      /* Unterstreichung nur im Teilchenbeschleuniger-Abschnitt (#ring-hotspots) abschalten */
+
       #ring-hotspots .u-line { 
         padding-bottom: 0 !important;
       }
@@ -461,13 +450,13 @@
         content: none !important;
         display: none !important;
       }
-      /* Magneten – untereinander, mit alternierendem Layout und 16:9 Video */
+    
       .lhc-magnets{
         display:flex; flex-direction:column; gap:28px;
         margin:16px 0 6px;
       }
       .magnet-row{
-        display:grid; grid-template-columns:1.05fr 1fr; /* Text | Video */
+        display:grid; grid-template-columns:1.05fr 1fr; 
         gap:22px; align-items:center;
       }
       .magnet-row .magnet-copy h4{ margin:0 0 6px; font-size:clamp(16px,2.6vw,20px); letter-spacing:-.01em; }
@@ -476,16 +465,15 @@
       .magnet-media{ position:relative; width:100%; aspect-ratio:16/9; border-radius:16px; overflow:hidden; background:#000; }
       .magnet-media video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
       
-      /* Quadrupol: Video links, Text rechts */
+     
       .magnet-row.reverse{
-        grid-template-columns:1fr 1.05fr;          /* Video | Text */
+        grid-template-columns:1fr 1.05fr;         
         grid-template-areas:"media copy";
       }
       .magnet-row{ grid-template-areas:"copy media"; }
       .magnet-row .magnet-copy{ grid-area:copy; }
       .magnet-row .magnet-media{ grid-area:media; }
-      
-      /* Mobile: untereinander (Video über Text) */
+
       @media (max-width:900px){
         .magnet-row,
         .magnet-row.reverse{
@@ -496,13 +484,13 @@
         }
       }
       
-      /* Falls die Unterstreichung beim Subtitel noch aktiv ist – ausschalten: */
+    
       .u-line::after{ display:none !important; }
 
-      /* Container für beide Magneten */
+      
       .lhc-magnets{ display:flex; flex-direction:column; gap:32px; margin:16px 0 6px; }
       
-      /* Ein Magnet-Block mit Titel oben, darunter 2 Spalten */
+    
       .magnet-block{
         display:grid; gap:14px 22px; align-items:center;
         grid-template-columns:1.05fr 1fr;
@@ -511,13 +499,13 @@
           "copy  media";
       }
       .magnet-block.reverse{
-        grid-template-columns:1fr 1.05fr;         /* Video | Text */
+        grid-template-columns:1fr 1.05fr;     
         grid-template-areas:
           "title title"
           "media copy";
       }
       
-      /* Titel (Gradient aus deiner --heading-gradient) */
+      /*Titel*/
       .magnet-title{
         grid-area:title;
         margin:0;
@@ -530,7 +518,7 @@
       .magnet-copy{ grid-area:copy; }
       .magnet-copy p{ margin:0; color:var(--muted); }
       
-      /* Video rechts/links, 16:9 */
+    
       .magnet-media{
         grid-area:media; position:relative; width:100%;
         aspect-ratio:16/9; border-radius:16px; overflow:hidden; background:#000;
@@ -656,7 +644,7 @@
             <button class="nav-btn prev" type="button" aria-label="Zurück" title="Zurück">◀</button>
 
             <div class="event-card" aria-live="polite">
-              <div class="anim-wrap"><!-- dynamic slide injected here --></div>
+              <div class="anim-wrap"></div>
             </div>
 
             <button class="nav-btn next" type="button" aria-label="Weiter" title="Weiter">▶</button>
@@ -711,7 +699,7 @@
                   max-camera-orbit="auto 60deg 4000m"
                   interpolation-decay="200">
 
-                  <!-- 9 Hotspots (ohne Labels) -->
+   
                   <button class="mv-dot" slot="hotspot-LINAC4"    data-name="LINAC4"    data-position="20.6911m -0.684515m -112.797m"  data-normal="0m 1m 0m"></button>
                   <button class="mv-dot" slot="hotspot-PSBooster" data-name="PSBooster" data-position="36.691m 0.25m -77.884m"         data-normal="0m 1m 0m"></button>
                   <button class="mv-dot" slot="hotspot-PS"        data-name="PS"        data-position="-0.06m 0.25m -80.025m"          data-normal="0m 1m 0m"></button>
@@ -724,7 +712,7 @@
 
                 </model-viewer>
 
-                <!-- Smooth focus/zoom controller -->
+              
                 <script>
                 (function(){
                   const mv = document.getElementById('mv');
@@ -829,7 +817,7 @@
                 })();
                 </script>
 
-                <!-- Control Panel (XY editor) -->
+                
                 <div id="mv-hotspot-controls" class="card" style="margin-top:12px">
                   <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:end">
                     <label>
@@ -920,7 +908,6 @@
 
           <div class="lhc-magnets reveal">
           
-            <!-- Dipol: Titel oben, Text links | Video rechts -->
             <section class="magnet-block" id="magnet-dipol">
               <h4 class="magnet-title">Dipolmagneten</h4>
               <div class="magnet-copy">
@@ -935,7 +922,7 @@
               </figure>
             </section>
           
-            <!-- Quadrupol: Titel oben, Video links | Text rechts -->
+            
             <section class="magnet-block reverse" id="magnet-quadrupol">
               <h4 class="magnet-title">Quadrupolmagneten</h4>
               <figure class="magnet-media" aria-hidden="true">
@@ -970,7 +957,7 @@
             </div>
           
             <div class="lhc-video" aria-hidden="true">
-              <!-- Pfad anpassen: z. B. /media/rf-cavity-loop.mp4 -->
+
               <video src="ja.mp4" autoplay muted loop playsinline preload="auto"
                      aria-label="Schematische RF-Kavität (Loop)"></video>
             </div>
@@ -1185,7 +1172,7 @@
     <script defer>
       (function(){
         const stepsEl = document.getElementById('phys-steps');
-        if(!stepsEl) return; /* guard if that demo isn't present */
+        if(!stepsEl) return;
         const stepLis = stepsEl.querySelectorAll('li');
         const energy = document.getElementById('energy');
         const speed  = document.getElementById('speed');
@@ -1348,7 +1335,7 @@
       })();
     </script>
 
-    <!-- PONG overlay wiring -->
+    <!-- PONG -->
     <script defer>
       (function(){
         const overlay = document.getElementById('pong-overlay');
@@ -1371,7 +1358,7 @@
       })();
     </script>
 
-    <!-- PONG game -->
+
     <script defer>
       (function(){
         const { isOpen, ctx, canvas, scoreEl, bestEl, LS_KEY, resizeCanvas } = window.__PONG__;
@@ -1483,7 +1470,7 @@
       })();
     </script>
 
-    <!-- Beschleunigerkette: Buttons & Texte + CAMERA FOCUS (smooth) -->
+    <!-- Beschleunigerkette -->
     <script defer>
       (function(){
         const elTitle = document.getElementById('flow-title');
@@ -1503,7 +1490,7 @@
 
         let mode = 'protons';
         let i = 0;
-        const seq = () => (mode==='protons' ? protons : ions); /* ions optional later */
+        const seq = () => (mode==='protons' ? protons : ions); 
 
         function stepToHotspotName(stepKey){
           const s = String(stepKey).toLowerCase().trim();
@@ -1779,13 +1766,13 @@
 
 
     <script>
-      /* === LHC · Historie + Live · robust mit Debug-Ausgabe ===================== */
+    
       (function(){
-        const MIN_INTERVAL_MS = 30000;                  // 30 s
+        const MIN_INTERVAL_MS = 30000;                 
         const SRC         = 'data/latest.json';
         const HISTORY_URL = 'data/lhc_history.jsonl';
     
-        // ---- UI elements ---------------------------------------------------------
+      
         const els = {
           canvas:  document.getElementById('tg-canvas'),
           wrap:    document.getElementById('tg-wrap'),
@@ -1796,7 +1783,7 @@
           btnNow:  document.getElementById('tg-refresh'),
         };
     
-        // Debug-Box unter der Grafik
+       
         let dbgBox = document.getElementById('tg-debug');
         if(!dbgBox){
           dbgBox = document.createElement('div');
@@ -1833,7 +1820,7 @@
         }
         function hideDebug(){ dbgBox.style.display = 'none'; }
     
-        // ---- Metric glossary -----------------------------------------------------
+        
         const METRICS = {
           energy:{ label:'Energie', unit:'GeV',
             desc:'Protonen-Gesamtenergie pro Teilchen (GeV).',
@@ -1856,13 +1843,13 @@
           if (m?.desc) op.title = `${m.label}: ${m.desc}`;
         });
     
-        // ---- Fenster-Presets -----------------------------------------------------
+       
         const PRESET_WINDOWS = { s:5*60, min:60*60, h:6*3600 };
         const HARD_MIN_WINDOW = 30;
         const HARD_MAX_WINDOW = 24*3600;
     
-        // ---- State ----------------------------------------------------------------
-        let data = [];           // [{t, energy, speed, ib1, ib2, lumi}]
+   
+        let data = [];          
         let yKey  = els.ySel.value || 'energy';
         let timer = null;
         const v = { t0: 0, t1: 0 };
@@ -1893,14 +1880,14 @@
           return { value:null, keys:[...foundKeys] };
         }
         function betaFromGeV(E){
-          const m0 = 0.9382720813; // GeV (Proton)
+          const m0 = 0.9382720813;
           const gamma = (E && E>0) ? (E/m0) : 1;
           if (gamma<=1) return 0;
           const b2 = 1 - 1/(gamma*gamma);
           return Math.sqrt(Math.max(0, Math.min(1, b2)));
         }
         function fmtClock(ts, winSec){
-          // Gewünschtes Format: DD.MM HH:MM[:SS] (Sekunden nur bei kleinen Fenstern)
+         
           const d = new Date(ts*1000);
           const DD = String(d.getDate()).padStart(2,'0');
           const MM = String(d.getMonth()+1).padStart(2,'0');
@@ -1962,7 +1949,6 @@
             if(!r.ok) throw new Error('HTTP '+r.status);
             const j = await r.json();
     
-            // Akzeptiere sowohl "normiert" als auch "roh"
             const e = pickByRegex(j, /(^|_)(energy|beam.?energy|lhc.?energy)(_|$)/i).value;
             const ib1 = pickByRegex(j, /(ib1|beam.?1.*(intensity|current))/i).value;
             const ib2 = pickByRegex(j, /(ib2|beam.?2.*(intensity|current))/i).value;
@@ -1980,15 +1966,15 @@
               data = data.filter(d => d.t >= cutoff);
             }
     
-            // Debug aus Datei übernehmen (falls vorhanden)
+           
             debug = j && j._debug ? j._debug : null;
     
-            // Fenster vorrücken, wenn wir rechts am Rand waren
+   
             const viewLen = Math.max(HARD_MIN_WINDOW, v.t1 - v.t0 || (PRESET_WINDOWS.min));
             const atRight = (Math.abs(v.t1 - (last?.t ?? v.t1)) <= 120) || (v.t1 >= (last?.t ?? v.t1));
             if(atRight){ v.t1 = t; v.t0 = v.t1 - viewLen; }
     
-            // Wenn alles null -> Debug zeigen
+      
             const allNull = (e==null) && (ib1==null) && (ib2==null) && (lumi==null);
             if(allNull){
               showDebug('Quelle hat keine verwertbaren Felder geliefert.', {
@@ -2008,7 +1994,7 @@
           }
         }
     
-        // ---- Canvas render (wie gehabt) -------------------------------------------
+    
         function setupCtx(){
           const c = els.canvas, rect = els.wrap.getBoundingClientRect(), k = dpr();
           c.width = Math.floor(rect.width * k);
@@ -2063,7 +2049,7 @@
             ctx.fillText(fmtClock(t, v.t1-v.t0), x, H-4);
           }
     
-          // Y ticks
+        
           ctx.textAlign='right';
           yTicks(y0, y1, 4).forEach(val=>{
             const y = yToPx(val);
@@ -2073,7 +2059,7 @@
     
           drawAxisTitles(ctx, W, H, m);
     
-          // Linie + Punkte
+         
           ctx.beginPath();
           let started = false;
           for(const d of vis){
@@ -2098,7 +2084,7 @@
           ctx.textAlign='right'; ctx.fillText(`${meta.label} [${meta.unit}]`, W-m.r, m.t-8);
         }
     
-        // ---- Hover Crosshair ------------------------------------------------------
+       
         function bindHover(){
           const c=els.canvas, tip=els.tip;
           const m = { l:64, r:16, t:22, b:42 };
@@ -2155,7 +2141,7 @@
           c.addEventListener('touchend',   ()=>{ tip.style.display='none'; render(); }, { passive:true });
         }
     
-        // ---- Zoom & Pan ------------------------------------------------------------
+   
         function bindZoomPan(){
           const c=els.canvas;
           const m = { l:64, r:16, t:22, b:42 };
@@ -2207,7 +2193,7 @@
           }, { passive:true });
         }
     
-        // ---- Status & scheduling ---------------------------------------------------
+     
         function stamp(msg){
           const d=new Date();
           els.status.textContent = (msg? msg+' · ':'') + `aktualisiert: ` + fmtClock(Math.floor(d.getTime()/1000), 60);
@@ -2218,7 +2204,7 @@
           timer = setTimeout(()=>{ fetchLatest().catch(e=>{ console.error('[latest]',e); schedule(MIN_INTERVAL_MS); }); }, Math.max(10_000, ms|0));
         }
     
-        // ---- Init ------------------------------------------------------------------
+        
         async function init(){
           bindHover();
           bindZoomPan();
@@ -2257,16 +2243,16 @@
           }
         }
       
-        // Immer OFF beim Laden
+       
         apply(false);
       
-        // Optional: alte Persistenz-Schlüssel aufräumen
+       
         try{
           localStorage.removeItem('show_sources_v1');
           localStorage.removeItem('show_sources_v2');
         }catch{}
       
-        // Toggle nur für die aktuelle Sitzung (ohne Persistenz)
+       
         if(sw){
           sw.addEventListener('change', ()=>{
             apply(!!sw.checked);
@@ -2277,6 +2263,7 @@
 
   </body>
 </html>
+
 
 
 
