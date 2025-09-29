@@ -575,6 +575,81 @@
       
       .calc-note{ margin-top:10px; font-size:12px; color:var(--muted); }
       .calc-emph{ font-weight:700; color:var(--fg); }
+      /* === Kollisions-Rechner (borderlos, wie Magnet-Sektion) =================== */
+      #collision-detector .calc-block{
+        display:grid; gap:14px clamp(28px, 4vw, 56px);
+        grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);
+        align-items:start;
+      }
+      @media (max-width:900px){
+        #collision-detector .calc-block{
+          grid-template-columns:1fr;
+        }
+      }
+      
+      .calc-left .calc-sub,
+      .calc-right .calc-sub{
+        margin:0 0 6px;
+        font-size:clamp(18px,2.8vw,22px);
+        font-weight:800; letter-spacing:-.01em;
+        background:var(--heading-gradient);
+        -webkit-background-clip:text; background-clip:text; color:transparent;
+      }
+      
+      .calc-left p{ margin:0 0 10px; color:var(--muted); }
+      
+      .calc-right{ min-width:0; }
+      .calc-right .sub-wrap{
+        display:flex; align-items:center; gap:8px; position:relative;
+      }
+      
+      /* Segmented toggle */
+      .seg{ display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; }
+      .seg button{
+        background:transparent; color:var(--fg); border:0; padding:6px 10px; font-size:12px;
+        cursor:pointer;
+      }
+      .seg button.active{ background:var(--card); font-weight:700; }
+      
+      /* Rows: Label | Slider | Wert (einzeilig) */
+      .calc-row{
+        display:grid; grid-template-columns:minmax(150px,.9fr) 1fr minmax(140px,.7fr);
+        align-items:center; gap:12px; margin:10px 0;
+      }
+      .calc-row .label{ font-weight:600; }
+      .calc-row .val, .calc-row output{
+        text-align:right; font-variant-numeric:tabular-nums; color:var(--muted);
+      }
+      
+      /* Range (schlicht, ohne Box) */
+      .calc-range{ appearance:none; width:100%; height:4px; background:#2d2b30; border-radius:999px; outline:none; }
+      .calc-range::-webkit-slider-thumb{ appearance:none; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.35); }
+      .calc-range::-moz-range-thumb{ width:18px; height:18px; border-radius:50%; background:#fff; border:none; }
+      
+      .calc-emph{ font-weight:800; color:var(--fg); }
+      
+      /* Info-Icon + Tooltip */
+      .info-dot{
+        width:18px; height:18px; border-radius:50%;
+        display:inline-grid; place-items:center; font-weight:900; font-size:12px;
+        background:#1f2937; color:#fff; border:1px solid var(--line); cursor:help;
+      }
+      .tooltip{
+        position:absolute; right:0; top:100%;
+        transform:translateY(8px);
+        background:var(--card); border:1px solid var(--line); border-radius:12px;
+        padding:10px 12px; width:min(420px, 92vw);
+        color:var(--muted); font-size:12px; line-height:1.4;
+        box-shadow:0 8px 24px rgba(0,0,0,.35);
+        opacity:0; visibility:hidden; transition:opacity .18s ease, transform .18s ease;
+        z-index:30;
+      }
+      .info-dot:focus + .tooltip,
+      .info-dot:hover + .tooltip{
+        opacity:1; visibility:visible; transform:translateY(4px);
+      }
+      .tooltip b{ color:var(--fg); }
+
       
 
 
@@ -1041,77 +1116,64 @@
         <div class="container">
           <h2 class="reveal">Kollisionen</h2>
           <p class="reveal">Müssen wir noch schauen</p>
-          <div class="calc-grid reveal" aria-live="polite">
-            <div class="calc-box">
-              <h3 class="calc-sub">Kurz erklärt</h3>
+          <div class="calc-block reveal" id="cc-block" aria-live="polite">
+            <div class="calc-left">
+              <h4 class="calc-sub">Kurz erklärt</h4>
               <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer non orci
-                vitae lorem feugiat rhoncus. In hac habitasse platea dictumst. Nulla facilisi.
-                Suspendisse potenti. Sed accumsan, nunc a placerat interdum, sapien purus
-                gravida neque, in pretium ipsum enim vel arcu. Curabitur quis lorem sed nisl
-                interdum condimentum. Pellentesque habitant morbi tristique senectus et netus.
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer non orci vitae lorem feugiat rhoncus.
+                In hac habitasse platea dictumst. Suspendisse potenti. Sed accumsan, nunc a placerat interdum, sapien purus
+                gravida neque, in pretium ipsum enim vel arcu.
               </p>
               <p>
-                Morbi ut nisl nec justo iaculis pellentesque. In vel risus vitae nulla
-                fringilla bibendum. Cras aliquet mi in urna faucibus, vitae gravida ligula
-                porttitor. Duis euismod, ligula non facilisis luctus, sapien magna luctus nibh,
-                a gravida enim elit quis velit.
+                Morbi ut nisl nec justo iaculis pellentesque. Cras aliquet mi in urna faucibus, vitae gravida ligula porttitor.
+                Duis euismod, ligula non facilisis luctus, sapien magna luctus nibh, a gravida enim elit quis velit.
               </p>
             </div>
           
-        
-            <div class="calc-box" id="lumicalc">
-              <h3 class="calc-sub">Interaktiver Rechner (vereinfacht)</h3>
-            
-              <!-- Reihe 1 -->
+         
+            <div class="calc-right">
+              <div class="sub-wrap">
+                <h4 class="calc-sub" style="margin:0">Interaktiver Rechner (vereinfacht)</h4>
+                <button class="info-dot" id="cc-info" aria-label="Annahmen anzeigen" aria-describedby="cc-tip">!</button>
+                <div class="tooltip" id="cc-tip" role="tooltip">
+                  <b>Annahmen (LHC-Modell):</b><br>
+                  σ<sub>inel</sub> = <b>75 mb</b> (fix), f<sub>rev</sub> = <b>11 245 /s</b>.<br>
+                  μ skaliert näherungsweise wie <b>(N/N₀)²</b> mit μ₀ = <b>60</b> bei N₀ = <b>1,15×10¹¹</b> Protonen/Bunch.<br>
+                  Crossings/s am IP: f<sub>rev</sub> · n<sub>bunch</sub>.<br>
+                  <b>Rate:</b> R = μ · f<sub>rev</sub> · n<sub>bunch</sub> · (hier 1 IP).<br>
+                  <b>Luminosität:</b> L = R / σ<sub>inel</sub>.
+                </div>
+              </div>
+          
+              <div class="calc-row" style="grid-template-columns:auto auto 1fr">
+                <div class="label">Ausgabe</div>
+                <div class="seg" role="tablist" aria-label="Auswahl Ausgabe">
+                  <button type="button" id="cc-mode-rate" class="active" role="tab" aria-selected="true">Kollisionen/s</button>
+                  <button type="button" id="cc-mode-lumi" role="tab" aria-selected="false">Luminosität</button>
+                </div>
+                <div></div>
+              </div>
+          
+             
               <div class="calc-row">
                 <div class="label">Bunches pro Strahl</div>
-                <input id="lc-bunches" class="calc-range" type="range" min="1" max="2808" step="1" value="2200" aria-label="Bunches pro Strahl">
-                <output for="lc-bunches" id="lc-bunches-out">2 200</output>
+                <input id="cc-bunches" class="calc-range" type="range" min="1" max="2808" step="1" value="2200" aria-label="Bunches pro Strahl">
+                <output for="cc-bunches" id="cc-bunches-out">2 200</output>
               </div>
-            
-              <!-- Reihe 2 -->
+          
+          
               <div class="calc-row">
                 <div class="label">Protonen pro Bunch</div>
-                <!-- Skala in 10^11 -->
-                <input id="lc-protons" class="calc-range" type="range" min="0.50" max="2.00" step="0.01" value="1.15" aria-label="Protonen pro Bunch (×10¹¹)">
-                <output for="lc-protons" id="lc-protons-out">1,15 × 10¹¹<br><span style="font-size:11px;color:var(--muted)">≈ 115 Mrd.</span></output>
+             
+                <input id="cc-protons" class="calc-range" type="range" min="0.50" max="2.00" step="0.01" value="1.15" aria-label="Protonen pro Bunch (×10¹¹)">
+                <output for="cc-protons" id="cc-protons-out">1,15 × 10¹¹<br><span style="font-size:11px;color:var(--muted)">≈ 115 Mrd.</span></output>
               </div>
-            
-              <!-- Reihe 3: σ_inel -->
+          
+             
               <div class="calc-row">
-                <div class="label">σ<sub>inel</sub> (mb)</div>
-                <input id="lc-sigma" class="calc-range" type="range" min="60" max="85" step="1" value="75" aria-label="Inelastischer Wirkungsquerschnitt (mb)">
-                <output for="lc-sigma" id="lc-sigma-out">75 mb<br><span style="font-size:11px;color:var(--muted)">7,5 × 10⁻²⁶ cm²</span></output>
-              </div>
-            
-              <!-- Ergebnis: Kollisionen/s -->
-              <div class="calc-row">
-                <div class="label">Kollisionen / s</div>
-                <div class="val" id="lc-rate-aux" aria-hidden="true">—</div>
-                <div class="val calc-emph" id="lc-rate">—</div>
-              </div>
-            
-              <!-- Ergebnis: μ -->
-              <div class="calc-row">
-                <div class="label">Pile-up μ</div>
-                <div class="val" aria-hidden="true">—</div>
-                <div class="val calc-emph" id="lc-mu">—</div>
-              </div>
-            
-              <!-- Ergebnis: L -->
-              <div class="calc-row">
-                <div class="label">Luminosität L</div>
-                <div class="val" id="lc-L-aux" aria-hidden="true">—</div>
-                <div class="val calc-emph" id="lc-L">—</div>
-              </div>
-            
-              <div class="calc-note">
-                Annahmen: <span class="calc-emph">f<sub>rev</sub> = 11 245 /s</span>.
-                <span class="calc-emph">μ</span> skaliert hier vereinfachend wie <span class="calc-emph">N²</span> (bei gleicher Strahlgröße) mit Referenz
-                <span class="calc-emph">μ₀ = 60</span> bei <span class="calc-emph">N₀ = 1,15×10¹¹</span>.
-                Rate: <span class="calc-emph">R = μ · f<sub>rev</sub> · n<sub>bunch</sub></span>.
-                Luminosität: <span class="calc-emph">L = R / σ<sub>inel</sub></span> (σ in cm²).
+                <div class="label" id="cc-out-label">Kollisionen / s</div>
+                <div class="val" id="cc-out-aux" aria-hidden="true">—</div>
+                <div class="val calc-emph" id="cc-out">—</div>
               </div>
             </div>
           </div>
@@ -2344,93 +2406,113 @@
         const $ = (id)=>document.getElementById(id);
       
         // Inputs
-        const bunch    = $('lc-bunches');
-        const bunchOut = $('lc-bunches-out');
-        const prot     = $('lc-protons');
-        const protOut  = $('lc-protons-out');
-        const sigma    = $('lc-sigma');
-        const sigmaOut = $('lc-sigma-out');
+        const bunch = $('cc-bunches');
+        const bunchOut = $('cc-bunches-out');
+        const prot  = $('cc-protons');
+        const protOut = $('cc-protons-out');
       
-        // Outputs
-        const rateEl = $('lc-rate');
-        const rateAux= $('lc-rate-aux');
-        const muEl   = $('lc-mu');
-        const LEl    = $('lc-L');
-        const LAux   = $('lc-L-aux');
+        // Mode toggle
+        const btnRate = $('cc-mode-rate');
+        const btnLumi = $('cc-mode-lumi');
       
-        // Konstanten (vereinfachtes Modell)
-        const f_rev = 11245;   // 1/s
-        const N0    = 1.15e11; // Referenz Protonen/Bunch
-        const mu0   = 60;      // Referenz-μ bei N0
-        const MB_TO_CM2 = 1e-27; // 1 mb = 1e-27 cm^2
+        // Output
+        const outLabel = $('cc-out-label');
+        const outMain  = $('cc-out');
+        const outAux   = $('cc-out-aux');
       
-        const nfInt = (x)=> new Intl.NumberFormat('de-DE').format(Math.round(x));
-        const fmtSci = (x, digits=2)=>{
-          if(!isFinite(x) || x===0) return '0';
-          const [m,e] = x.toExponential(digits).split('e');
-          const exp = parseInt(e,10);
-          return `${m.replace('.',',')} × 10<sup>${exp}</sup>`;
-        };
-        const fmtRateCompact = (x)=>{
-          if(!isFinite(x)) return '—';
-          if(x >= 1e9)  return (x/1e9).toFixed(2).replace('.',',') + ' Mrd/s';
-          if(x >= 1e6)  return (x/1e6).toFixed(2).replace('.',',') + ' Mio/s';
-          if(x >= 1e3)  return nfInt(x) + ' /s';
-          return Math.round(x).toString() + ' /s';
-        };
+        // Konstanten
+        const f_rev = 11245;      // 1/s
+        const N0    = 1.15e11;    // Referenz Protonen/Bunch
+        const mu0   = 60;         // Referenz-μ bei N0
+        const SIGMA_MB   = 75;    // LHC-Standard (fix)
+        const MB_TO_CM2  = 1e-27; // 1 mb = 1e-27 cm^2
+        const SIGMA_CM2  = SIGMA_MB * MB_TO_CM2;
+      
+        let mode = 'rate'; // 'rate' | 'lumi'
+      
+        // Formatter
+        const nf = new Intl.NumberFormat('de-DE');
+        const fmtBunch = (n)=> nf.format(Math.round(n));
         const fmtN = (N10e11)=>{
           const N = N10e11 * 1e11;
           const mrd = N/1e9;
           return `${N10e11.toFixed(2).replace('.',',')} × 10¹¹<br><span style="font-size:11px;color:var(--muted)">≈ ${mrd.toFixed(0).replace('.',',')} Mrd.</span>`;
         };
-        const fmtSigma = (mb)=>{
-          const cm2 = mb * MB_TO_CM2;
-          return `${mb} mb<br><span style="font-size:11px;color:var(--muted)">${fmtSci(cm2,2)} cm²</span>`;
+        const fmtSci = (x, digits=2)=>{
+          if(!isFinite(x) || x===0) return '0';
+          const [m,e] = x.toExponential(digits).split('e');
+          return `${m.replace('.',',')} × 10<sup>${parseInt(e,10)}</sup>`;
         };
       
-        function update(){
-          const nb      = Math.max(1, Math.min(2808, +bunch.value||0)); // Bunches
-          const N       = (+prot.value||0) * 1e11;                      // Protonen/Bunch
-          const sigmaMb = (+sigma.value||0);
-          const sigmaCm2= sigmaMb * MB_TO_CM2;
+        // Ergebnis-Formatter
+        const fmtRateMrd = (R)=>{
+          const mrd = R/1e9;
+          return `${mrd.toFixed(2).replace('.',',')} Mrd/s`;
+        };
+        const fmtRateAux = (R)=> fmtSci(R,2) + ' /s';
+        const fmtLumiMain = (L)=> fmtSci(L,2) + ' cm⁻² s⁻¹';
+        const fmtLumiAux  = (L)=> (L/1e34).toFixed(2).replace('.',',') + ' × 10³⁴ cm⁻² s⁻¹';
       
-          // μ ~ (N/N0)^2  (vereinfachte Skalierung)
+        function compute(){
+          const nb = Math.max(1, Math.min(2808, +bunch.value||0));
+          const N  = (+prot.value||0) * 1e11;
+      
+          // μ ~ (N/N0)^2 (vereinfachte Näherung)
           const mu = mu0 * Math.pow(N / N0, 2);
       
-          // Crossings/s am IP: f_rev * n_bunch
+          // Crossings/s am IP
           const crossings = f_rev * nb;
       
-          // Kollisionen/s: R = μ * Crossings/s
+          // Kollisionen/s
           const R = mu * crossings;
       
-          // Luminosität: L = R / σ_inel (σ in cm^2)
-          const L = R / sigmaCm2;
+          // Luminosität
+          const L = R / SIGMA_CM2;
       
-          // UI
-          bunchOut.textContent = nfInt(nb);
-          protOut.innerHTML    = fmtN(+prot.value||0);
-          sigmaOut.innerHTML   = fmtSigma(sigmaMb);
-      
-          rateEl.innerHTML     = fmtRateCompact(R);
-          rateAux.innerHTML    = fmtSci(R,2) + ' /s';
-      
-          muEl.textContent     = (mu).toFixed(2).replace('.',',');
-      
-          LEl.innerHTML        = fmtSci(L,2) + ' cm⁻² s⁻¹';
-          LAux.innerHTML       = (L/1e34).toFixed(2).replace('.',',') + ' × 10³⁴ cm⁻² s⁻¹';
+          return { nb, N, mu, R, L };
         }
       
-        bunch?.addEventListener('input', update);
-        prot?.addEventListener('input', update);
-        sigma?.addEventListener('input', update);
+        function render(){
+          const { nb, N, mu, R, L } = compute();
       
-        // Initial
-        update();
+          bunchOut.textContent   = fmtBunch(nb);
+          protOut.innerHTML      = fmtN(+prot.value||0);
+      
+          if(mode === 'rate'){
+            outLabel.textContent = 'Kollisionen / s';
+            outMain.innerHTML    = fmtRateMrd(R);
+            outAux.innerHTML     = fmtRateAux(R);
+          }else{
+            outLabel.textContent = 'Luminosität L';
+            outMain.innerHTML    = fmtLumiMain(L);
+            outAux.innerHTML     = fmtLumiAux(L);
+          }
+        }
+      
+        // Events
+        bunch?.addEventListener('input', render);
+        prot?.addEventListener('input', render);
+      
+        btnRate?.addEventListener('click', ()=>{
+          mode='rate';
+          btnRate.classList.add('active'); btnRate.setAttribute('aria-selected','true');
+          btnLumi.classList.remove('active'); btnLumi.setAttribute('aria-selected','false');
+          render();
+        });
+        btnLumi?.addEventListener('click', ()=>{
+          mode='lumi';
+          btnLumi.classList.add('active'); btnLumi.setAttribute('aria-selected','true');
+          btnRate.classList.remove('active'); btnRate.setAttribute('aria-selected','false');
+          render();
+        });
+      
+        // Init
+        render();
       })();
     </script>
-
   </body>
 </html>
+
 
 
 
