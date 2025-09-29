@@ -664,10 +664,10 @@
         background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));
         font-size:11px; font-weight:700; color:var(--muted);
       }
-      /* Tooltip dauerhaft anzeigen, wenn Klasse .open gesetzt ist */
+    
       .tooltip.open{ opacity:1; visibility:visible; transform:translateY(4px); }
       
-      /* Button im Tooltip */
+   
       .tt-btn{
         display:inline-block; margin-top:8px; padding:6px 10px;
         border:1px solid var(--line); border-radius:10px;
@@ -676,7 +676,7 @@
       }
       .tt-btn:hover{ border-color:var(--accent); }
       
-      /* (hattest du schon) Snap-Marker & Badge – falls nicht vorhanden, gern mitnehmen */
+    
       .range-wrap{ position:relative; }
       .range-wrap .tick{
         position:absolute; top:50%; transform:translate(-50%,-50%);
@@ -695,16 +695,16 @@
         position:fixed; inset:0; z-index:9999;
         display:grid; grid-template-rows:1fr auto;
         background:rgba(5,6,8,.92);
-        backdrop-filter:saturate(115%) blur(6px);
+        backdrop-filter:saturate(115%) blur(4px); /* weicher */
         opacity:0; pointer-events:none;
         transition: opacity .35s ease;
       }
+      }
       #glossar-overlay.active{ opacity:1; pointer-events:auto; }
-      
-      /* Inhalt mittig */
+    
       #glossar-stage{ position:relative; display:grid; place-items:center; padding:16px; }
       
-      /* „Schwarze Papierrolle“ */
+      
       .glossar-scroll{
         position:relative;
         width:min(1100px, 96vw);
@@ -727,7 +727,7 @@
       .glossar-scroll::before{ top:-1px; }
       .glossar-scroll::after{ bottom:-1px; transform:scaleY(-1); }
       
-      /* Kopf + Titel in Mittelalter-Font */
+      
       .glossar-head{
         display:flex; align-items:center; justify-content:space-between; gap:12px;
         padding:16px 18px; border-bottom:1px solid var(--line);
@@ -746,20 +746,21 @@
       }
       .glossar-close:hover{ border-color:var(--accent); background:#1b1c21; }
       
-      /* Body: interner Scroll */
+     
       .glossar-body{
         max-height:min(72vh, 800px);
         overflow:auto;
         padding:18px;
       }
       
-      /* kleine optische Angleiche an deine Accordion-Optik */
+     
       .glossar-body .accordion{
         margin:0 0 12px;
       }
       
-      /* Blur wie beim DVD-Overlay */
-      #content-wrap.blur{ filter: blur(12px); }
+      #content-wrap.blur{
+        filter: blur(6px);
+      }
       
       /* Tooltip bleibt offen, wenn .open (aus deinem Rechner-Block) */
       .tooltip.open{ opacity:1; visibility:visible; transform:translateY(4px); }
@@ -2849,6 +2850,7 @@
     </script>
   </body>
 </html>
+
 
 
 
