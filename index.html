@@ -10,6 +10,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+
 
     <style>
       *, *::before, *::after { box-sizing: border-box; }
@@ -687,6 +689,87 @@
         background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));
         font-size:11px; font-weight:700; color:var(--muted);
       }
+      /* === Glossar ========================================= */
+      #glossar-overlay[hidden]{ display:none !important; }
+      #glossar-overlay{
+        position:fixed; inset:0; z-index:9999;
+        display:grid; grid-template-rows:1fr auto;
+        background:rgba(5,6,8,.92);
+        backdrop-filter:saturate(115%) blur(6px);
+        opacity:0; pointer-events:none;
+        transition: opacity .35s ease;
+      }
+      #glossar-overlay.active{ opacity:1; pointer-events:auto; }
+      
+      /* Inhalt mittig */
+      #glossar-stage{ position:relative; display:grid; place-items:center; padding:16px; }
+      
+      /* „Schwarze Papierrolle“ */
+      .glossar-scroll{
+        position:relative;
+        width:min(1100px, 96vw);
+        border:1px solid var(--line);
+        border-radius:18px;
+        background:
+          radial-gradient(180% 100% at 50% 0%, rgba(255,255,255,.06), transparent 55%),
+          radial-gradient(180% 100% at 50% 100%, rgba(255,255,255,.05), transparent 55%),
+          linear-gradient(180deg,#121317,#0c0d11 60%, #0a0b0f);
+        box-shadow:0 30px 60px rgba(0,0,0,.45), inset 0 0 60px rgba(255,255,255,.03), inset 0 1px 0 rgba(255,255,255,.05);
+        overflow:hidden;
+      }
+      .glossar-scroll::before,.glossar-scroll::after{
+        content:""; position:absolute; left:0; right:0; height:20px;
+        background:
+          radial-gradient(120% 220% at 50% 0%, rgba(255,255,255,.08), transparent 55%),
+          linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));
+        filter:blur(.2px);
+      }
+      .glossar-scroll::before{ top:-1px; }
+      .glossar-scroll::after{ bottom:-1px; transform:scaleY(-1); }
+      
+      /* Kopf + Titel in Mittelalter-Font */
+      .glossar-head{
+        display:flex; align-items:center; justify-content:space-between; gap:12px;
+        padding:16px 18px; border-bottom:1px solid var(--line);
+        background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      }
+      .glossar-title{
+        margin:0; line-height:1;
+        font-family:"UnifrakturMaguntia","MedievalSharp",serif;
+        font-size:clamp(28px,4.6vw,40px);
+        background:linear-gradient(90deg,#fff,#c6d2ff 40%, #b4f0d2 85%);
+        -webkit-background-clip:text; background-clip:text; color:transparent;
+      }
+      .glossar-close{
+        border:1px solid var(--line); background:#17181c; color:var(--fg);
+        border-radius:10px; padding:8px 12px; cursor:pointer; font-weight:700;
+      }
+      .glossar-close:hover{ border-color:var(--accent); background:#1b1c21; }
+      
+      /* Body: interner Scroll */
+      .glossar-body{
+        max-height:min(72vh, 800px);
+        overflow:auto;
+        padding:18px;
+      }
+      
+      /* kleine optische Angleiche an deine Accordion-Optik */
+      .glossar-body .accordion{
+        margin:0 0 12px;
+      }
+      
+      /* Blur wie beim DVD-Overlay */
+      #content-wrap.blur{ filter: blur(12px); }
+      
+      /* Tooltip bleibt offen, wenn .open (aus deinem Rechner-Block) */
+      .tooltip.open{ opacity:1; visibility:visible; transform:translateY(4px); }
+      .tt-btn{ /* Button im Tooltip */
+        display:inline-block; margin-top:8px; padding:6px 10px;
+        border:1px solid var(--line); border-radius:10px;
+        background:var(--card); color:var(--fg); font-weight:700; font-size:12px; text-decoration:none;
+      }
+      .tt-btn:hover{ border-color:var(--accent); }
+
 
 
 
@@ -1182,7 +1265,7 @@
                   Crossings/s am IP: f<sub>rev</sub> · n<sub>bunch</sub>.<br>
                   <b>Rate:</b> R = μ · f<sub>rev</sub> · n<sub>bunch</sub> (hier 1 IP).<br>
                   <b>Luminosität:</b> L = R / σ<sub>inel</sub>.<br>
-                  <a href="glossar.html#annahmen" class="tt-btn" role="button">Genauere Erklärung</a>
+                  <a href="#glossar-annahmen" class="tt-btn glossar-open" data-glossar="annahmen">Genauere Erklärung</a>
                 </div>
               </div>
             
@@ -1328,6 +1411,56 @@
         </iframe>
       </div>
     </div>
+
+    <!-- === GLOSSAR ======================================== -->
+    <div id="glossar-overlay" role="dialog" aria-modal="true" aria-label="Glossar" hidden>
+      <div id="glossar-stage">
+        <div class="glossar-scroll">
+          <div class="glossar-head">
+            <h2 class="glossar-title">Glossar</h2>
+            <button class="glossar-close" id="glossar-close" type="button" title="Schließen (Esc)">Schließen</button>
+          </div>
+          <div class="glossar-body">
+            <!-- Sektion: Annahmen -->
+            <div class="accordion" id="g-acc-annahmen">
+              <button class="accordion-header" type="button" aria-expanded="true" aria-controls="g-acc-annahmen-content">
+                <span>Annahmen</span>
+                <span class="chev" aria-hidden="true">▸</span>
+              </button>
+              <div class="accordion-content" id="g-acc-annahmen-content" style="height:auto">
+                <div class="accordion-inner">
+                  <p><b>Fixe Konstanten:</b> σ<sub>inel</sub> = <b>75 mb</b> (7,5×10⁻²⁶ cm²), f<sub>rev</sub> = <b>11 245 /s</b>.</p>
+                  <p><b>Skalierung:</b> μ = μ₀ · (N/N₀)² mit μ₀ = 60 bei N₀ = 1,15×10¹¹ p/Bunch.</p>
+                  <p><b>Crossings:</b> f<sub>bx</sub> = f<sub>rev</sub> · n<sub>bunch</sub> (ein IP).</p>
+                  <p><b>Rate:</b> R = μ · f<sub>rev</sub> · n<sub>bunch</sub>; <b>Luminosität:</b> L = R / σ<sub>inel</sub>.</p>
+                  <ul>
+                    <li>Spotgrößen (σ<sub>x</sub>, σ<sub>y</sub>), β* und Geometriefaktor H konstant.</li>
+                    <li>Keine Lücken/Füllmuster modelliert; ein IP betrachtet.</li>
+                    <li>Nur inelastische pp-Wechselwirkungen (σ<sub>inel</sub>).</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+    
+          
+            <div class="accordion" id="g-acc-begriffe">
+              <button class="accordion-header" type="button" aria-expanded="false" aria-controls="g-acc-begriffe-content">
+                <span>Begriffe</span>
+                <span class="chev" aria-hidden="true">▸</span>
+              </button>
+              <div class="accordion-content" id="g-acc-begriffe-content" style="height:0">
+                <div class="accordion-inner">
+                  <p><b>Bunch:</b> Paket aus vielen Protonen, das den Ring umläuft.</p>
+                  <p><b>Pile-up μ:</b> Mittlere Zahl inelastischer Wechselwirkungen pro Bunch-Kreuzung.</p>
+                  <p><b>Luminosität L:</b> Strahl-Intensitätsparameter (cm⁻² s⁻¹).</p>
+                </div>
+              </div>
+            </div>
+          </div> 
+        </div>
+      </div>
+    </div>
+
 
     <!-- ================= SCRIPTS ================= -->
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
@@ -2603,9 +2736,120 @@
         render();
       })();
     </script>
-
+    <script defer>
+      (function(){
+        const overlay = document.getElementById('glossar-overlay');
+        const stage   = document.getElementById('glossar-stage');
+        const btnX    = document.getElementById('glossar-close');
+        const content = document.getElementById('content-wrap');
+      
+        function isOpen(){ return !overlay.hasAttribute('hidden'); }
+        function openGlossar(sectionId){
+          overlay.removeAttribute('hidden');
+          requestAnimationFrame(()=> overlay.classList.add('active'));
+          content?.classList.add('blur');
+      
+          // optional: direkt passende Sektion öffnen + scrollen
+          if(sectionId){
+            const map = { annahmen: 'g-acc-annahmen', begriffe: 'g-acc-begriffe' };
+            const id = map[sectionId] || sectionId;
+            const acc = document.getElementById(id);
+            if(acc){
+              openAccordion(acc);
+              // in sicht scrollen
+              setTimeout(()=> acc.scrollIntoView({behavior:'smooth', block:'start'}), 60);
+            }
+          }
+          setTimeout(()=>btnX?.focus?.(), 0);
+        }
+        function closeGlossar(){
+          overlay.classList.remove('active');
+          content?.classList.remove('blur');
+          setTimeout(()=> overlay.setAttribute('hidden',''), 200);
+        }
+      
+        // Klick auf Links, die das Glossar öffnen sollen
+        document.addEventListener('click', (e)=>{
+          const a = e.target.closest('a.glossar-open, a[href^="#glossar-"]');
+          if(!a) return;
+          e.preventDefault();
+          // Ziel ableiten (#glossar-annahmen -> "annahmen")
+          const href = a.getAttribute('href') || '';
+          const explicit = a.getAttribute('data-glossar');
+          let sect = explicit || '';
+          const m = href.match(/#glossar-([a-z0-9_-]+)/i);
+          if(!sect && m) sect = m[1].toLowerCase();
+          openGlossar(sect);
+          // Tooltip ggf. schließen
+          const tip = document.getElementById('cc-tip');
+          tip?.classList.remove('open');
+        });
+      
+        // Schließen
+        btnX?.addEventListener('click', closeGlossar);
+        window.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && isOpen()) closeGlossar(); });
+        // Optional: Klick außerhalb der „Rolle“ schließt
+        overlay.addEventListener('click', (e)=>{
+          if(e.target === overlay || e.target === stage) closeGlossar();
+        });
+      
+        // ===== Accordion-Logik (wie „Was ist CERN“, aber generisch) =============
+        function setupAccordion(acc){
+          const btn   = acc.querySelector('.accordion-header');
+          const panel = acc.querySelector('.accordion-content');
+          const inner = acc.querySelector('.accordion-inner');
+          if(!btn || !panel || !inner) return;
+      
+          function openPanel(){
+            acc.classList.add('open');
+            btn.setAttribute('aria-expanded','true');
+            panel.style.height = 'auto';
+            const target = panel.scrollHeight;
+            panel.style.height = '0px';
+            requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ panel.style.height = target + 'px'; }); });
+          }
+          function closePanel(){
+            btn.setAttribute('aria-expanded','false');
+            panel.style.height = panel.scrollHeight + 'px';
+            requestAnimationFrame(()=>{ panel.style.height = '0px'; });
+            acc.classList.remove('open');
+          }
+          function toggle(){ acc.classList.contains('open') ? closePanel() : openPanel(); }
+      
+          btn.addEventListener('click', toggle);
+          panel.addEventListener('transitionend', (e)=>{ if(e.propertyName!=='height') return; if(acc.classList.contains('open')) panel.style.height='auto'; });
+      
+          // Anfangszustand aus inline height ableiten
+          if(panel.style.height === 'auto' || acc.classList.contains('open')){
+            acc.classList.add('open'); btn.setAttribute('aria-expanded','true');
+          }
+        }
+      
+        function openAccordion(acc){
+          const btn   = acc.querySelector('.accordion-header');
+          const panel = acc.querySelector('.accordion-content');
+          if(!btn || !panel) return;
+          if(!acc.classList.contains('open')){
+            acc.classList.add('open');
+            btn.setAttribute('aria-expanded','true');
+            panel.style.height = panel.scrollHeight + 'px';
+            // nach Ende fixieren
+            panel.addEventListener('transitionend', function done(e){
+              if(e.propertyName==='height'){ panel.style.height='auto'; panel.removeEventListener('transitionend', done); }
+            });
+          }
+        }
+      
+        // alle Glossar-Accordions initialisieren
+        document.querySelectorAll('#glossar-overlay .accordion').forEach(setupAccordion);
+      
+        // Expose for debugging
+        window.__GLOSSAR__ = { open: openGlossar, close: closeGlossar, isOpen };
+      })();
+    </script>
   </body>
 </html>
+
 
 
 
