@@ -786,6 +786,13 @@
       .play-overlay{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(180deg,rgba(0,0,0,.45),rgba(0,0,0,.35));transition:opacity .2s ease}
       .play-overlay[hidden]{opacity:0;pointer-events:none}
       .play-btn{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer}
+    
+      .vid-frame{position:relative;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#000;aspect-ratio:16/9}
+      .vid-frame video{width:100%;height:100%;object-fit:contain;background:#000}
+      .play-overlay{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(180deg,rgba(0,0,0,.45),rgba(0,0,0,.35));transition:opacity .2s ease}
+      .play-overlay[hidden]{opacity:0;pointer-events:none}
+      .play-btn{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer}
+      
       
 
 
@@ -1257,54 +1264,80 @@
         <div class="container">
           <h2 class="reveal">Kollisionen</h2>
           <p class="reveal">Müssen wir noch schauen</p>
-         
-          <div class="sm-grid reveal" id="stdmodel-block" aria-live="polite">
-         
-            <section class="sm-card" aria-labelledby="sm-title">
-              <h4 class="sm-h" id="sm-title">Standardmodell – superkurz</h4>
-              <p class="sm-sub">
-                Bausteine der Materie (Fermionen), Kraftvermittler (Eichbosonen) und das Higgs-Feld.
+          
+          <section class="reveal" id="stdmodel">
+            <h3>Das Standardmodell – kurz & verständlich</h3>
+          
+            <div class="card" style="margin-top:8px">
+              <p>
+                Wie im Schalenmodell kennst du <b>Elektronen</b>, die die Atomhülle bilden, und im Kern
+                <b>Protonen</b> und <b>Neutronen</b>. Das <b>Standardmodell (SM)</b> geht eine Ebene tiefer:
+                Protonen und Neutronen (zusammen <i>Hadronen</i>) bestehen aus noch kleineren Bausteinen,
+                den <b>Quarks</b>, die durch <b>Gluonen</b> zusammengehalten werden.
               </p>
-              <ul class="sm-list">
-                <li class="sm-item">
-                  <b>Fermionen</b>: Quarks (u, d, c, s, t, b) &amp; Leptonen (e, μ, τ + drei Neutrinos).
-                  <span class="sm-pill">Materie</span>
-                </li>
-                <li class="sm-item">
-                  <b>Eichbosonen</b>: Photon (EM), W±/Z⁰ (schwach), Gluon (stark).
-                  <span class="sm-pill">Kräfte</span>
-                </li>
-                <li class="sm-item">
-                  <b>Higgs-Boson</b>: verleiht via Higgs-Feld den Teilchen Masse (Nachweis 2012 bei ATLAS/CMS).
-                </li>
-                <li class="sm-item">
-                  <b>Offen</b>: Dunkle Materie, Neutrinomassen, Gravitation &rarr; Physik jenseits des SM.
-                </li>
-              </ul>
-            </section>
           
-
-            <section class="vid-card" aria-labelledby="demo-title" aria-describedby="demo-sub">
-              <h4 class="sm-h" id="demo-title">Beispielkollision (pp @ LHC)</h4>
-              <p class="sm-sub" id="demo-sub">Kurzer Clip: Rekonstruktion eines Ereignisses (Demo).</p>
+              <p>
+                Die häufigsten Quarks in normaler Materie sind <b>up</b> (u) und <b>down</b> (d). Ein
+                <b>Proton</b> besteht aus <b>u + u + d</b>. Ladungen: u trägt <b>+2/3</b>, d trägt <b>−1/3</b>.
+                Summiert: <code>2/3 + 2/3 − 1/3 = +1</code> ⇒ genau die Elementarladung des Protons.
+                Ein <b>Neutron</b> ist <b>u + d + d</b> ⇒ <code>2/3 − 1/3 − 1/3 = 0</code>.
+              </p>
           
-              <div class="vid-frame" id="demo-vid-box">
-                <video id="demo-collision" preload="metadata" playsinline controls>
-                  <source src="beispielvideo.mp4" type="video/mp4" />
-                  Ihr Browser unterstützt das Video-Element nicht.
-                </video>
+              <p>
+                Neben den drei sogenannten <b>Valenzquarks</b> enthält ein Proton eine „<b>Gluonenwolke</b>“
+                und kurzlebige Quark-Antiquark-Paare aus dem Vakuum. Das erklärt, warum die Protonenmasse weit
+                größer ist als die Summe der reinen Quarkmassen – ein Großteil steckt in der Feldenergie
+                der starken Wechselwirkung.
+              </p>
           
-               
-                <div class="play-overlay" id="demo-play">
-                  <button class="play-btn" type="button" aria-label="Abspielen">
-                    ▶ Abspielen
-                  </button>
-                </div>
+              <p>
+                Zu jedem Teilchen gibt es ein <b>Antiteilchen</b> mit entgegengesetzter Ladung:
+                zum Elektron das <b>Positron</b>, zu u das <b>Anti-u</b>, usw. Trifft Teilchen auf sein
+                Antiteilchen, kann <i>Annihilation</i> in Energie bzw. andere Teilchen stattfinden.
+              </p>
+          
+              <div class="subsection-sep" aria-hidden="true">
+                <span class="chip"><span class="dot" aria-hidden="true"></span>Mini-Erklärung: Bosonen</span>
               </div>
           
-              <small class="pong-muted">Hinweis: Ton optional; starte mit Klick auf „Abspielen“.</small>
-            </section>
-          </div>
+              <p>
+                <b>Bosonen</b> sind die <b>Kraftvermittler</b> im SM:
+              </p>
+              <ul class="lhc-list" style="margin-top:6px">
+                <li><b>Photon</b> (γ): Träger der elektromagnetischen Kraft – wirkt auf geladene Teilchen.</li>
+                <li><b>Gluonen</b> (g): „Kleben“ Quarks zusammen (starke Kraft, <i>Farbladung</i>).</li>
+                <li><b>W</b><sup>±</sup> & <b>Z</b><sup>0</sup>: schwache Kraft – u. a. verantwortlich für Betazerfälle.</li>
+                <li><b>Higgs-Boson</b> (H): Anzeichen eines allgegenwärtigen Higgs-Feldes; die Kopplung daran verleiht
+                    Elementarteilchen <b>Masse</b>.</li>
+              </ul>
+          
+              <p style="margin-top:8px;color:var(--muted)">
+                Nicht enthalten im SM: <i>Gravitation</i>, <i>Dunkle Materie</i>, und die volle Erklärung der
+                <i>Neutrinomassen</i> – dafür suchen Experimente (wie der LHC) nach neuer Physik.
+              </p>
+            </div>
+          </section>
+          
+       
+          <section class="reveal" id="demo-collision-block" style="margin-top:18px">
+            <h3>Beispielkollision (pp @ LHC)</h3>
+            <p class="subtitle">Kurzer Clip: Rekonstruktion eines Ereignisses – starte mit „Abspielen“.</p>
+          
+            <div class="card" style="margin-top:8px">
+              <div class="vid-frame" id="demo-vid-box">
+                <video id="demo-collision-video" preload="metadata" playsinline controls>
+                  <source src="beispielvideo.mp4" type="video/mp4" />
+                  Dein Browser unterstützt das Video-Element nicht.
+                </video>
+          
+            
+                <div class="play-overlay" id="demo-play">
+                  <button class="play-btn" type="button" aria-label="Abspielen">▶ Abspielen</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
 
 
           <div class="calc-block reveal" id="cc-block" aria-live="polite">
@@ -1347,7 +1380,7 @@
                 <div></div>
               </div>
             
-              <!-- Slider 1 -->
+           
               <div class="calc-row">
                 <div class="label">Bunches pro Strahl</div>
                 <div class="range-wrap">
@@ -1357,18 +1390,18 @@
                 <output for="cc-bunches" id="cc-bunches-out">2 200</output>
               </div>
             
-              <!-- Slider 2 -->
+              
               <div class="calc-row">
                 <div class="label">Protonen pro Bunch</div>
                 <div class="range-wrap">
-                  <!-- Skala in 10^11 intern, Anzeige = Mio./Mrd. -->
+                 
                   <input id="cc-protons" class="calc-range" type="range" min="0.50" max="2.00" step="0.01" value="1.15" aria-label="Protonen pro Bunch (×10¹¹, Anzeige in Mio./Mrd.)">
                   <span class="tick" id="tick-prot" aria-hidden="true"></span>
                 </div>
                 <output for="cc-protons" id="cc-protons-out">115 Mrd.</output>
               </div>
             
-              <!-- Ergebnis (nur EIN Wert) -->
+             
               <div class="calc-row">
                 <div class="label" id="cc-out-label">Kollisionen / s</div>
                 <div></div>
@@ -2953,22 +2986,21 @@
     <script>
       (function(){
         const box = document.getElementById('demo-vid-box');
-        const vid = document.getElementById('demo-collision');
+        const vid = document.getElementById('demo-collision-video');
         const overlay = document.getElementById('demo-play');
         if(!box || !vid || !overlay) return;
     
-        function showOverlay(show){
-          if(show) overlay.removeAttribute('hidden'); else overlay.setAttribute('hidden','');
-        }
+        const showOverlay = (show)=> show ? overlay.removeAttribute('hidden')
+                                          : overlay.setAttribute('hidden','');
     
-        // Start per Klick
+        // Start über den Button
         overlay.addEventListener('click', () => {
           showOverlay(false);
           try { vid.play(); } catch {}
           vid.focus();
         });
     
-        // Overlay zurück, wenn pausiert oder zu Ende
+        // Overlay automatisch aus/ein bei Play/Pause/Ende (auch bei nativen Controls)
         vid.addEventListener('play',  () => showOverlay(false));
         vid.addEventListener('pause', () => {
           if (vid.currentTime < (vid.duration || Infinity)) showOverlay(true);
@@ -2976,10 +3008,9 @@
         vid.addEventListener('ended', () => showOverlay(true));
       })();
     </script>
-
-
   </body>
 </html>
+
 
 
 
