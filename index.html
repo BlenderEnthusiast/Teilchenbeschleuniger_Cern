@@ -1259,12 +1259,14 @@
          </div>
       </section>
 
+
       <!-- ================= KOLLISIONEN ================= -->
       <section class="section" id="collision-detector">
         <div class="container">
           <h2 class="reveal">Kollisionen</h2>
           <p class="reveal">Müssen wir noch schauen</p>
-          
+      
+          <!-- 1) Nebeneinander: Kurz erklärt + Rechner -->
           <div class="calc-block reveal" id="cc-block" aria-live="polite">
             <div class="calc-left">
               <h4 class="calc-sub">Kurz erklärt</h4>
@@ -1278,8 +1280,7 @@
                 Duis euismod, ligula non facilisis luctus, sapien magna luctus nibh, a gravida enim elit quis velit.
               </p>
             </div>
-          
-         
+      
             <div class="calc-right">
               <div class="sub-wrap">
                 <h4 class="calc-sub" style="margin:0">Interaktiver Rechner (vereinfacht)</h4>
@@ -1294,8 +1295,7 @@
                   <a href="#glossar-annahmen" class="tt-btn glossar-open" data-glossar="annahmen">Genauere Erklärung</a>
                 </div>
               </div>
-            
-              
+      
               <div class="calc-row" style="grid-template-columns:auto auto 1fr">
                 <div class="label">Ausgabe</div>
                 <div class="seg" role="tablist" aria-label="Auswahl Ausgabe">
@@ -1304,8 +1304,7 @@
                 </div>
                 <div></div>
               </div>
-            
-           
+      
               <div class="calc-row">
                 <div class="label">Bunches pro Strahl</div>
                 <div class="range-wrap">
@@ -1314,83 +1313,79 @@
                 </div>
                 <output for="cc-bunches" id="cc-bunches-out">2 200</output>
               </div>
-            
-              
+      
               <div class="calc-row">
                 <div class="label">Protonen pro Bunch</div>
                 <div class="range-wrap">
-                 
                   <input id="cc-protons" class="calc-range" type="range" min="0.50" max="2.00" step="0.01" value="1.15" aria-label="Protonen pro Bunch (×10¹¹, Anzeige in Mio./Mrd.)">
                   <span class="tick" id="tick-prot" aria-hidden="true"></span>
                 </div>
                 <output for="cc-protons" id="cc-protons-out">115 Mrd.</output>
               </div>
-            
-             
+      
               <div class="calc-row">
                 <div class="label" id="cc-out-label">Kollisionen / s</div>
                 <div></div>
                 <div class="val calc-emph" id="cc-out">—</div>
               </div>
-          </div>
-              
-          <section class="reveal" id="stdmodel">
+            </div>
+          </div><!-- /calc-block -->
+      
+          <!-- 2) Untereinander & ohne Box: Standardmodell -->
+          <section class="reveal" id="stdmodel" style="margin-top:18px">
             <h3>Das Standardmodell – kurz & verständlich</h3>
-          
+      
             <div class="reveal" style="margin-top:8px">
               <p>
-                Wie im Schalenmodell gibt es im Standartmodell <b>Protonen</b>, <b>Neutronen</b> und <b>Elektronen</b>, die zusammen
-                ein Atom bilden. Das Standartmodell sagt jedoch, dass Protonen und Neutronen
-                <i>nicht</i> die kleinsten Teilchen sind. Anstattdessen bestehen sie aus <b>Quarks</b>, die durch <b>Gluonen</b>
+                Wie im Schalenmodell gibt es <b>Protonen</b>, <b>Neutronen</b> und <b>Elektronen</b>, die zusammen
+                ein Atom bilden. Das <b>Standardmodell</b> sagt jedoch, dass Protonen und Neutronen
+                <i>nicht</i> die kleinsten Teilchen sind. Stattdessen bestehen sie aus <b>Quarks</b>, die durch <b>Gluonen</b>
                 zusammengehalten werden.
               </p>
-          
+      
               <p>
-                Die häufigsten Quarks sind <b>up</b> (u) und <b>down</b> (d) Quarks. Ein <b>Proton</b> besteht aus
-                <b>up + up + down</b>. Die Ladung von Protonen lässt sich hierdurch auch erklären, da up Quarks eine Ladung von +2/3 haben und down Quarks eine Ladung von -1/3 haben, was zusammengerechnet genau die Protonenladung +1 ergibt. Neben diesen drei Quarks
-                gibt es im Proton eine <b>Gluonenwolke</b> und kurzlebige Quark-Antiquark-Paare.
+                Die häufigsten Quarks sind <b>up</b> (u) und <b>down</b> (d). Ein <b>Proton</b> besteht aus
+                <b>up + up + down</b>. Die Protonenladung erklärt sich so: u trägt <b>+2/3</b>, d trägt <b>−1/3</b> ⇒
+                <code>2/3 + 2/3 − 1/3 = +1</code>. Neben diesen drei Quarks gibt es eine <b>Gluonenwolke</b> und kurzlebige
+                Quark–Antiquark-Paare.
               </p>
-          
+      
               <p>
-                Laut dem Standartmodell gibt es zu jedem Teilchen ein <b>Antiteilchen</b> mit entgegengesetzter Ladung.
-                z.&nbsp;B. Elektron <b>e⁻</b> und <b>Positron e⁺</b>, up und anti-up und so weiter. Laut dem Standartmodell gibt es jedoch nicht nur Quarks sondern auch <b>Leptonen</b>, welche nicht an der starken kraft Teilnehmen
-                wie z.B- <b>Elektronen</b> (e⁻) und sein Gegenpart <b>Positronen</b> (e⁺).
+                Zu jedem Teilchen gibt es ein <b>Antiteilchen</b> mit entgegengesetzter Ladung (z.&nbsp;B. Elektron <b>e⁻</b> ↔
+                <b>Positron e⁺</b>, up ↔ anti-up). Neben Quarks gibt es auch <b>Leptonen</b>, die nicht den Atomkern zusammenhalten:
+                z.&nbsp;B. <b>Elektron</b> (e⁻), <b>Positron</b> (e⁺), <b>Myon</b> (μ⁻) und das <b>Myon-Neutrino</b> (ν<sub>μ</sub>).
               </p>
-          
+      
               <p>
                 Die Kräfte zwischen den Teilchen werden durch <b>Bosonen</b> vermittelt:
-                <b>Photon</b> (elektromagnetisch), <b>Gluonen</b> (sogenannte starke Kraft), <b>W</b><sup>±</sup>/<b>Z</b><sup>0</sup>
+                <b>Photon</b> (elektromagnetisch), <b>Gluonen</b> (starke Kraft), <b>W</b><sup>±</sup>/<b>Z</b><sup>0</sup>
                 (schwache Kraft) sowie das <b>Higgs-Boson</b>.
               </p>
             </div>
           </section>
-
-          
-       
+      
+          <!-- 3) Untereinander & ohne Box: Beispielkollision -->
           <section class="reveal" id="demo-collision-block" style="margin-top:18px">
             <h3>Beispielkollision</h3>
-            <p class="subtitle">Kolision von u-Quark und Anti-u-Quark</p>
-          
+            <p class="subtitle">Kollision von u-Quark und Anti-u-Quark</p>
+      
             <div class="reveal" style="margin-top:8px">
               <div class="vid-frame" id="demo-vid-box">
                 <video id="demo-collision-video" preload="metadata" playsinline controls>
                   <source src="beispielvideo.mp4" type="video/mp4" />
                 </video>
-          
-            
+      
+                <!-- Overlay bleibt sichtbar bis zum ersten Start -->
                 <div class="play-overlay" id="demo-play">
                   <button class="play-btn" type="button" aria-label="Abspielen">▶ Abspielen</button>
                 </div>
               </div>
             </div>
           </section>
-
-
-
-
-          </div>
+      
         </div>
       </section>
+
       
       <!-- === LIVE · LHC ================= -->
       <section class="section" id="live-telemetry">
@@ -2990,6 +2985,7 @@
     </script>
   </body>
 </html>
+
 
 
 
