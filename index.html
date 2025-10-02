@@ -1264,29 +1264,21 @@
       <section class="section" id="collision-detector">
         <div class="container">
           <h2 class="reveal">Kollisionen</h2>
-          <p class="reveal">Müssen wir noch schauen</p>
-      
-          <!-- 1) Nebeneinander: Kurz erklärt + Rechner -->
+         
           <div class="calc-block reveal" id="cc-block" aria-live="polite">
             <div class="calc-left">
-              <h4 class="calc-sub">Kurz erklärt</h4>
+              <h4 class="calc-sub">Einführung</h4>
               <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer non orci vitae lorem feugiat rhoncus.
-                In hac habitasse platea dictumst. Suspendisse potenti. Sed accumsan, nunc a placerat interdum, sapien purus
-                gravida neque, in pretium ipsum enim vel arcu.
-              </p>
-              <p>
-                Morbi ut nisl nec justo iaculis pellentesque. Cras aliquet mi in urna faucibus, vitae gravida ligula porttitor.
-                Duis euismod, ligula non facilisis luctus, sapien magna luctus nibh, a gravida enim elit quis velit.
+                In Cern werden Protonen in sogenannten Bunches beschleunigt. Da die Treffwahrscheinlichkeit von den Protonen extrem klein ist werden in diesen Bunches standartmäßig 115 Miliarden Protonen geführt, von denen lediglich 15 kolidieren. Cern gibt die Anzahl der durchschnitlichen Kollisionen pro Quadratcentimeter und pro Sekunde als die sogenannte Luminosität an. 
               </p>
             </div>
       
             <div class="calc-right">
               <div class="sub-wrap">
-                <h4 class="calc-sub" style="margin:0">Interaktiver Rechner (vereinfacht)</h4>
+                <h4 class="calc-sub" style="margin:0">Rechner</h4>
                 <button class="info-dot" id="cc-info" aria-label="Annahmen anzeigen" aria-describedby="cc-tip">!</button>
                 <div class="tooltip" id="cc-tip" role="tooltip">
-                  <b>Annahmen (LHC-Modell):</b><br>
+                  <b>Annahmen:</b><br>
                   σ<sub>inel</sub> = <b>75 mb</b> (fix), f<sub>rev</sub> = <b>11 245 /s</b>.<br>
                   μ skaliert näherungsweise wie <b>(N/N₀)²</b> mit μ₀ = <b>60</b> bei N₀ = <b>1,15×10¹¹</b> Protonen/Bunch.<br>
                   Crossings/s am IP: f<sub>rev</sub> · n<sub>bunch</sub>.<br>
@@ -1329,11 +1321,10 @@
                 <div class="val calc-emph" id="cc-out">—</div>
               </div>
             </div>
-          </div><!-- /calc-block -->
-      
-          <!-- 2) Untereinander & ohne Box: Standardmodell -->
+          </div>
+          
           <section class="reveal" id="stdmodel" style="margin-top:18px">
-            <h3>Das Standardmodell – kurz & verständlich</h3>
+            <h3>Das Standardmodell</h3>
       
             <div class="reveal" style="margin-top:8px">
               <p>
@@ -1364,7 +1355,7 @@
             </div>
           </section>
       
-          <!-- 3) Untereinander & ohne Box: Beispielkollision -->
+        
           <section class="reveal" id="demo-collision-block" style="margin-top:18px">
             <h3>Beispielkollision</h3>
             <p class="subtitle">Kollision von u-Quark und Anti-u-Quark</p>
@@ -1375,7 +1366,7 @@
                   <source src="beispielvideo.mp4" type="video/mp4" />
                 </video>
       
-                <!-- Overlay bleibt sichtbar bis zum ersten Start -->
+                
                 <div class="play-overlay" id="demo-play">
                   <button class="play-btn" type="button" aria-label="Abspielen">▶ Abspielen</button>
                 </div>
@@ -1403,9 +1394,7 @@
               </label>
               <label>X-Achse&nbsp;
                 <select id="tg-x" style="background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:6px 8px">
-                  <option value="s">Sekunden</option>
-                  <option value="min" selected>Minuten</option>
-                  <option value="h">Stunden</option>
+                  <option value="h" selected>Stunden</option>
                 </select>
               </label>
               <button id="tg-refresh" class="step-btn" type="button" title="Jetzt aktualisieren">Jetzt aktualisieren</button>
@@ -1418,7 +1407,7 @@
             </div>
       
             <p class="subtitle" style="margin-top:10px;color:var(--muted)">
-              Datenbasis: CERN Vistars (via Repo-Dateien).
+              Datenbasis: CERN Vistars
             </p>
           </div>
         </div>
@@ -2985,6 +2974,7 @@
     </script>
   </body>
 </html>
+
 
 
 
