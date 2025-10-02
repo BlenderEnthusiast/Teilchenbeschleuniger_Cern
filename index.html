@@ -762,7 +762,7 @@
         filter: blur(6px);
       }
       
-      /* Tooltip bleibt offen, wenn .open (aus deinem Rechner-Block) */
+
       .tooltip.open{ opacity:1; visibility:visible; transform:translateY(4px); }
       .tt-btn{ /* Button im Tooltip */
         display:inline-block; margin-top:8px; padding:6px 10px;
@@ -770,6 +770,23 @@
         background:var(--card); color:var(--fg); font-weight:700; font-size:12px; text-decoration:none;
       }
       .tt-btn:hover{ border-color:var(--accent); }
+
+     
+      .sm-h{margin:0 0 6px;font-size:clamp(18px,2.8vw,22px);font-weight:800;letter-spacing:-.01em;background:var(--heading-gradient);-webkit-background-clip:text;background-clip:text;color:transparent}
+      .sm-sub{margin:0 0 10px;color:var(--muted)}
+      .sm-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:22px;align-items:start}
+      @media (max-width:900px){.sm-grid{grid-template-columns:1fr}}
+      .sm-card,.vid-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
+      .sm-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;list-style:none;padding:0;margin:0}
+      @media (max-width:600px){.sm-list{grid-template-columns:1fr}}
+      .sm-item b{color:var(--fg)}
+      .sm-pill{display:inline-block;padding:2px 8px;border:1px solid var(--line);border-radius:999px;font-size:11px;color:var(--muted);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03));margin-left:6px}
+      .vid-frame{position:relative;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#000;aspect-ratio:16/9}
+      .vid-frame video{width:100%;height:100%;object-fit:contain;background:#000}
+      .play-overlay{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(180deg,rgba(0,0,0,.45),rgba(0,0,0,.35));transition:opacity .2s ease}
+      .play-overlay[hidden]{opacity:0;pointer-events:none}
+      .play-btn{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer}
+      
 
 
 
@@ -1240,6 +1257,56 @@
         <div class="container">
           <h2 class="reveal">Kollisionen</h2>
           <p class="reveal">Müssen wir noch schauen</p>
+         
+          <div class="sm-grid reveal" id="stdmodel-block" aria-live="polite">
+         
+            <section class="sm-card" aria-labelledby="sm-title">
+              <h4 class="sm-h" id="sm-title">Standardmodell – superkurz</h4>
+              <p class="sm-sub">
+                Bausteine der Materie (Fermionen), Kraftvermittler (Eichbosonen) und das Higgs-Feld.
+              </p>
+              <ul class="sm-list">
+                <li class="sm-item">
+                  <b>Fermionen</b>: Quarks (u, d, c, s, t, b) &amp; Leptonen (e, μ, τ + drei Neutrinos).
+                  <span class="sm-pill">Materie</span>
+                </li>
+                <li class="sm-item">
+                  <b>Eichbosonen</b>: Photon (EM), W±/Z⁰ (schwach), Gluon (stark).
+                  <span class="sm-pill">Kräfte</span>
+                </li>
+                <li class="sm-item">
+                  <b>Higgs-Boson</b>: verleiht via Higgs-Feld den Teilchen Masse (Nachweis 2012 bei ATLAS/CMS).
+                </li>
+                <li class="sm-item">
+                  <b>Offen</b>: Dunkle Materie, Neutrinomassen, Gravitation &rarr; Physik jenseits des SM.
+                </li>
+              </ul>
+            </section>
+          
+
+            <section class="vid-card" aria-labelledby="demo-title" aria-describedby="demo-sub">
+              <h4 class="sm-h" id="demo-title">Beispielkollision (pp @ LHC)</h4>
+              <p class="sm-sub" id="demo-sub">Kurzer Clip: Rekonstruktion eines Ereignisses (Demo).</p>
+          
+              <div class="vid-frame" id="demo-vid-box">
+                <video id="demo-collision" preload="metadata" playsinline controls>
+                  <source src="beispielvideo.mp4" type="video/mp4" />
+                  Ihr Browser unterstützt das Video-Element nicht.
+                </video>
+          
+               
+                <div class="play-overlay" id="demo-play">
+                  <button class="play-btn" type="button" aria-label="Abspielen">
+                    ▶ Abspielen
+                  </button>
+                </div>
+              </div>
+          
+              <small class="pong-muted">Hinweis: Ton optional; starte mit Klick auf „Abspielen“.</small>
+            </section>
+          </div>
+
+
           <div class="calc-block reveal" id="cc-block" aria-live="polite">
             <div class="calc-left">
               <h4 class="calc-sub">Kurz erklärt</h4>
@@ -2883,9 +2950,37 @@
         };
       })();
     </script>
+    <script>
+      (function(){
+        const box = document.getElementById('demo-vid-box');
+        const vid = document.getElementById('demo-collision');
+        const overlay = document.getElementById('demo-play');
+        if(!box || !vid || !overlay) return;
+    
+        function showOverlay(show){
+          if(show) overlay.removeAttribute('hidden'); else overlay.setAttribute('hidden','');
+        }
+    
+        // Start per Klick
+        overlay.addEventListener('click', () => {
+          showOverlay(false);
+          try { vid.play(); } catch {}
+          vid.focus();
+        });
+    
+        // Overlay zurück, wenn pausiert oder zu Ende
+        vid.addEventListener('play',  () => showOverlay(false));
+        vid.addEventListener('pause', () => {
+          if (vid.currentTime < (vid.duration || Infinity)) showOverlay(true);
+        });
+        vid.addEventListener('ended', () => showOverlay(true));
+      })();
+    </script>
+
 
   </body>
 </html>
+
 
 
 
