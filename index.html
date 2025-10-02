@@ -1390,7 +1390,6 @@
                   <option value="energy" selected>Energie (GeV)</option>
                   <option value="speed">Geschwindigkeit (% c)</option>
                   <option value="lumi">Luminosität</option>
-                  <option value="rate">Kollisionen/s</option>
                 </select>
               </label>
               <label>X-Achse&nbsp;
@@ -2118,11 +2117,13 @@
 
 
     <script>
+    
       (function(){
         const MIN_INTERVAL_MS = 30000;                 
         const SRC         = 'data/latest.json';
         const HISTORY_URL = 'data/lhc_history.jsonl';
     
+      
         const els = {
           canvas:  document.getElementById('tg-canvas'),
           wrap:    document.getElementById('tg-wrap'),
@@ -2133,7 +2134,7 @@
           btnNow:  document.getElementById('tg-refresh'),
         };
     
-      
+       
         let dbgBox = document.getElementById('tg-debug');
         if(!dbgBox){
           dbgBox = document.createElement('div');
@@ -2170,10 +2171,7 @@
         }
         function hideDebug(){ dbgBox.style.display = 'none'; }
     
-    
-        const SIGMA_INEL_CM2 = 75e-27;
-    
-      
+        
         const METRICS = {
           energy:{ label:'Energie', unit:'GeV',
             desc:'Protonen-Gesamtenergie pro Teilchen (GeV).',
@@ -2190,34 +2188,24 @@
           lumi:  { label:'Luminosität', unit:'cm⁻²s⁻¹',
             desc:'Sofortige Kollisionsrate pro Fläche und Zeit.',
             fmt:v=>v==null?'–':Number(v).toExponential(2) },
-          rate:  { label:'Kollisionen/s', unit:'s⁻¹',
-            desc:'R = L · σ_inel (σ_inel = 75 mb).',
-            fmt:v=>v==null?'–':Number(v).toExponential(2) }
         };
-    
-
         Array.from(els.ySel?.options||[]).forEach(op=>{
           const m = METRICS[op.value];
           if (m?.desc) op.title = `${m.label}: ${m.desc}`;
         });
     
-        function getYVal(d, yKey){
-          if (yKey === 'rate') {
-            return (d.lumi != null) ? d.lumi * SIGMA_INEL_CM2 : null;
-          }
-          return d[yKey];
-        }
-    
+       
         const PRESET_WINDOWS = { s:5*60, min:60*60, h:6*3600 };
         const HARD_MIN_WINDOW = 30;
         const HARD_MAX_WINDOW = 24*3600;
     
+   
         let data = [];          
         let yKey  = els.ySel.value || 'energy';
         let timer = null;
         const v = { t0: 0, t1: 0 };
     
-       
+        // ---- Helpers --------------------------------------------------------------
         const dpr = () => Math.max(1, window.devicePixelRatio || 1);
         const num = x => {
           if (x==null) return null;
@@ -2250,6 +2238,7 @@
           return Math.sqrt(Math.max(0, Math.min(1, b2)));
         }
         function fmtClock(ts, winSec){
+         
           const d = new Date(ts*1000);
           const DD = String(d.getDate()).padStart(2,'0');
           const MM = String(d.getMonth()+1).padStart(2,'0');
@@ -2278,7 +2267,7 @@
           return best;
         }
     
-      
+        // ---- Data loading ----------------------------------------------------------
         async function loadHistory(){
           try{
             const r = await fetch(`${HISTORY_URL}?b=${Date.now()}`, { cache:'no-store' });
@@ -2292,8 +2281,7 @@
               speed:  o.speed  ?? (o.energy!=null ? betaFromGeV(o.energy) : null),
               ib1:    o.ib1 ?? null,
               ib2:    o.ib2 ?? null,
-              lumi:   o.lumi ?? null
-              
+              lumi:   o.lumi ?? null,
             }));
             const now = Math.floor(Date.now()/1000);
             const win = PRESET_WINDOWS[els.xSel.value] || PRESET_WINDOWS.min;
@@ -2312,7 +2300,7 @@
             if(!r.ok) throw new Error('HTTP '+r.status);
             const j = await r.json();
     
-            const e   = pickByRegex(j, /(^|_)(energy|beam.?energy|lhc.?energy)(_|$)/i).value;
+            const e = pickByRegex(j, /(^|_)(energy|beam.?energy|lhc.?energy)(_|$)/i).value;
             const ib1 = pickByRegex(j, /(ib1|beam.?1.*(intensity|current))/i).value;
             const ib2 = pickByRegex(j, /(ib2|beam.?2.*(intensity|current))/i).value;
             const lumi= pickByRegex(j, /(lumi|luminosit)/i).value;
@@ -2329,12 +2317,15 @@
               data = data.filter(d => d.t >= cutoff);
             }
     
+           
             debug = j && j._debug ? j._debug : null;
     
+   
             const viewLen = Math.max(HARD_MIN_WINDOW, v.t1 - v.t0 || (PRESET_WINDOWS.min));
             const atRight = (Math.abs(v.t1 - (last?.t ?? v.t1)) <= 120) || (v.t1 >= (last?.t ?? v.t1));
             if(atRight){ v.t1 = t; v.t0 = v.t1 - viewLen; }
     
+      
             const allNull = (e==null) && (ib1==null) && (ib2==null) && (lumi==null);
             if(allNull){
               showDebug('Quelle hat keine verwertbaren Felder geliefert.', {
@@ -2354,6 +2345,7 @@
           }
         }
     
+    
         function setupCtx(){
           const c = els.canvas, rect = els.wrap.getBoundingClientRect(), k = dpr();
           c.width = Math.floor(rect.width * k);
@@ -2364,7 +2356,6 @@
           ctx.setTransform(k,0,0,k,0,0);
           return ctx;
         }
-    
         function render(){
           const ctx = setupCtx();
           const W = ctx.canvas.width / dpr();
@@ -2388,7 +2379,7 @@
             return;
           }
     
-          const yVals = vis.map(d=>getYVal(d, yKey)).filter(v=>v!=null);
+          const yVals = vis.map(d=>d[yKey]).filter(v=>v!=null);
           const ymin = Math.min(...yVals), ymax = Math.max(...yVals);
           const pad  = (ymax-ymin || 1) * 0.12;
           const y0 = ymin - pad, y1 = ymax + pad;
@@ -2396,7 +2387,7 @@
           const xToPx = t => m.l + ((t - v.t0)/(v.t1 - v.t0)) * (W - m.l - m.r);
           const yToPx = val => H - m.b - ((val - y0)/(y1 - y0)) * (H - m.t - m.b);
     
-       
+          // Grid + Ticks (X als Datum+Zeit)
           ctx.strokeStyle = '#2d2d32'; ctx.lineWidth = 1;
           ctx.fillStyle   = 'var(--muted)'; ctx.font='600 11px Inter, system-ui, sans-serif';
     
@@ -2409,7 +2400,7 @@
             ctx.fillText(fmtClock(t, v.t1-v.t0), x, H-4);
           }
     
-       
+        
           ctx.textAlign='right';
           yTicks(y0, y1, 4).forEach(val=>{
             const y = yToPx(val);
@@ -2419,28 +2410,24 @@
     
           drawAxisTitles(ctx, W, H, m);
     
-        
+         
           ctx.beginPath();
           let started = false;
           for(const d of vis){
-            const val = getYVal(d, yKey);
-            if(val==null) { started=false; continue; }
-            const x=xToPx(d.t), y=yToPx(val);
+            if(d[yKey]==null) { started=false; continue; }
+            const x=xToPx(d.t), y=yToPx(d[yKey]);
             if(!started){ ctx.moveTo(x,y); started=true; } else { ctx.lineTo(x,y); }
           }
           ctx.strokeStyle='var(--accent)'; ctx.lineWidth=2;
           ctx.shadowColor='rgba(125,211,252,.25)'; ctx.shadowBlur=8; ctx.stroke(); ctx.shadowBlur=0;
     
-       
           ctx.fillStyle='rgba(125,211,252,.9)';
           for(const d of vis){
-            const val = getYVal(d, yKey);
-            if(val==null) continue;
-            const x=xToPx(d.t), y=yToPx(val);
+            if(d[yKey]==null) continue;
+            const x=xToPx(d.t), y=yToPx(d[yKey]);
             ctx.beginPath(); ctx.arc(x,y,2.1,0,Math.PI*2); ctx.fill();
           }
         }
-    
         function drawAxisTitles(ctx, W, H, m){
           const meta = METRICS[yKey] || METRICS.energy;
           ctx.fillStyle='var(--muted)'; ctx.font='600 12px Inter, system-ui, sans-serif';
@@ -2473,12 +2460,10 @@
             const x = m.l + ( (n.t - v.t0) / (v.t1 - v.t0) ) * (W - m.l - m.r);
     
             const vis = data.filter(d=>d.t>=v.t0 && d.t<=v.t1);
-            const vals=vis.map(d=>getYVal(d, yKey)).filter(v=>v!=null);
+            const vals=vis.map(d=>d[yKey]).filter(v=>v!=null);
             const ymin=Math.min(...vals), ymax=Math.max(...vals);
             const pad=(ymax-ymin||1)*0.12, y0=ymin-pad, y1=ymax+pad;
-    
-            const valN = getYVal(n, yKey);
-            const y = H - m.b - ((valN - y0)/(y1 - y0)) * (H - m.t - m.b);
+            const y = H - m.b - ((n[yKey]-y0)/(y1-y0)) * (H - m.t - m.b);
     
             const raw = c.getContext('2d');
             raw.save(); raw.setTransform(1,0,0,1,0,0); raw.scale(k,k);
@@ -2492,7 +2477,7 @@
             const win  = (v.t1 - v.t0);
             tip.innerHTML = `<b>${meta.label}</b><br>
               <span class="muted">Zeit:</span> ${fmtClock(n.t, win)}
-              · <span class="muted">Wert:</span> ${meta.fmt(getYVal(n, yKey))} ${meta.unit}`;
+              · <span class="muted">Wert:</span> ${meta.fmt(n[yKey])} ${meta.unit}`;
             tip.style.display='block';
           }
           function onMove(clientX){
@@ -2507,7 +2492,7 @@
           c.addEventListener('touchend',   ()=>{ tip.style.display='none'; render(); }, { passive:true });
         }
     
-      
+   
         function bindZoomPan(){
           const c=els.canvas;
           const m = { l:64, r:16, t:22, b:42 };
@@ -2559,6 +2544,7 @@
           }, { passive:true });
         }
     
+     
         function stamp(msg){
           const d=new Date();
           els.status.textContent = (msg? msg+' · ':'') + `aktualisiert: ` + fmtClock(Math.floor(d.getTime()/1000), 60);
@@ -2569,7 +2555,7 @@
           timer = setTimeout(()=>{ fetchLatest().catch(e=>{ console.error('[latest]',e); schedule(MIN_INTERVAL_MS); }); }, Math.max(10_000, ms|0));
         }
     
-        // Init
+        
         async function init(){
           bindHover();
           bindZoomPan();
@@ -2589,7 +2575,6 @@
         init();
       })();
     </script>
-
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
@@ -2989,142 +2974,6 @@
     </script>
   </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
