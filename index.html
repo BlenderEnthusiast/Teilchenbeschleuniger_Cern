@@ -3034,8 +3034,138 @@
         vid.addEventListener('ended', () => showOverlay(true));
       })();
     </script>
+    <script>
+      /* FS-Gate: minimaler Vollbild-Gate als Drop-in */
+      (function () {
+        const STYLE_ID = "fs-gate-style";
+        const GATE_ID  = "fs-gate";
+      
+        function injectStyles() {
+          if (document.getElementById(STYLE_ID)) return;
+          const css = `
+            :root { --fs-bg: #0b0b0ef0; --fs-card:#15151a; --fs-accent:#4f46e5; --fs-text:#fff; }
+            #${GATE_ID} {
+              position: fixed; inset: 0; display: none; place-items: center;
+              background: var(--fs-bg); color: var(--fs-text); z-index: 2147483647; padding: 2rem;
+            }
+            #${GATE_ID}.show { display: grid; }
+            #${GATE_ID} .card {
+              max-width: 38rem; text-align: center; background: var(--fs-card); padding: 2rem;
+              border-radius: 18px; box-shadow: 0 10px 40px rgba(0,0,0,.5);
+              font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            }
+            #${GATE_ID} button {
+              border: 0; padding: .9rem 1.2rem; border-radius: 12px; font-weight: 600; cursor: pointer; margin-top: 1rem;
+            }
+            #${GATE_ID} #fs-enter { background: var(--fs-accent); color: #fff; }
+            #${GATE_ID} #fs-enter:hover { filter: brightness(1.1); }
+            #${GATE_ID} #fs-help { display:none; opacity:.9; font-size:.95rem; margin-top:.75rem; }
+            #${GATE_ID} kbd { background:#222; padding:.15rem .35rem; border-radius:.35rem; font-weight:600; }
+          `;
+          const style = document.createElement("style");
+          style.id = STYLE_ID;
+          style.textContent = css;
+          document.head.appendChild(style);
+        }
+      
+        function buildGate() {
+          if (document.getElementById(GATE_ID)) return;
+          const gate = document.createElement("div");
+          gate.id = GATE_ID;
+          gate.setAttribute("role", "dialog");
+          gate.setAttribute("aria-modal", "true");
+          gate.innerHTML = `
+            <div class="card">
+              <h2 style="margin-top:0">Diese Seite nutzt Vollbild</h2>
+              <p>Bitte starte im Vollbildmodus, um fortzufahren.</p>
+              <button id="fs-enter" type="button">Vollbild starten</button>
+              <div id="fs-help">
+                <p>Fullscreen konnte nicht automatisch aktiviert werden.<br>
+                Drücke bitte <strong>F11</strong> (macOS: <strong>Ctrl ⌃ + Cmd ⌘ + F</strong>) und lade die Seite neu.</p>
+              </div>
+              <p style="opacity:.7;margin-top:1rem">Zum Beenden später <kbd>Esc</kbd> drücken.</p>
+            </div>
+          `;
+          document.body.appendChild(gate);
+          return gate;
+        }
+      
+        function isFullscreen() {
+          return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+        }
+      
+        async function requestFS() {
+          const el = document.documentElement;
+          try {
+            if (el.requestFullscreen) {
+              await el.requestFullscreen({ navigationUI: "hide" }).catch(()=>{});
+            } else if (el.webkitRequestFullscreen) {
+              el.webkitRequestFullscreen();
+            } else if (el.msRequestFullscreen) {
+              el.msRequestFullscreen();
+            } else {
+              throw new Error("Fullscreen API nicht verfügbar");
+            }
+          } catch (e) {
+            console.warn(e);
+          }
+          setTimeout(() => {
+            const gate = document.getElementById(GATE_ID);
+            const help = document.getElementById("fs-help");
+            if (!gate) return;
+            if (isFullscreen()) {
+              gate.classList.remove("show");
+              sessionStorage.setItem("fs-ok", "1");
+            } else if (help) {
+              help.style.display = "block";
+            }
+          }, 100);
+        }
+      
+        function onFSChange() {
+          const gate = document.getElementById(GATE_ID);
+          const help = document.getElementById("fs-help");
+          if (!gate) return;
+          if (!isFullscreen()) {
+            sessionStorage.removeItem("fs-ok");
+            gate.classList.add("show");
+            if (help) help.style.display = "none";
+          }
+        }
+      
+        function setup() {
+          injectStyles();
+          const gate = buildGate();
+      
+          // Gate nur zeigen, wenn nicht bereits im FS (und kein vorheriges OK)
+          if (sessionStorage.getItem("fs-ok") === "1" && isFullscreen()) {
+            gate.classList.remove("show");
+          } else {
+            gate.classList.add("show");
+          }
+      
+          // Events
+          document.getElementById("fs-enter").addEventListener("click", requestFS);
+          let firstTried = false;
+          const firstTry = () => { if (!firstTried) { firstTried = true; requestFS(); } };
+          window.addEventListener("click", firstTry, { once: true });
+          window.addEventListener("keydown", firstTry, { once: true });
+      
+          document.addEventListener("fullscreenchange", onFSChange);
+          document.addEventListener("webkitfullscreenchange", onFSChange);
+          document.addEventListener("msfullscreenchange", onFSChange);
+        }
+      
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", setup);
+        } else {
+          setup();
+        }
+      })();
+    </script>
   </body>
 </html>
+
 
 
 
