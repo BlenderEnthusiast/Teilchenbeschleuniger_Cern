@@ -809,12 +809,14 @@
       <div class="nav container">
         <div>Beschleuniger</div>
         <nav aria-label="Hauptnavigation"> 
-          <a href="#cern-teile">Einleitung</a>
-          <a href="#timeline">Timeline</a>
-          <a href="#chain-switch">Beschleunigerkette</a>
-          <a href="#ring-hotspots">Teilchenbeschleuniger</a>
-          <a href="#acceleration-chain">Detektoren</a>
-          <a href="#collision-detector">Kollision</a>         
+          <a class="topic-card" href="#timeline"><h3>Zeitleiste</h3></a>
+          <a class="topic-card" href="#chain-switch"><h3>Beschleunigerkette</h3></a>
+          <a class="topic-card" href="#ring-hotspots"><h3>Teilchenbeschleuniger</h3></a>
+          <a class="topic-card" href="#acceleration-chain"><h3>Atlas</h3></a>
+          <a class="topic-card" href="#collision-detector"><h3>Kollisionen</h3></a>
+          <a class="topic-card" href="#live-telemetry"><h3>LHC Live</h3></a>
+          <a class="topic-card" href="#safety"><h3>Sicherheit</h3></a>
+          
           <span class="nav-sources">
             <a href="#sources">Quellen</a>
             <label class="switch" title="Quellen ein-/ausblenden">
@@ -833,7 +835,6 @@
         <div class="bg" aria-hidden="true"></div>
         <div class="content container">
           <h1 class="title" id="hero-title">Teilchen auf nahezu Lichtgeschwindigkeit</h1>
-          <p class="subtitle">Eine Einführung in CERN, seine Geschichte und seine Beschleuniger (Fokus: LHC-Komplex) – plus ein Blick auf die Physik dahinter.</p>
         </div>
       </section>
 
@@ -865,15 +866,23 @@
             </a>
             <a class="topic-card" href="#ring-hotspots">
               <h3>Teilchenbeschleuniger</h3>
-              <p>Funktionsweise und Arten am CERN</p>
+              <p>Funktionsweise des LHC Teilchenbeschleunigers</p>
             </a>
             <a class="topic-card" href="#acceleration-chain">
-              <h3>Physik</h3>
-              <p>Die Grundlagen hinter den Beschleunigern</p>
+              <h3>Atlas</h3>
+              <p>Die Bestandteile des Atlas Detektors</p>
             </a>
             <a class="topic-card" href="#collision-detector">
               <h3>Kollisionen</h3>
-              <p>Was in den Detektoren passiert</p>
+              <p>Eine Einführung in Kollisionen in Cern</p>
+            </a>
+            <a class="topic-card" href="#live-telemetry">
+              <h3>LHC Live</h3>
+              <p>Live Informationen vom LHC</p>
+            </a>
+            <a class="topic-card" href="#safety">
+              <h3>Sicherheit</h3>
+              <p>Eine Erklärung von den Sicherheitsmaßnahmen an Cern</p>
             </a>
             <a class="topic-card" href="#sources">
               <h3>Quellen</h3>
@@ -1367,7 +1376,17 @@
               </div>
             </div>
           </section>
-      
+          <div class="sources-block card" aria-label="Quellen dieser Sektion">
+              <h5>Verwendete Quellen</h5>
+              <ul class="sources-list">
+                <li>
+                  <a href="https://example.com" target="_blank" rel="noopener noreferrer">
+                    X – Titel der Quelle
+                  </a>
+                 
+                </li>
+              </ul>
+            </div>
         </div>
       </section>
 
@@ -1404,16 +1423,27 @@
               Datenbasis: CERN Vistars
             </p>
           </div>
+          <div class="sources-block card" aria-label="Quellen dieser Sektion">
+              <h5>Verwendete Quellen</h5>
+              <ul class="sources-list">
+                <li>
+                  <a href="https://example.com" target="_blank" rel="noopener noreferrer">
+                    X – Titel der Quelle
+                  </a>
+                 
+                </li>
+              </ul>
+            </div>
         </div>
       </section>
       <!-- ================= SICHERHEIT ================= -->
       <section class="section" id="safety">
         <div class="container">
-          <h2 class="reveal">Sicherheit und Realität (wenn projekt fertig)</h2>
+          <h2 class="reveal">Sicherheit</h2>
           <div class="safety">
-            <div class="card reveal"><h3>Abschirmung</h3><p>Kurzinfo zu Strahlenschutz & Infrastruktur.</p></div>
-            <div class="card reveal"><h3>Betrieb</h3><p>Kontrollierte Strahlzeiten & Wartungsphasen.</p></div>
-            <div class="card reveal"><h3>Mythen</h3><p>Schwarze Löcher? Nope. Physikalisch nicht relevant.</p></div>
+            <div class="card reveal"><h3>Sicherheitssysteme CERN</h3><p>CERN verfügt über eine eigene Abteilung für Gesundheit, Sicherheit und Umwelt (HSE), Sicherheitsvorschriften, Strahlenschutz und Verriegelungssysteme, die Strahlen im Störungsfall abschalten. Besucher werden niemals in die Nähe gefährlicher Bereiche gebracht; die Strahlung wird streng abgeschirmt und überwacht. Bei seltenen Unfällen untersucht CERN die Situation genau und passt die Sicherheitsysteme an. Sicherheit ist CERNs erste Priorität.</p></div>
+            <div class="card reveal"><h3>Mythen</h3><p>Immer wieder tauchen im Internett Hororszenarien auf in denen Schwarze Löcher in CERN entstehen und dann die ganze Welt verschlingen. Und tatsächlich enstehen zumindest in Theroie microskopische Schwarze Löcher in CERN. Die Befürchtung, CERN könnte die Erde zerstören, ist jedoch unbegründet, da diese Schwarzen Löcher so unfassbar klein in Masse sind, dass sie sofort wieder zerfallen.</p></div>
+            <div class="card reveal"><h3>Was wäre wenn...</h3><p>In 1978 wurde der sowjetische Wissenschaftler Anatoli Bugorski am U-70-Beschleuniger (nicht CERN) versehentlich von einen 76-GeV-Protonenstrahl durch den Kopf Getroffen. Laut ihm sah er einen Blitz und erlitt im folgenden Verbrennungen, einseitigen Gehörverlusst, teilweise Lähmungen und erkrankte später an Epilepsie – überlebte aber.</p></div>
           </div>
           <div class="sources-block card" aria-label="Quellen dieser Sektion">
               <h5>Verwendete Quellen</h5>
@@ -1435,13 +1465,28 @@
       <!-- ================= QUELLEN ================= -->
       <section class="section" id="sources">
         <div class="container">
-          <h2 class="reveal">Quellen(hier pdf importer)</h2>
+          <h2 class="reveal">Quellen</h2>
           <ul>
-            <li><a href="#" style="color:#9ecbff">Quellen als PDF</a></li>
-            <li><a href="#" style="color:#9ecbff">Credits</a></li>
+            <li>
+              <a href="quellen_links (12).pdf"
+                 download="Quellen.pdf"
+                 type="application/pdf"
+                 style="color:#9ecbff">
+                Quellen als PDF
+              </a>
+            </li>
+            <li>
+              <a href="quellen_links (12).pdf"
+                 download="Credits.pdf"
+                 type="application/pdf"
+                 style="color:#9ecbff">
+                Credits
+              </a>
+            </li>
           </ul>
         </div>
       </section>
+
 
       <!-- === PONG OVERLAY =================================== -->
       <div id="pong-overlay" role="dialog" aria-modal="true" aria-label="Pong" hidden>
@@ -2968,6 +3013,7 @@
     </script>
   </body>
 </html>
+
 
 
 
