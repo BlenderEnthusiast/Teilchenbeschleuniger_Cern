@@ -1,5 +1,3 @@
-{"t":1759329600,"energy":6335,"speed":0.9999999890318254,"ib1":null,"ib2":null,"lumi":0.376}
-{"t":1759330200,"energy":6799,"speed":0.9999999904777953,"ib1":null,"ib2":null,"lumi":0.439}
 {"t":1759332000,"energy":6799,"speed":0.9999999904777953,"ib1":null,"ib2":null,"lumi":21186.039}
 {"t":1759333200,"energy":6799,"speed":0.9999999904777953,"ib1":null,"ib2":null,"lumi":21467.908}
 {"t":1759333800,"energy":6799,"speed":0.9999999904777953,"ib1":null,"ib2":null,"lumi":21596.088}
@@ -2855,3 +2853,4 @@
 {"t":1763646600,"energy":0,"speed":0,"ib1":null,"ib2":null,"lumi":0}
 {"t":1763647800,"energy":59,"speed":0.9998735406253079,"ib1":null,"ib2":null,"lumi":0}
 {"t":1763649000,"energy":3565,"speed":0.9999999653655312,"ib1":null,"ib2":null,"lumi":0}
+{"t":1763650200,"energy":59,"speed":0.9998735406253079,"ib1":null,"ib2":null,"lumi":0}
